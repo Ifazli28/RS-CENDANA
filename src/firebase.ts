@@ -1,10 +1,33 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer, setDoc } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import {
+  getFirestore,
+  doc,
+  getDocFromServer,
+  setDoc,
+  collection,
+  onSnapshot,
+  query,
+  where,
+} from 'firebase/firestore';
+import firebaseAppletConfig from '../firebase-applet-config.json';
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// Mendukung Environment Variables Vercel (VITE_FIREBASE_*) sekaligus fallback otomatis ke firebase-applet-config.json
+const resolvedConfig = {
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseAppletConfig.projectId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseAppletConfig.appId,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseAppletConfig.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseAppletConfig.authDomain,
+  firestoreDatabaseId:
+    import.meta.env.VITE_FIREBASE_DATABASE_ID || firebaseAppletConfig.firestoreDatabaseId,
+  storageBucket:
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || firebaseAppletConfig.storageBucket,
+  messagingSenderId:
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseAppletConfig.messagingSenderId,
+};
+
+const app = initializeApp(resolvedConfig);
+export const db = getFirestore(app, resolvedConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -72,6 +95,15 @@ async function testConnection() {
 }
 testConnection();
 
+export interface CloudPortalRecord {
+  id: string;
+  module: string;
+  title: string;
+  status: string;
+  updatedAt: string;
+  payload?: Record<string, unknown>;
+}
+
 /**
  * Helper to persist any Portal Layanan Paramedic Cendana record to Cloud Firestore
  * while adhering strictly to the schema in firebase-blueprint.json & firestore.rules.
@@ -86,15 +118,56 @@ export async function syncRecordToFirestore(
   const cleanId = id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120);
   const path = `portal_records/${cleanId}`;
   try {
+    // Sanitize undefined fields inside payloadData so Firestore doesn't reject undefined values
+    const sanitizedPayload = JSON.parse(JSON.stringify(payloadData)) as Record<string, unknown>;
     await setDoc(doc(db, 'portal_records', cleanId), {
       id: cleanId,
       module: moduleName.slice(0, 60),
       title: (title || moduleName).slice(0, 290),
       status: (status || 'Active').slice(0, 60),
       updatedAt: new Date().toISOString().slice(0, 32),
-      payload: payloadData,
+      payload: sanitizedPayload,
     });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
+}
+
+/**
+ * Real-time listener to keep all clients/devices in sync when deployed on Vercel
+ */
+export function subscribeToPortalRecords(
+  onRecordsUpdate: (records: CloudPortalRecord[]) => void
+) {
+  const path = 'portal_records';
+  const q = query(
+    collection(db, path),
+    where('module', 'in', [
+      'staff_account',
+      'sks_record',
+      'psychology_record',
+      'plastic_surgery',
+      'color_blind_result',
+      'appointment',
+      'complaint',
+      'recruitment',
+      'recruitment_config',
+      'leave_request',
+      'resign_request',
+    ])
+  );
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const items: CloudPortalRecord[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as CloudPortalRecord);
+      });
+      onRecordsUpdate(items);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
+  );
 }

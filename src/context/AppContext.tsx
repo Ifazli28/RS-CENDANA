@@ -40,7 +40,7 @@ import {
   INITIAL_PAYROLL_RECORDS,
 } from '../data/initialData';
 import { createStaffAvatarSvg } from '../components/BrandAssets';
-import { syncRecordToFirestore } from '../firebase';
+import { syncRecordToFirestore, subscribeToPortalRecords } from '../firebase';
 
 interface AppContextType {
   currentUser: StaffAccount | null;
@@ -140,6 +140,124 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (currentUserId) localStorage.setItem('cendana_current_user_id_v1', currentUserId);
     else localStorage.removeItem('cendana_current_user_id_v1');
   }, [currentUserId]);
+
+  // Real-time synchronization from Cloud Firestore across devices / Vercel deployments
+  useEffect(() => {
+    const unsubscribe = subscribeToPortalRecords((cloudRecords) => {
+      if (!cloudRecords.length) return;
+
+      cloudRecords.forEach((docItem) => {
+        const p = docItem.payload || {};
+        switch (docItem.module) {
+          case 'recruitment_config': {
+            if (docItem.status === 'OPEN' || docItem.status === 'CLOSED') {
+              setRecruitmentStatus(docItem.status);
+            }
+            break;
+          }
+          case 'recruitment': {
+            const recItem = p as unknown as RecruitmentApplicant;
+            if (recItem && recItem.id) {
+              setRecruitmentApplicants((prev) => {
+                const exists = prev.some((x) => x.id === recItem.id);
+                if (exists) {
+                  return prev.map((x) =>
+                    x.id === recItem.id
+                      ? { ...x, ...recItem, status: (docItem.status as RecruitmentApplicant['status']) || recItem.status }
+                      : x
+                  );
+                }
+                return [recItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'sks_record': {
+            const sksItem = p as unknown as SKSRecord;
+            if (sksItem && sksItem.id) {
+              setSksRecords((prev) => {
+                const exists = prev.some((x) => x.id === sksItem.id);
+                if (exists) {
+                  return prev.map((x) =>
+                    x.id === sksItem.id
+                      ? { ...x, ...sksItem, status: (docItem.status as SKSRecord['status']) || sksItem.status }
+                      : x
+                  );
+                }
+                return [sksItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'psychology_record': {
+            const psyItem = p as unknown as PsychologyRecord;
+            if (psyItem && psyItem.id) {
+              setPsychologyRecords((prev) => {
+                const exists = prev.some((x) => x.id === psyItem.id);
+                if (exists) {
+                  return prev.map((x) =>
+                    x.id === psyItem.id
+                      ? { ...x, ...psyItem, status: (docItem.status as PsychologyRecord['status']) || psyItem.status }
+                      : x
+                  );
+                }
+                return [psyItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'plastic_surgery': {
+            const plsItem = p as unknown as PlasticSurgeryRecord;
+            if (plsItem && plsItem.id) {
+              setPlasticSurgeryRecords((prev) => {
+                const exists = prev.some((x) => x.id === plsItem.id);
+                return exists ? prev.map((x) => (x.id === plsItem.id ? { ...x, ...plsItem } : x)) : [plsItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'appointment': {
+            const aptItem = p as unknown as AppointmentRecord;
+            if (aptItem && aptItem.id) {
+              setAppointments((prev) => {
+                const exists = prev.some((x) => x.id === aptItem.id);
+                if (exists) {
+                  return prev.map((x) =>
+                    x.id === aptItem.id
+                      ? { ...x, ...aptItem, status: (docItem.status as AppointmentRecord['status']) || aptItem.status }
+                      : x
+                  );
+                }
+                return [aptItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'complaint': {
+            const cmpItem = p as unknown as ComplaintRecord;
+            if (cmpItem && cmpItem.id) {
+              setComplaints((prev) => {
+                const exists = prev.some((x) => x.id === cmpItem.id);
+                if (exists) {
+                  return prev.map((x) =>
+                    x.id === cmpItem.id
+                      ? { ...x, ...cmpItem, status: (docItem.status as ComplaintRecord['status']) || cmpItem.status }
+                      : x
+                  );
+                }
+                return [cmpItem, ...prev];
+              });
+            }
+            break;
+          }
+          default:
+            break;
+        }
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const currentUser = React.useMemo(() => {
     if (!currentUserId) return null;
@@ -435,36 +553,85 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const toggleRecruitmentStatus = (status: 'OPEN' | 'CLOSED') => {
     if (!currentUser || currentUser.level < 7) return;
     setRecruitmentStatus(status);
+    void syncRecordToFirestore('recruitment_config_main', 'recruitment_config', 'Status Pendaftaran Paramedic', status, {
+      status,
+      updatedBy: currentUser.name,
+    });
     addToast('info', `Rekrutmen: ${status}`, `Status pendaftaran publik diubah menjadi ${status}.`);
   };
 
   const updateRecruitmentApplicantStatus = (id: string, status: RecruitmentApplicant['status']) => {
     if (!currentUser || currentUser.level < 7) return;
-    setRecruitmentApplicants((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+    setRecruitmentApplicants((prev) =>
+      prev.map((a) => {
+        if (a.id === id) {
+          const updated = { ...a, status };
+          void syncRecordToFirestore(id, 'recruitment', updated.fullName, status, { ...updated });
+          return updated;
+        }
+        return a;
+      })
+    );
     addToast('info', 'Status Pelamar Diperbarui', `Status diubah menjadi ${status}.`);
   };
 
   const updateComplaintStatus = (id: string, status: ComplaintRecord['status'], internalNote?: string) => {
     if (!currentUser || currentUser.level < 7) return;
-    setComplaints((prev) => prev.map((c) => (c.id === id ? { ...c, status, internalNote: internalNote ?? c.internalNote } : c)));
+    setComplaints((prev) =>
+      prev.map((c) => {
+        if (c.id === id) {
+          const updated = { ...c, status, internalNote: internalNote ?? c.internalNote };
+          void syncRecordToFirestore(id, 'complaint', updated.subject, status, { ...updated });
+          return updated;
+        }
+        return c;
+      })
+    );
     addToast('success', 'Keluhan Diperbarui', `Status keluhan menjadi ${status}.`);
   };
 
   const updateAppointmentStatus = (id: string, status: AppointmentRecord['status']) => {
     if (!currentUser || currentUser.level < 5) return;
-    setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+    setAppointments((prev) =>
+      prev.map((a) => {
+        if (a.id === id) {
+          const updated = { ...a, status };
+          void syncRecordToFirestore(id, 'appointment', updated.patientName, status, { ...updated });
+          return updated;
+        }
+        return a;
+      })
+    );
     addToast('info', 'Janji Temu Diperbarui', `Status diubah menjadi ${status}.`);
   };
 
   const updateSKSStatus = (id: string, status: SKSRecord['status']) => {
     if (!currentUser || currentUser.level < 3) return;
-    setSksRecords((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    setSksRecords((prev) =>
+      prev.map((r) => {
+        if (r.id === id) {
+          const updated = { ...r, status };
+          void syncRecordToFirestore(id, 'sks_record', updated.fullName, status, { ...updated });
+          return updated;
+        }
+        return r;
+      })
+    );
     addToast('success', 'Status SKS Diperbarui', `Status SKS menjadi ${status}.`);
   };
 
   const updatePsychologyStatus = (id: string, status: PsychologyRecord['status']) => {
     if (!currentUser || currentUser.level < 4) return;
-    setPsychologyRecords((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    setPsychologyRecords((prev) =>
+      prev.map((r) => {
+        if (r.id === id) {
+          const updated = { ...r, status };
+          void syncRecordToFirestore(id, 'psychology_record', updated.fullName, status, { ...updated });
+          return updated;
+        }
+        return r;
+      })
+    );
     addToast('success', 'Status Psikologi Diperbarui', `Status menjadi ${status}.`);
   };
 
