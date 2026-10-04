@@ -84,6 +84,7 @@ interface AppContextType {
   deactivateStaff: (staffId: string) => void;
   updateAccountStatus: (staffId: string, newStatus: AccountStatus) => void;
   deleteInactiveAccount: (staffId: string) => void;
+  deleteStaffAccount: (staffId: string) => void;
   submitLeaveRequest: (data: Omit<LeaveRequest, 'id' | 'staffId' | 'staffName' | 'staffRole' | 'submittedAt' | 'status'>) => void;
   reviewLeaveRequest: (leaveId: string, status: 'Approved' | 'Rejected', rejectionReason?: string) => void;
   submitResignRequest: (data: Omit<ResignRequest, 'id' | 'staffId' | 'staffName' | 'staffRole' | 'status'>) => void;
@@ -775,11 +776,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteInactiveAccount = (staffId: string) => {
     if (!currentUser || currentUser.level < 7) return;
+    if (staffId === currentUser.id) {
+      addToast('error', 'Akses Ditolak', 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif login.');
+      return;
+    }
     const target = staffAccounts.find((s) => s.id === staffId);
-    if (!target || target.status !== 'Inactive') return;
+    if (!target) return;
     setStaffAccounts((prev) => prev.filter((s) => s.id !== staffId));
     void syncRecordToFirestore(target.id, 'staff_account', target.name, 'DELETED', { id: target.id });
-    addToast('success', 'Akun Inactive Dihapus', `Akun ${target.name} dihapus dari Database. Data historis tetap terjaga.`);
+    addToast('success', 'Akun Staff Dihapus', `Data & akun ${target.name} berhasil dihapus dari Database.`);
+  };
+
+  const deleteStaffAccount = (staffId: string) => {
+    deleteInactiveAccount(staffId);
   };
 
   const submitLeaveRequest = (data: Omit<LeaveRequest, 'id' | 'staffId' | 'staffName' | 'staffRole' | 'submittedAt' | 'status'>) => {
@@ -1121,6 +1130,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deactivateStaff,
         updateAccountStatus,
         deleteInactiveAccount,
+        deleteStaffAccount,
         submitLeaveRequest,
         reviewLeaveRequest,
         submitResignRequest,

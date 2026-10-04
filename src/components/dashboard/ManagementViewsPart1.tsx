@@ -17,7 +17,7 @@ import {
 
 // 1. PENGELOLAAN STAFF & EDIT STAFF + CONFIRMATION MODAL (Sec 44, 45, 46, 47)
 export const StaffManagementView: React.FC = () => {
-  const { staffAccounts, currentUser, updateStaffRoleAndInfo, deactivateStaff } = useApp();
+  const { staffAccounts, currentUser, updateStaffRoleAndInfo, deactivateStaff, deleteStaffAccount } = useApp();
   const [search, setSearch] = useState('');
   const [editingStaff, setEditingStaff] = useState<typeof staffAccounts[0] | null>(null);
   const [editName, setEditName] = useState('');
@@ -29,6 +29,9 @@ export const StaffManagementView: React.FC = () => {
 
   // Deactivate Confirmation Modal State (Sec 47)
   const [deactivateTarget, setDeactivateTarget] = useState<typeof staffAccounts[0] | null>(null);
+
+  // Delete Staff Confirmation Modal State
+  const [deleteStaffTarget, setDeleteStaffTarget] = useState<typeof staffAccounts[0] | null>(null);
 
   const filtered = staffAccounts.filter(
     (s) =>
@@ -63,7 +66,7 @@ export const StaffManagementView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900">Pengelolaan Staff & Hirarki Jabatan</h2>
           <p className="text-xs text-slate-500">
-            Khusus Heads of Departments ke atas · Perubahan jabatan otomatis memperbarui RBAC di seluruh sistem
+            Khusus Heads of Departments ke atas · Perubahan jabatan & penghapusan anggota otomatis memperbarui Database
           </p>
         </div>
         <div className="relative w-full sm:w-64">
@@ -142,9 +145,18 @@ export const StaffManagementView: React.FC = () => {
                       {st.status === 'Active' && st.id !== currentUser?.id && (
                         <button
                           onClick={() => setDeactivateTarget(st)}
-                          className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold cursor-pointer"
                         >
                           Deactivate
+                        </button>
+                      )}
+                      {st.id !== currentUser?.id && (
+                        <button
+                          onClick={() => setDeleteStaffTarget(st)}
+                          className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
                         </button>
                       )}
                     </div>
@@ -292,9 +304,46 @@ export const StaffManagementView: React.FC = () => {
                   deactivateStaff(deactivateTarget.id);
                   setDeactivateTarget(null);
                 }}
-                className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-semibold cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-amber-600 text-white text-xs font-semibold cursor-pointer"
               >
                 Confirm Deactivate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Staff Confirmation Modal */}
+      {deleteStaffTarget && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setDeleteStaffTarget(null)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-bold text-slate-900">
+              Hapus Anggota Staff ({deleteStaffTarget.name})?
+            </h3>
+            <p className="text-xs text-slate-600">
+              Anggota staff beserta akunnya akan dihapus secara permanen dari daftar Pengelolaan Staff & Database.
+            </p>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                onClick={() => setDeleteStaffTarget(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteStaffAccount(deleteStaffTarget.id);
+                  setDeleteStaffTarget(null);
+                }}
+                className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-semibold cursor-pointer"
+              >
+                Confirm Delete Staff
               </button>
             </div>
           </div>
@@ -305,11 +354,12 @@ export const StaffManagementView: React.FC = () => {
 };
 
 // 2. APPROVAL AKUN BARU (Sec 36 & 84 — Heads+ Level 7+)
+// Jika pengajuan akun sudah diproses (Approve atau Reject), maka data pengajuan langsung hilang dari daftar ini
 export const AccountApprovalView: React.FC = () => {
   const { staffAccounts, approveOrRejectAccount } = useApp();
-  const [filter, setFilter] = useState<'All' | 'Pending Approval' | 'Active' | 'Rejected'>('All');
 
-  const list = staffAccounts.filter((s) => (filter === 'All' ? true : s.status === filter));
+  // Hanya menampilkan akun yang masih berstatus 'Pending Approval'
+  const pendingList = staffAccounts.filter((s) => s.status === 'Pending Approval');
 
   return (
     <div className="space-y-6">
@@ -317,21 +367,11 @@ export const AccountApprovalView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900">Approval Akun Staff Baru</h2>
           <p className="text-xs text-slate-500">
-            Akun baru wajib disetujui (Approve) sebelum dapat melakukan login ke Portal Staff
+            Menampilkan pengajuan akun baru. Begitu diproses (Approve / Reject), data pengajuan langsung selesai dan hilang dari antrean ini.
           </p>
         </div>
-        <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100">
-          {(['All', 'Pending Approval', 'Active', 'Rejected'] as const).map((st) => (
-            <button
-              key={st}
-              onClick={() => setFilter(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-                filter === st ? 'bg-[#E83E8C] text-white' : 'text-slate-600'
-              }`}
-            >
-              {st === 'Pending Approval' ? 'Pending' : st === 'Active' ? 'Approved' : st}
-            </button>
-          ))}
+        <div className="px-3.5 py-1.5 rounded-xl bg-[#FFF5F8] border border-pink-100 text-xs font-bold text-[#D63384]">
+          Antrean Pending: {pendingList.length} Akun
         </div>
       </div>
 
@@ -348,48 +388,42 @@ export const AccountApprovalView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
-              {list.map((acc) => (
-                <tr key={acc.id} className="hover:bg-pink-50/30 transition">
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">{acc.name}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{acc.email}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-500 tabular-nums">
-                    {acc.registeredAt}
+              {pendingList.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-10 text-center text-xs text-slate-500">
+                    Tidak ada pengajuan akun baru yang menunggu persetujuan saat ini.
                   </td>
-                  <td className="py-3.5 px-4">
-                    <span
-                      className={`text-xs font-bold ${
-                        acc.status === 'Active'
-                          ? 'text-[#20C997]'
-                          : acc.status === 'Pending Approval'
-                          ? 'text-amber-600'
-                          : 'text-rose-600'
-                      }`}
-                    >
-                      {acc.status === 'Active' ? 'Approved (Active)' : acc.status}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      {acc.status !== 'Active' && (
+                </tr>
+              ) : (
+                pendingList.map((acc) => (
+                  <tr key={acc.id} className="hover:bg-pink-50/30 transition">
+                    <td className="py-3.5 px-4 font-semibold text-slate-900">{acc.name}</td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{acc.email}</td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-500 tabular-nums">
+                      {acc.registeredAt}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="text-xs font-bold text-amber-600">{acc.status}</span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="inline-flex items-center gap-2">
                         <button
                           onClick={() => approveOrRejectAccount(acc.id, 'Approve')}
-                          className="px-3 py-1.5 rounded-lg bg-[#20C997] text-white text-xs font-semibold hover:opacity-95 cursor-pointer"
+                          className="px-3.5 py-1.5 rounded-lg bg-[#20C997] text-white text-xs font-semibold hover:opacity-95 cursor-pointer"
                         >
                           Approve
                         </button>
-                      )}
-                      {acc.status !== 'Rejected' && (
                         <button
                           onClick={() => approveOrRejectAccount(acc.id, 'Reject')}
-                          className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold cursor-pointer"
+                          className="px-3.5 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold cursor-pointer"
                         >
                           Reject
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -398,9 +432,9 @@ export const AccountApprovalView: React.FC = () => {
   );
 };
 
-// 3. KELOLA AKUN & HAPUS AKUN INACTIVE (Sec 48, 49, 50 — Heads+ Level 7+)
+// 3. KELOLA AKUN & HAPUS AKUN (Sec 48, 49, 50 — Heads+ Level 7+)
 export const AccountManagementView: React.FC = () => {
-  const { staffAccounts, updateAccountStatus, deleteInactiveAccount } = useApp();
+  const { staffAccounts, currentUser, updateAccountStatus, deleteStaffAccount } = useApp();
   const [statusFilter, setStatusFilter] = useState<'All' | AccountStatus>('All');
   const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<typeof staffAccounts[0] | null>(
     null
@@ -416,7 +450,7 @@ export const AccountManagementView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900">Kelola Akun & Kredensial Staff</h2>
           <p className="text-xs text-slate-500">
-            Kelola status Active, Pending, Rejected, Inactive serta hapus akun berstatus Inactive
+            Kelola status Active, Pending, Rejected, Inactive serta fitur hapus akun staff
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100">
@@ -443,7 +477,7 @@ export const AccountManagementView: React.FC = () => {
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Role</th>
                 <th className="py-3.5 px-4">Status Akun</th>
-                <th className="py-3.5 px-4 text-right">Kelola Status / Hapus Inactive</th>
+                <th className="py-3.5 px-4 text-right">Kelola Status / Delete Akun</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
@@ -482,13 +516,13 @@ export const AccountManagementView: React.FC = () => {
                         <option value="Inactive">Inactive</option>
                       </select>
 
-                      {acc.status === 'Inactive' && (
+                      {acc.id !== currentUser?.id && (
                         <button
                           onClick={() => setDeleteConfirmTarget(acc)}
                           className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 flex items-center gap-1 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>Delete Account</span>
+                          <span>Delete Akun</span>
                         </button>
                       )}
                     </div>
@@ -500,7 +534,7 @@ export const AccountManagementView: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal Delete Inactive Account (Sec 50) */}
+      {/* Confirmation Modal Delete Account */}
       {deleteConfirmTarget && (
         <div
           className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
@@ -511,21 +545,21 @@ export const AccountManagementView: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-bold text-slate-900">
-              Hapus Permanen Akun Inactive ({deleteConfirmTarget.name})?
+              Hapus Permanen Akun ({deleteConfirmTarget.name})?
             </h3>
             <p className="text-xs text-slate-600">
-              Kredensial login akun akan dihapus, namun <strong>seluruh riwayat historis duty, payroll, dan cuti tetap tersimpan aman</strong> di database.
+              Kredensial login akun akan dihapus secara permanen dari sistem & Database.
             </p>
             <div className="flex justify-center gap-3 pt-2">
               <button
                 onClick={() => setDeleteConfirmTarget(null)}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold"
+                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => {
-                  deleteInactiveAccount(deleteConfirmTarget.id);
+                  deleteStaffAccount(deleteConfirmTarget.id);
                   setDeleteConfirmTarget(null);
                 }}
                 className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-semibold cursor-pointer"
