@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Trophy,
@@ -16,20 +16,64 @@ import {
   AlertCircle,
   Search,
   Plus,
+  Trash2,
 } from 'lucide-react';
+
+// Helper to get real-time current week's Monday and Sunday (YYYY-MM-DD)
+export function getCurrentWeekMondaySunday(nowDate: Date) {
+  const d = new Date(nowDate);
+  const day = d.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  const fmt = (dt: Date) => {
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const fmtIndo = (dt: Date) =>
+    dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  return {
+    mondayDate: monday,
+    sundayDate: sunday,
+    mondayStr: fmt(monday),
+    sundayStr: fmt(sunday),
+    rangeLabel: `Senin, ${fmtIndo(monday)} – Minggu, ${fmtIndo(sunday)}`,
+    monthPrefix: `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}`,
+    monthLabel: nowDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
+  };
+}
 
 // 1. DASHBOARD HOME & LEADERBOARD DUTY (Sec 38 & 39)
 export const DashboardLeaderboardView: React.FC = () => {
   const { dutyLogs, staffAccounts, currentUser } = useApp();
   const [periodFilter, setPeriodFilter] = useState<'week' | 'month'>('week');
+  const [nowTime, setNowTime] = useState<Date>(() => new Date());
 
-  // Filter logs from unified Discord Duty Parser / Duty Log source
-  const filteredLogs = dutyLogs.filter((log) =>
-    periodFilter === 'week' ? log.weekKey === 'current-week' : log.monthKey === '2026-10'
-  );
+  // Live real-time clock refresh so Monday-Sunday boundaries & time stay accurate
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowTime(new Date());
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
 
-  // Aggregate total duty hours & session count per staff
+  const weekBounds = React.useMemo(() => getCurrentWeekMondaySunday(nowTime), [nowTime]);
+
+  // Aggregate total duty hours & session count ONLY for currently Active medical staff
   const leaderboardData = React.useMemo(() => {
+    const activeStaffList = staffAccounts.filter((s) => s.status === 'Active');
+    const activeStaffIds = new Set(activeStaffList.map((s) => s.id));
+
     const map = new Map<
       string,
       {
@@ -42,39 +86,41 @@ export const DashboardLeaderboardView: React.FC = () => {
       }
     >();
 
-    // Seed with active staff so everyone appears or gets matched
-    staffAccounts
-      .filter((s) => s.status === 'Active')
-      .forEach((s) => {
-        map.set(s.id, {
-          staffId: s.id,
-          name: s.name,
-          role: s.role,
-          avatarUrl: s.avatarUrl,
-          totalMinutes: 0,
-          sessions: 0,
-        });
+    // Seed ONLY with active staff (inactive or deleted staff are immediately excluded)
+    activeStaffList.forEach((s) => {
+      map.set(s.id, {
+        staffId: s.id,
+        name: s.name,
+        role: s.role,
+        avatarUrl: s.avatarUrl,
+        totalMinutes: 0,
+        sessions: 0,
       });
+    });
 
-    filteredLogs.forEach((log) => {
+    dutyLogs.forEach((log) => {
+      // If staff is Inactive or deleted (not in activeStaffIds), skip immediately!
+      if (!activeStaffIds.has(log.staffId)) return;
+
+      const logDateStr = (log.startDate || '').slice(0, 10);
+      const isInCurrentWeek =
+        (logDateStr >= weekBounds.mondayStr && logDateStr <= weekBounds.sundayStr) ||
+        log.weekKey === 'current-week';
+      const isInCurrentMonth =
+        logDateStr.startsWith(weekBounds.monthPrefix) || log.monthKey === weekBounds.monthPrefix;
+
+      const matchesPeriod = periodFilter === 'week' ? isInCurrentWeek : isInCurrentMonth;
+      if (!matchesPeriod) return;
+
       const existing = map.get(log.staffId);
       if (existing) {
         existing.totalMinutes += log.durationMinutes;
         existing.sessions += 1;
-      } else {
-        map.set(log.staffId, {
-          staffId: log.staffId,
-          name: log.staffName,
-          role: log.role,
-          avatarUrl: staffAccounts.find((a) => a.id === log.staffId)?.avatarUrl || '',
-          totalMinutes: log.durationMinutes,
-          sessions: 1,
-        });
       }
     });
 
     return Array.from(map.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
-  }, [filteredLogs, staffAccounts]);
+  }, [dutyLogs, staffAccounts, periodFilter, weekBounds]);
 
   const formatHoursMinutes = (mins: number) => {
     const h = Math.floor(mins / 60);
@@ -102,27 +148,32 @@ export const DashboardLeaderboardView: React.FC = () => {
         </div>
 
         {/* Period Filter (Sec 38: Default Minggu berjalan Senin-Minggu, Filter Minggu / Bulan) */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100 self-start sm:self-auto">
-          <button
-            onClick={() => setPeriodFilter('week')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-              periodFilter === 'week'
-                ? 'bg-[#E83E8C] text-white shadow-xs'
-                : 'text-slate-600 hover:text-[#D63384]'
-            }`}
-          >
-            Minggu Berjalan (Sen–Min)
-          </button>
-          <button
-            onClick={() => setPeriodFilter('month')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-              periodFilter === 'month'
-                ? 'bg-[#E83E8C] text-white shadow-xs'
-                : 'text-slate-600 hover:text-[#D63384]'
-            }`}
-          >
-            Bulan Ini (Okt 2026)
-          </button>
+        <div className="flex flex-col items-start sm:items-end gap-1.5">
+          <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100">
+            <button
+              onClick={() => setPeriodFilter('week')}
+              className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                periodFilter === 'week'
+                  ? 'bg-[#E83E8C] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-[#D63384]'
+              }`}
+            >
+              Minggu Ini (Sen–Min)
+            </button>
+            <button
+              onClick={() => setPeriodFilter('month')}
+              className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                periodFilter === 'month'
+                  ? 'bg-[#E83E8C] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-[#D63384]'
+              }`}
+            >
+              Bulan Ini ({weekBounds.monthLabel})
+            </button>
+          </div>
+          <span className="text-[11px] font-mono text-slate-500">
+            {periodFilter === 'week' ? weekBounds.rangeLabel : `Periode: ${weekBounds.monthLabel}`} · Live Sync Aktif
+          </span>
         </div>
       </div>
 
@@ -594,14 +645,15 @@ export const StaffDirectoryView: React.FC = () => {
   );
 };
 
-// 4. VOTING INTERNAL (Sec 51 — Semua staff aktif memilih 1x, Heads+ dapat membuat voting)
+// 4. VOTING INTERNAL (Sec 51 — Semua staff aktif memilih 1x, Heads+ dapat membuat & menghapus voting)
 export const VotingView: React.FC = () => {
-  const { votingPolls, currentUser, castVote, createVotingPoll } = useApp();
+  const { votingPolls, currentUser, castVote, createVotingPoll, deleteVotingPoll } = useApp();
   const [showCreate, setShowCreate] = useState(false);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [deadline, setDeadline] = useState('2026-10-30');
   const [optionsText, setOptionsText] = useState('Opsi 1\nOpsi 2');
+  const [deletingPollId, setDeletingPollId] = useState<string | null>(null);
 
   if (!currentUser) return null;
   const canCreate = currentUser.level >= 7;
@@ -720,9 +772,21 @@ export const VotingView: React.FC = () => {
                     <strong className="text-[#20C997]">{poll.status}</strong>
                   </p>
                 </div>
-                <span className="text-xs font-mono font-bold text-slate-600 tabular-nums">
-                  Total {totalVotes} Suara
-                </span>
+                <div className="flex items-center gap-3 self-start sm:self-auto">
+                  <span className="text-xs font-mono font-bold text-slate-600 tabular-nums">
+                    Total {totalVotes} Suara
+                  </span>
+                  {canCreate && (
+                    <button
+                      type="button"
+                      onClick={() => setDeletingPollId(poll.id)}
+                      className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Hapus Voting</span>
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="text-xs sm:text-sm text-slate-600">{poll.description}</p>
 
@@ -769,29 +833,159 @@ export const VotingView: React.FC = () => {
           );
         })}
       </div>
+
+      {deletingPollId && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setDeletingPollId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-rose-200 p-6 max-w-md w-full space-y-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-bold text-slate-900">Konfirmasi Hapus Voting</h3>
+            <p className="text-xs text-slate-600">
+              Apakah Anda yakin ingin menghapus jajak pendapat / voting ini secara permanen dari portal dan database?
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingPollId(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteVotingPoll(deletingPollId);
+                  setDeletingPollId(null);
+                }}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer"
+              >
+                Ya, Hapus Voting
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// 5. GAJI SAYA (Sec 52)
+// 5. GAJI SAYA (Sec 52 — Terintegrasi Skema Gaji Jabatan, Target Jam Mingguan, Gaji Utuh/Perjam & Bonus Kelipatan)
 export const MySalaryView: React.FC = () => {
-  const { payrollRecords, currentUser } = useApp();
+  const { payrollRecords, dutyLogs, roleSalaryConfigs, currentUser } = useApp();
   if (!currentUser) return null;
+
+  const myRoleConfig = roleSalaryConfigs.find((c) => c.role === currentUser.role);
+  const myWeeklyMinutes = dutyLogs
+    .filter((l) => l.staffId === currentUser.id && l.weekKey === 'current-week')
+    .reduce((acc, l) => acc + l.durationMinutes, 0);
+
+  const dutyHours = Number((myWeeklyMinutes / 60).toFixed(2));
+  const targetHours = myRoleConfig?.targetWeeklyHours ?? 18;
+  const meetsTarget = dutyHours >= targetHours;
+  const baseEarned = myRoleConfig
+    ? meetsTarget
+      ? myRoleConfig.fullSalary
+      : Math.round(dutyHours * myRoleConfig.hourlyRate)
+    : 0;
+
+  const excessHours =
+    myRoleConfig && dutyHours > targetHours
+      ? Number((dutyHours - targetHours).toFixed(2))
+      : 0;
+  const bonusMultiples =
+    myRoleConfig && excessHours > 0 && myRoleConfig.bonusStepHours > 0
+      ? Math.floor(excessHours / myRoleConfig.bonusStepHours)
+      : 0;
+  const liveBonus = myRoleConfig ? bonusMultiples * myRoleConfig.bonusPerStepAmount : 0;
 
   const myPayrolls = payrollRecords.filter((p) => p.staffId === currentUser.id);
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-5 rounded-2xl border border-pink-100">
-        <h2 className="text-lg font-bold text-slate-900">Gaji Saya & Riwayat Pembayaran</h2>
-        <p className="text-xs text-slate-500">
-          Rincian slip gaji pribadi berdasarkan jabatan ({currentUser.role}) dan jam duty aktif
-        </p>
+      <div className="bg-white p-5 rounded-2xl border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Gaji Saya & Estimasi Mingguan Real-Time</h2>
+          <p className="text-xs text-slate-500">
+            Jabatan: <strong>{currentUser.role}</strong> · Target Duty Mingguan:{' '}
+            <strong>{targetHours} Jam/Minggu</strong>
+          </p>
+        </div>
+        {myRoleConfig && (
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+              Gaji Utuh: ${myRoleConfig.fullSalary.toLocaleString()}
+            </span>
+            <span className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 font-bold border border-amber-200">
+              Per Jam: ${myRoleConfig.hourlyRate.toLocaleString()}/jam
+            </span>
+            <span className="px-3 py-1.5 rounded-xl bg-pink-50 text-[#D63384] font-bold border border-pink-200">
+              Bonus: +${myRoleConfig.bonusPerStepAmount.toLocaleString()} / {myRoleConfig.bonusStepHours} jam lebih
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Kartu Kalkulasi Jam Duty Minggu Berjalan */}
+      <div className="bg-white rounded-2xl border border-pink-200 p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-pink-100 pb-4">
+          <div>
+            <span className="text-xs font-bold text-[#E83E8C] uppercase tracking-wider">
+              KALKULASI MINGGU BERJALAN (REAL-TIME DARI LOG DUTY)
+            </span>
+            <h3 className="text-lg font-bold text-slate-900 mt-0.5">
+              Progress Jam Duty: {dutyHours} Jam / {targetHours} Jam
+            </h3>
+          </div>
+          <span
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold self-start sm:self-auto ${
+              meetsTarget
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}
+          >
+            {meetsTarget
+              ? '✓ Memenuhi Target Mingguan (Berhak Gaji Utuh)'
+              : `Belum Capai Target (Dihitung Per Jam × $${myRoleConfig?.hourlyRate ?? 0})`}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-sm tabular-nums">
+          <div className="p-4 rounded-xl bg-[#FFF5F8]">
+            <p className="text-xs text-slate-500">Status Perhitungan Gaji</p>
+            <p className="text-base font-bold text-slate-900 mt-0.5">
+              {meetsTarget ? 'Gaji Utuh' : 'Gaji Per Jam'}
+            </p>
+          </div>
+          <div className="p-4 rounded-xl bg-[#FFF5F8]">
+            <p className="text-xs text-slate-500">Gaji Pokok Terhitung</p>
+            <p className="text-lg font-extrabold font-mono text-slate-900 mt-0.5">
+              ${baseEarned.toLocaleString()}
+            </p>
+          </div>
+          <div className="p-4 rounded-xl bg-[#FFF5F8]">
+            <p className="text-xs text-slate-500">
+              Bonus Kelebihan Jam ({bonusMultiples}x kelipatan)
+            </p>
+            <p className="text-lg font-extrabold font-mono text-[#20C997] mt-0.5">
+              +${liveBonus.toLocaleString()}
+            </p>
+          </div>
+          <div className="p-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white">
+            <p className="text-xs text-pink-100">Estimasi Gaji Minggu Ini</p>
+            <p className="text-xl font-extrabold font-mono mt-0.5">
+              ${(baseEarned + liveBonus).toLocaleString()}
+            </p>
+          </div>
+        </div>
       </div>
 
       {myPayrolls.length === 0 ? (
         <div className="bg-white p-8 rounded-2xl border border-pink-100 text-center text-sm text-slate-500">
-          Belum ada catatan slip gaji untuk akun Anda pada periode ini.
+          Belum ada catatan slip gaji resmi yang diterbitkan untuk akun Anda pada periode ini.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
@@ -818,7 +1012,7 @@ export const MySalaryView: React.FC = () => {
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-sm tabular-nums">
                 <div className="p-3.5 rounded-xl bg-[#FFF5F8]">
-                  <p className="text-xs text-slate-500">Basic Salary</p>
+                  <p className="text-xs text-slate-500">Gaji Pokok</p>
                   <p className="text-base font-bold font-mono text-slate-900">
                     ${pay.basicSalary.toLocaleString()}
                   </p>

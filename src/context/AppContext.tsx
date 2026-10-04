@@ -19,6 +19,7 @@ import {
   RegulationItem,
   DutyLog,
   PayrollRecord,
+  RoleSalaryConfig,
   ToastMessage,
 } from '../types';
 import {
@@ -38,6 +39,7 @@ import {
   INITIAL_REGULATIONS,
   INITIAL_DUTY_LOGS,
   INITIAL_PAYROLL_RECORDS,
+  INITIAL_ROLE_SALARY_CONFIGS,
 } from '../data/initialData';
 import { createStaffAvatarSvg } from '../components/BrandAssets';
 import { syncRecordToFirestore, subscribeToPortalRecords } from '../firebase';
@@ -65,6 +67,7 @@ interface AppContextType {
   regulations: RegulationItem[];
   dutyLogs: DutyLog[];
   payrollRecords: PayrollRecord[];
+  roleSalaryConfigs: RoleSalaryConfig[];
   toasts: ToastMessage[];
   addToast: (type: ToastMessage['type'], title: string, message: string) => void;
   removeToast: (id: string) => void;
@@ -91,17 +94,24 @@ interface AppContextType {
   reviewResignRequest: (resignId: string, status: 'Approved' | 'Rejected', rejectionReason?: string) => void;
   castVote: (pollId: string, optionId: string) => void;
   createVotingPoll: (title: string, description: string, deadline: string, optionLabels: string[]) => void;
+  deleteVotingPoll: (pollId: string) => void;
   toggleRecruitmentStatus: (status: 'OPEN' | 'CLOSED') => void;
   updateRecruitmentApplicantStatus: (id: string, status: RecruitmentApplicant['status']) => void;
   updateComplaintStatus: (id: string, status: ComplaintRecord['status'], internalNote?: string) => void;
   updateAppointmentStatus: (id: string, status: AppointmentRecord['status']) => void;
   updateSKSStatus: (id: string, status: SKSRecord['status']) => void;
   updatePsychologyStatus: (id: string, status: PsychologyRecord['status']) => void;
+  updatePlasticSurgeryStatus: (
+    id: string,
+    status: PlasticSurgeryRecord['status'],
+    handlingDoctorName: string
+  ) => void;
   addDoctorSchedule: (data: Omit<DoctorSchedule, 'id'>) => void;
   deleteDoctorSchedule: (id: string) => void;
   addOrUpdateSOP: (sop: Omit<SOPDocument, 'id' | 'updatedAt' | 'author'>, existingId?: string) => void;
   addDutyLogsBatch: (logs: Omit<DutyLog, 'id'>[]) => void;
   addOrUpdatePayroll: (record: Omit<PayrollRecord, 'id'>, existingId?: string) => void;
+  updateRoleSalaryConfig: (config: RoleSalaryConfig) => void;
   addOrUpdateRegulation: (reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>, existingId?: string) => void;
 }
 
@@ -171,6 +181,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>(() =>
     loadLocal('cendana_payrolls_v1', INITIAL_PAYROLL_RECORDS)
   );
+  const [roleSalaryConfigs, setRoleSalaryConfigs] = useState<RoleSalaryConfig[]>(() =>
+    loadLocal('cendana_role_salaries_v1', INITIAL_ROLE_SALARY_CONFIGS)
+  );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // LocalStorage persistence for all modules
@@ -225,6 +238,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('cendana_payrolls_v1', JSON.stringify(payrollRecords));
   }, [payrollRecords]);
+  useEffect(() => {
+    localStorage.setItem('cendana_role_salaries_v1', JSON.stringify(roleSalaryConfigs));
+  }, [roleSalaryConfigs]);
 
   useEffect(() => {
     if (currentUserId) localStorage.setItem('cendana_current_user_id_v1', currentUserId);
@@ -414,12 +430,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           case 'voting_poll': {
             const pollItem = p as unknown as VotingPoll;
             if (pollItem && pollItem.id) {
-              setVotingPolls((prev) => {
-                const exists = prev.some((x) => x.id === pollItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === pollItem.id ? { ...x, ...pollItem } : x))
-                  : [pollItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setVotingPolls((prev) => prev.filter((x) => x.id !== pollItem.id));
+              } else {
+                setVotingPolls((prev) => {
+                  const exists = prev.some((x) => x.id === pollItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === pollItem.id ? { ...x, ...pollItem } : x))
+                    : [pollItem, ...prev];
+                });
+              }
             }
             break;
           }
@@ -483,6 +503,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 return exists
                   ? prev.map((x) => (x.id === regItem.id ? { ...x, ...regItem } : x))
                   : [regItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'role_salary_config': {
+            const roleCfg = p as unknown as RoleSalaryConfig;
+            if (roleCfg && roleCfg.role) {
+              setRoleSalaryConfigs((prev) => {
+                const exists = prev.some((x) => x.role === roleCfg.role);
+                return exists
+                  ? prev.map((x) => (x.role === roleCfg.role ? { ...x, ...roleCfg } : x))
+                  : [roleCfg, ...prev];
               });
             }
             break;
@@ -905,6 +937,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast('success', 'Voting Baru Dibuat', `Voting "${title}" telah dibuka dan disimpan di Database.`);
   };
 
+  const deleteVotingPoll = (pollId: string) => {
+    if (!currentUser || currentUser.level < 7) return;
+    const target = votingPolls.find((p) => p.id === pollId);
+    setVotingPolls((prev) => prev.filter((p) => p.id !== pollId));
+    void syncRecordToFirestore(pollId, 'voting_poll', target?.title || pollId, 'DELETED', { id: pollId });
+    addToast('info', 'Voting Dihapus', `Voting "${target?.title || ''}" berhasil dihapus dari Database.`);
+  };
+
   const toggleRecruitmentStatus = (status: 'OPEN' | 'CLOSED') => {
     if (!currentUser || currentUser.level < 7) return;
     setRecruitmentStatus(status);
@@ -990,6 +1030,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast('success', 'Status Psikologi Diperbarui', `Status menjadi ${status}.`);
   };
 
+  const updatePlasticSurgeryStatus = (
+    id: string,
+    status: PlasticSurgeryRecord['status'],
+    handlingDoctorName: string
+  ) => {
+    if (!currentUser || currentUser.level < 5) return;
+    const approvedAt = nowFormatted();
+    setPlasticSurgeryRecords((prev) =>
+      prev.map((r) => {
+        if (r.id === id) {
+          const updated: PlasticSurgeryRecord = {
+            ...r,
+            status,
+            handlingDoctorName: handlingDoctorName.trim() || currentUser.name,
+            approvedAt,
+          };
+          void syncRecordToFirestore(id, 'plastic_surgery', updated.fullName, status, { ...updated });
+          return updated;
+        }
+        return r;
+      })
+    );
+    addToast(
+      'success',
+      `Pengajuan Operasi Plastik: ${status}`,
+      `Ditangani oleh ${handlingDoctorName.trim() || currentUser.name} & tersimpan ke Database.`
+    );
+  };
+
   const addDoctorSchedule = (data: Omit<DoctorSchedule, 'id'>) => {
     if (!currentUser || currentUser.level < 5) return;
     const id = `sch-${Date.now()}`;
@@ -1063,6 +1132,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast('success', 'Payroll Disimpan', `Skema gaji ${record.staffName} berhasil disimpan ke Database.`);
   };
 
+  const updateRoleSalaryConfig = (config: RoleSalaryConfig) => {
+    if (!currentUser || currentUser.level < 7) return;
+    setRoleSalaryConfigs((prev) =>
+      prev.map((c) => (c.role === config.role ? { ...config } : c))
+    );
+    const id = `role_sal_${config.role.toLowerCase().replace(/\s+/g, '_')}`;
+    void syncRecordToFirestore(id, 'role_salary_config', `Skema Gaji ${config.role}`, 'Active', {
+      ...config,
+    });
+    addToast(
+      'success',
+      'Skema Gaji Jabatan Diperbarui',
+      `Pengaturan gaji, target jam mingguan (${config.targetWeeklyHours}j), & bonus ${config.role} tersimpan ke Database.`
+    );
+  };
+
   const addOrUpdateRegulation = (reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>, existingId?: string) => {
     if (!currentUser || currentUser.level < 7) return;
     const updatedAt = new Date().toISOString().slice(0, 10);
@@ -1111,6 +1196,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         regulations,
         dutyLogs,
         payrollRecords,
+        roleSalaryConfigs,
         toasts,
         addToast,
         removeToast,
@@ -1137,17 +1223,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         reviewResignRequest,
         castVote,
         createVotingPoll,
+        deleteVotingPoll,
         toggleRecruitmentStatus,
         updateRecruitmentApplicantStatus,
         updateComplaintStatus,
         updateAppointmentStatus,
         updateSKSStatus,
         updatePsychologyStatus,
+        updatePlasticSurgeryStatus,
         addDoctorSchedule,
         deleteDoctorSchedule,
         addOrUpdateSOP,
         addDutyLogsBatch,
         addOrUpdatePayroll,
+        updateRoleSalaryConfig,
         addOrUpdateRegulation,
       }}
     >

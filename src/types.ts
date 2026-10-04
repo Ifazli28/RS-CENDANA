@@ -108,9 +108,11 @@ export interface PlasticSurgeryRecord {
   phoneOrIC: string;
   surgeryType: string;
   idPhotoName: string;
-  legalDocName: string;
+  legalDocName: string; // Dokumen SKB (Kepolisian) atau SKWB
+  handlingDoctorName?: string; // Nama dokter yang menangani / menyetujui
+  approvedAt?: string;
   createdAt: string;
-  status: 'Pending Review' | 'Approved' | 'Completed';
+  status: 'Pending Review' | 'Approved' | 'Completed' | 'Rejected';
 }
 
 export interface ColorBlindResult {
@@ -298,6 +300,16 @@ export interface PayrollRecord {
   totalSalary: number;
   paymentStatus: 'Paid' | 'Pending' | 'Processing';
   paidAt?: string;
+}
+
+export interface RoleSalaryConfig {
+  role: RoleName;
+  level: number;
+  fullSalary: number;          // Gaji Utuh (diberikan jika memenuhi target jam duty mingguan)
+  hourlyRate: number;          // Gaji Per Jam (jika tidak mencapai target jam duty mingguan)
+  targetWeeklyHours: number;   // Target Jam Duty Per Minggu
+  bonusStepHours: number;      // Kelipatan Jam Bonus (setiap melewati kelipatan X jam di atas target)
+  bonusPerStepAmount: number;  // Nominal Bonus per Kelipatan Jam ($)
 }
 
 export interface ToastMessage {

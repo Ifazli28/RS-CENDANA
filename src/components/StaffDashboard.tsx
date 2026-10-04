@@ -14,6 +14,7 @@ import {
   SKSResultsView,
   PsychologyResultsView,
   ColorBlindResultsView,
+  PlasticSurgeryDataView,
   AppointmentsDataView,
   DoctorScheduleManageView,
 } from './dashboard/MedicalDataViews';
@@ -26,6 +27,8 @@ import {
 } from './dashboard/ManagementViewsPart1';
 import {
   DutyManagementView,
+  WeeklyAttendanceRecapView,
+  MonthlyAttendanceRecapView,
   PayrollManagementView,
   RegulationManagementView,
 } from './dashboard/ManagementViewsPart2';
@@ -57,6 +60,7 @@ import {
   Menu,
   X,
   ShieldAlert,
+  Sparkles,
 } from 'lucide-react';
 
 export type StaffRouteId =
@@ -66,6 +70,7 @@ export type StaffRouteId =
   | 'sks-results'
   | 'psychology-results'
   | 'color-blind-results'
+  | 'plastic-surgery-requests'
   | 'appointments-data'
   | 'doctor-schedules'
   | 'voting'
@@ -81,6 +86,8 @@ export type StaffRouteId =
   | 'recruitment-management'
   | 'complaint-management'
   | 'duty-management'
+  | 'weekly-attendance-recap'
+  | 'monthly-attendance-recap'
   | 'payroll-management'
   | 'regulation-management';
 
@@ -135,7 +142,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     { id: 'sks-results', label: 'Hasil Surat Keterangan Sehat', minLevel: 3, category: 'Rekam & Layanan Medis', icon: FileText },
     // Level 4+ (Co-ass+): Psikologi
     { id: 'psychology-results', label: 'Hasil Tes Psikologi', minLevel: 4, category: 'Rekam & Layanan Medis', icon: Brain },
-    // Level 5+ (Doctor+): Buta Warna, Janji Temu, Jadwal Dokter
+    // Level 5+ (Doctor+): Operasi Plastik, Buta Warna, Janji Temu, Jadwal Dokter
+    { id: 'plastic-surgery-requests', label: 'Pengajuan Operasi Plastik', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Sparkles },
     { id: 'color-blind-results', label: 'Hasil Tes Buta Warna', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Eye },
     { id: 'appointments-data', label: 'Data Janji Temu', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Calendar },
     { id: 'doctor-schedules', label: 'Jadwal Praktik Dokter', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Stethoscope },
@@ -169,7 +177,9 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     },
     { id: 'recruitment-management', label: 'Recruitment Management', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: UserPlus },
     { id: 'complaint-management', label: 'Complaint Management', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: MessageSquareWarning },
-    { id: 'duty-management', label: 'Duty Management & Parser', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: Clock },
+    { id: 'duty-management', label: 'Discord Duty Parser', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: Clock },
+    { id: 'weekly-attendance-recap', label: 'Rekap Absensi Mingguan', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: Calendar },
+    { id: 'monthly-attendance-recap', label: 'Rekap Absensi Bulanan', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: FileText },
     { id: 'payroll-management', label: 'Payroll Management', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: CreditCard },
     { id: 'regulation-management', label: 'Regulation Management', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: ShieldCheck },
   ];
@@ -228,6 +238,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         return <SKSResultsView />;
       case 'psychology-results':
         return <PsychologyResultsView />;
+      case 'plastic-surgery-requests':
+        return <PlasticSurgeryDataView />;
       case 'color-blind-results':
         return <ColorBlindResultsView />;
       case 'appointments-data':
@@ -250,6 +262,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         return <RecruitmentAndComplaintManageView mode="complaint" />;
       case 'duty-management':
         return <DutyManagementView />;
+      case 'weekly-attendance-recap':
+        return <WeeklyAttendanceRecapView />;
+      case 'monthly-attendance-recap':
+        return <MonthlyAttendanceRecapView />;
       case 'payroll-management':
         return <PayrollManagementView />;
       case 'regulation-management':
@@ -409,37 +425,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             </div>
           </div>
 
-          {/* Fast Role Switcher for Testing RBAC (Sec 78) + Current User Profile */}
+          {/* Current User Profile */}
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-slate-500">Uji Role (RBAC):</span>
-              <select
-                value={currentUser.id}
-                onChange={(e) => switchDemoRole(e.target.value)}
-                className="px-2.5 py-1.5 rounded-xl border border-pink-200 bg-[#FFF5F8] text-xs font-semibold text-[#D63384] focus:outline-none cursor-pointer"
-              >
-                {staffAccounts
-                  .filter((s) => s.status === 'Active')
-                  .sort((a, b) => a.level - b.level)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      Lv.{s.level} {s.role} — {s.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            {/* Test Unauthorized URL Guard Button (Sec 10) */}
-            {currentUser.level < 7 && (
-              <button
-                onClick={() => onNavigateRoute('staff-management')}
-                className="hidden md:inline-flex px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-[11px] font-semibold hover:bg-rose-100 cursor-pointer whitespace-nowrap"
-                title="Uji proteksi URL manual tanpa permission"
-              >
-                Uji URL Terlarang (Lv.7)
-              </button>
-            )}
-
             <button
               onClick={() => onNavigateRoute('profile')}
               className="flex items-center gap-2.5 pl-2 pr-3 py-1 rounded-xl hover:bg-pink-50 transition cursor-pointer"

@@ -11,6 +11,7 @@ import {
   Trash2,
   CheckCircle2,
   X,
+  Sparkles,
 } from 'lucide-react';
 
 // 1. DATA SURAT KETERANGAN SEHAT (Sec 59 — Paramedic+ Level 3+)
@@ -706,3 +707,285 @@ export const DoctorScheduleManageView: React.FC = () => {
     </div>
   );
 };
+
+// 6. DATA PENGAJUAN OPERASI PLASTIK (Doctor+ Level 5+ — Dapat menyetujui & mencantumkan nama dokter yang menangani)
+export const PlasticSurgeryDataView: React.FC = () => {
+  const { plasticSurgeryRecords, staffAccounts, currentUser, updatePlasticSurgeryStatus } = useApp();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Semua');
+  const [selectedRecord, setSelectedRecord] = useState<typeof plasticSurgeryRecords[0] | null>(null);
+  const [handlingDoctor, setHandlingDoctor] = useState('');
+
+  const activeDoctors = staffAccounts.filter((s) => s.status === 'Active' && s.level >= 5);
+
+  const openModal = (rec: typeof plasticSurgeryRecords[0]) => {
+    setSelectedRecord(rec);
+    setHandlingDoctor(rec.handlingDoctorName || currentUser?.name || activeDoctors[0]?.name || '');
+  };
+
+  const filtered = plasticSurgeryRecords.filter((r) => {
+    const matchSearch =
+      r.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      r.surgeryType.toLowerCase().includes(search.toLowerCase()) ||
+      (r.handlingDoctorName || '').toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === 'Semua' || r.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">
+            Data Pengajuan Prosedur Operasi Plastik
+          </h2>
+          <p className="text-xs text-slate-500">
+            Akses Khusus Doctor ke atas (Level 5+) · Verifikasi Dokumen SKB/SKWB & Persetujuan Dokter Penanggung Jawab
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari pasien / prosedur / dokter..."
+              className="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#E83E8C] focus:outline-none"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white"
+          >
+            <option value="Semua">Semua Status</option>
+            <option value="Pending Review">Pending Review</option>
+            <option value="Approved">Approved</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+                <th className="py-3.5 px-4">Nama Pasien</th>
+                <th className="py-3.5 px-4">Tanggal Pengajuan</th>
+                <th className="py-3.5 px-4">Prosedur Operasi Plastik</th>
+                <th className="py-3.5 px-4">Dokumen KTP & SKB/SKWB</th>
+                <th className="py-3.5 px-4">Dokter yang Menangani</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                    Tidak ada data pengajuan operasi plastik yang sesuai filter.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((r) => (
+                  <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                    <td className="py-3.5 px-4">
+                      <div className="font-semibold text-slate-900">{r.fullName}</div>
+                      <div className="text-[11px] text-slate-500">
+                        {r.gender} · {r.age} th · {r.phoneOrIC}
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-500 tabular-nums">
+                      {r.createdAt}
+                    </td>
+                    <td className="py-3.5 px-4 font-semibold text-slate-800">{r.surgeryType}</td>
+                    <td className="py-3.5 px-4 text-xs text-slate-600 space-y-0.5">
+                      <div className="truncate max-w-[180px]" title={r.idPhotoName}>
+                        <span className="font-semibold text-slate-700">KTP:</span> {r.idPhotoName}
+                      </div>
+                      <div className="truncate max-w-[180px]" title={r.legalDocName}>
+                        <span className="font-semibold text-[#D63384]">SKB/SKWB:</span> {r.legalDocName}
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      {r.handlingDoctorName ? (
+                        <div>
+                          <span className="font-semibold text-slate-900">{r.handlingDoctorName}</span>
+                          {r.approvedAt && (
+                            <div className="text-[10px] font-mono text-slate-400">{r.approvedAt}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs italic text-slate-400">Belum ditentukan</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`text-xs font-bold ${
+                          r.status === 'Approved' || r.status === 'Completed'
+                            ? 'text-[#20C997]'
+                            : r.status === 'Rejected'
+                            ? 'text-rose-600'
+                            : 'text-amber-600'
+                        }`}
+                      >
+                        {r.status}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={() => openModal(r)}
+                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
+                      >
+                        Proses / Setujui
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {selectedRecord && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setSelectedRecord(null)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-lg w-full space-y-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E83E8C] flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Verifikasi & Persetujuan Operasi Plastik
+                  </h3>
+                  <p className="text-[11px] text-slate-500">Pasien: {selectedRecord.fullName}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedRecord(null)}
+                className="text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 text-xs text-slate-700 bg-[#FFF5F8]/60 p-4 rounded-xl border border-pink-100">
+              <p>
+                <strong>Nama Pasien:</strong> {selectedRecord.fullName}
+              </p>
+              <p>
+                <strong>Tanggal Lahir:</strong> {selectedRecord.birthDate} ({selectedRecord.age} th)
+              </p>
+              <p>
+                <strong>Gender:</strong> {selectedRecord.gender}
+              </p>
+              <p>
+                <strong>Pekerjaan:</strong> {selectedRecord.occupation}
+              </p>
+              <p>
+                <strong>No HP / IC:</strong> {selectedRecord.phoneOrIC}
+              </p>
+              <p>
+                <strong>Status Saat Ini:</strong> {selectedRecord.status}
+              </p>
+              <p className="col-span-2">
+                <strong>Prosedur Operasi:</strong> {selectedRecord.surgeryType}
+              </p>
+              <p className="col-span-2">
+                <strong>Lampiran KTP:</strong> {selectedRecord.idPhotoName}
+              </p>
+              <p className="col-span-2">
+                <strong>Dokumen SKB (Kepolisian) / SKWB:</strong> {selectedRecord.legalDocName}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-800">
+                Nama Dokter yang Menangani *
+              </label>
+              <input
+                type="text"
+                required
+                value={handlingDoctor}
+                onChange={(e) => setHandlingDoctor(e.target.value)}
+                placeholder="Masukkan atau pilih nama dokter yang menangani..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#E83E8C] focus:outline-none"
+              />
+              {activeDoctors.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <span className="text-[11px] text-slate-400 self-center mr-1">Pilih Cepat:</span>
+                  {activeDoctors.map((doc) => (
+                    <button
+                      key={doc.id}
+                      type="button"
+                      onClick={() => setHandlingDoctor(doc.name)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
+                        handlingDoctor === doc.name
+                          ? 'bg-[#E83E8C] text-white border-[#E83E8C]'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-pink-300'
+                      }`}
+                    >
+                      {doc.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-pink-100">
+              <button
+                type="button"
+                onClick={() => {
+                  updatePlasticSurgeryStatus(
+                    selectedRecord.id,
+                    'Rejected',
+                    handlingDoctor || currentUser?.name || '-'
+                  );
+                  setSelectedRecord(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold cursor-pointer"
+              >
+                Tolak (Reject)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!handlingDoctor.trim()) return;
+                  updatePlasticSurgeryStatus(selectedRecord.id, 'Completed', handlingDoctor);
+                  setSelectedRecord(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer"
+              >
+                Tandai Selesai (Completed)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!handlingDoctor.trim()) return;
+                  updatePlasticSurgeryStatus(selectedRecord.id, 'Approved', handlingDoctor);
+                  setSelectedRecord(null);
+                }}
+                className="px-5 py-2 rounded-xl bg-[#20C997] hover:opacity-95 text-white text-xs font-bold cursor-pointer"
+              >
+                Setujui Operasi Plastik (Approve)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+

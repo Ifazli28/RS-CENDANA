@@ -161,6 +161,7 @@ export function subscribeToPortalRecords(
     'duty_log',
     'payroll_record',
     'regulation_item',
+    'role_salary_config',
   ];
 
   let recordsBatch1: CloudPortalRecord[] = [];

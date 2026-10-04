@@ -506,7 +506,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 e.preventDefault();
                 if (!plasticForm.idPhotoName || !plasticForm.legalDocName) {
                   setPlasticUploadError(
-                    'Harap unggah Foto Identitas/KTP dan Dokumen Legal Declaration sebelum mengirim.'
+                    'Harap unggah Foto Identitas/KTP dan Dokumen SKB (Kepolisian) atau SKWB sebelum mengirim.'
                   );
                   return;
                 }
@@ -643,11 +643,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Upload Document / Legal Declaration (PDF/JPG) *
+                  Upload Dokumen SKB (Kepolisian) atau SKWB (PDF/JPG/PNG) *
                 </label>
                 <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
                   <span className="truncate text-slate-700">
-                    {plasticForm.legalDocName || 'Pilih dokumen legal...'}
+                    {plasticForm.legalDocName || 'Pilih dokumen SKB / SKWB...'}
                   </span>
                   <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
                   <input
