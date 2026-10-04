@@ -1,0 +1,39 @@
+{
+  "entities": {
+    "PortalRecord": {
+      "title": "PortalRecord",
+      "description": "Structured document for Portal Layanan Paramedic Cendana modules (Staff, SKS, Psychology, PlasticSurgery, ColorBlind, Appointment, Complaint, Recruitment, Voting, Leave, Resign, SOP, Regulation, Duty, Payroll).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "module": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "status": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "updatedAt": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "module", "title", "status", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/portal_records/{recordId}": {
+      "schema": { "$ref": "#/entities/PortalRecord" },
+      "description": "Stores synchronized records across all modules of Portal Layanan Paramedic Cendana."
+    }
+  }
+}

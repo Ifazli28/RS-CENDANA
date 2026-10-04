@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email == 'ihwanfazli@gmail.com' &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isValidPortalRecord(data) {
+      return data.keys().hasAll(['id', 'module', 'title', 'status', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'module', 'title', 'status', 'updatedAt', 'payload']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.module is string && data.module.size() >= 1 && data.module.size() <= 64 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 300 &&
+        data.status is string && data.status.size() >= 1 && data.status.size() <= 64 &&
+        data.updatedAt is string && data.updatedAt.size() >= 1 && data.updatedAt.size() <= 64 &&
+        (!('payload' in data) || (data.payload is map && data.payload.keys().size() <= 50));
+    }
+
+    // Connection health check endpoint
+    match /test/connection {
+      allow get: if true;
+      allow list, create, update, delete: if false;
+    }
+
+    // Main Portal Records Collection
+    match /portal_records/{recordId} {
+      // Public and Staff read access for portal records
+      allow get: if isValidId(recordId);
+      allow list: if resource.data.module is string && resource.data.module.size() <= 64;
+
+      // Public form submissions & Staff synchronization writes with strict schema validation
+      allow create: if isValidId(recordId) &&
+        isValidPortalRecord(incoming()) &&
+        incoming().id == recordId;
+
+      allow update: if isValidId(recordId) &&
+        isValidPortalRecord(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().module == existing().module &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'status', 'updatedAt', 'payload']) ||
+          isBootstrappedAdmin()
+        );
+
+      allow delete: if isValidId(recordId) && isBootstrappedAdmin();
+    }
+  }
+}
