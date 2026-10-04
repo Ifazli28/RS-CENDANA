@@ -134,40 +134,73 @@ export async function syncRecordToFirestore(
 }
 
 /**
- * Real-time listener to keep all clients/devices in sync when deployed on Vercel
+ * Real-time listener to keep ALL public & internal staff modules in sync across devices
+ * Note: Firestore 'in' operator supports max 30 values; we split into 2 queries to stay well within limits.
  */
 export function subscribeToPortalRecords(
   onRecordsUpdate: (records: CloudPortalRecord[]) => void
 ) {
   const path = 'portal_records';
-  const q = query(
-    collection(db, path),
-    where('module', 'in', [
-      'staff_account',
-      'sks_record',
-      'psychology_record',
-      'plastic_surgery',
-      'color_blind_result',
-      'appointment',
-      'complaint',
-      'recruitment',
-      'recruitment_config',
-      'leave_request',
-      'resign_request',
-    ])
-  );
+  const batch1Modules = [
+    'staff_account',
+    'sks_record',
+    'psychology_record',
+    'plastic_surgery',
+    'color_blind_result',
+    'appointment',
+    'complaint',
+    'recruitment',
+    'recruitment_config',
+  ];
+  const batch2Modules = [
+    'leave_request',
+    'resign_request',
+    'voting_poll',
+    'doctor_schedule',
+    'sop_document',
+    'duty_log',
+    'payroll_record',
+    'regulation_item',
+  ];
 
-  return onSnapshot(
-    q,
+  let recordsBatch1: CloudPortalRecord[] = [];
+  let recordsBatch2: CloudPortalRecord[] = [];
+
+  const q1 = query(collection(db, path), where('module', 'in', batch1Modules));
+  const q2 = query(collection(db, path), where('module', 'in', batch2Modules));
+
+  const unsub1 = onSnapshot(
+    q1,
     (snapshot) => {
       const items: CloudPortalRecord[] = [];
       snapshot.forEach((docSnap) => {
         items.push(docSnap.data() as CloudPortalRecord);
       });
-      onRecordsUpdate(items);
+      recordsBatch1 = items;
+      onRecordsUpdate([...recordsBatch1, ...recordsBatch2]);
     },
     (error) => {
       handleFirestoreError(error, OperationType.GET, path);
     }
   );
+
+  const unsub2 = onSnapshot(
+    q2,
+    (snapshot) => {
+      const items: CloudPortalRecord[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as CloudPortalRecord);
+      });
+      recordsBatch2 = items;
+      onRecordsUpdate([...recordsBatch1, ...recordsBatch2]);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
+  );
+
+  return () => {
+    unsub1();
+    unsub2();
+  };
 }

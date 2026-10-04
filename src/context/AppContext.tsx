@@ -106,42 +106,131 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+function loadLocal<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [staffAccounts, setStaffAccounts] = useState<StaffAccount[]>(() => {
-    const saved = localStorage.getItem('cendana_staff_v1');
-    return saved ? JSON.parse(saved) : INITIAL_STAFF_ACCOUNTS;
-  });
+  const [staffAccounts, setStaffAccounts] = useState<StaffAccount[]>(() =>
+    loadLocal('cendana_staff_v1', INITIAL_STAFF_ACCOUNTS)
+  );
   const [currentUserId, setCurrentUserId] = useState<string | null>(() =>
     localStorage.getItem('cendana_current_user_id_v1')
   );
-  const [doctorSchedules, setDoctorSchedules] = useState<DoctorSchedule[]>(INITIAL_DOCTOR_SCHEDULES);
-  const [sksRecords, setSksRecords] = useState<SKSRecord[]>(INITIAL_SKS_RECORDS);
-  const [psychologyRecords, setPsychologyRecords] = useState<PsychologyRecord[]>(INITIAL_PSYCHOLOGY_RECORDS);
-  const [plasticSurgeryRecords, setPlasticSurgeryRecords] = useState<PlasticSurgeryRecord[]>(INITIAL_PLASTIC_SURGERY_RECORDS);
-  const [colorBlindResults, setColorBlindResults] = useState<ColorBlindResult[]>(INITIAL_COLOR_BLIND_RESULTS);
-  const [appointments, setAppointments] = useState<AppointmentRecord[]>(INITIAL_APPOINTMENTS);
-  const [complaints, setComplaints] = useState<ComplaintRecord[]>(INITIAL_COMPLAINTS);
-  const [recruitmentStatus, setRecruitmentStatus] = useState<'OPEN' | 'CLOSED'>('OPEN');
-  const [recruitmentApplicants, setRecruitmentApplicants] = useState<RecruitmentApplicant[]>(INITIAL_RECRUITMENT_APPLICANTS);
-  const [votingPolls, setVotingPolls] = useState<VotingPoll[]>(INITIAL_VOTING_POLLS);
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(INITIAL_LEAVE_REQUESTS);
-  const [resignRequests, setResignRequests] = useState<ResignRequest[]>(INITIAL_RESIGN_REQUESTS);
-  const [sopDocuments, setSopDocuments] = useState<SOPDocument[]>(INITIAL_SOP_DOCUMENTS);
-  const [regulations, setRegulations] = useState<RegulationItem[]>(INITIAL_REGULATIONS);
-  const [dutyLogs, setDutyLogs] = useState<DutyLog[]>(INITIAL_DUTY_LOGS);
-  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>(INITIAL_PAYROLL_RECORDS);
+  const [doctorSchedules, setDoctorSchedules] = useState<DoctorSchedule[]>(() =>
+    loadLocal('cendana_schedules_v1', INITIAL_DOCTOR_SCHEDULES)
+  );
+  const [sksRecords, setSksRecords] = useState<SKSRecord[]>(() =>
+    loadLocal('cendana_sks_v1', INITIAL_SKS_RECORDS)
+  );
+  const [psychologyRecords, setPsychologyRecords] = useState<PsychologyRecord[]>(() =>
+    loadLocal('cendana_psy_v1', INITIAL_PSYCHOLOGY_RECORDS)
+  );
+  const [plasticSurgeryRecords, setPlasticSurgeryRecords] = useState<PlasticSurgeryRecord[]>(() =>
+    loadLocal('cendana_pls_v1', INITIAL_PLASTIC_SURGERY_RECORDS)
+  );
+  const [colorBlindResults, setColorBlindResults] = useState<ColorBlindResult[]>(() =>
+    loadLocal('cendana_cb_v1', INITIAL_COLOR_BLIND_RESULTS)
+  );
+  const [appointments, setAppointments] = useState<AppointmentRecord[]>(() =>
+    loadLocal('cendana_apt_v1', INITIAL_APPOINTMENTS)
+  );
+  const [complaints, setComplaints] = useState<ComplaintRecord[]>(() =>
+    loadLocal('cendana_cmp_v1', INITIAL_COMPLAINTS)
+  );
+  const [recruitmentStatus, setRecruitmentStatus] = useState<'OPEN' | 'CLOSED'>(() =>
+    loadLocal('cendana_rec_status_v1', 'OPEN')
+  );
+  const [recruitmentApplicants, setRecruitmentApplicants] = useState<RecruitmentApplicant[]>(() =>
+    loadLocal('cendana_rec_app_v1', INITIAL_RECRUITMENT_APPLICANTS)
+  );
+  const [votingPolls, setVotingPolls] = useState<VotingPoll[]>(() =>
+    loadLocal('cendana_votes_v1', INITIAL_VOTING_POLLS)
+  );
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() =>
+    loadLocal('cendana_leaves_v1', INITIAL_LEAVE_REQUESTS)
+  );
+  const [resignRequests, setResignRequests] = useState<ResignRequest[]>(() =>
+    loadLocal('cendana_resigns_v1', INITIAL_RESIGN_REQUESTS)
+  );
+  const [sopDocuments, setSopDocuments] = useState<SOPDocument[]>(() =>
+    loadLocal('cendana_sops_v1', INITIAL_SOP_DOCUMENTS)
+  );
+  const [regulations, setRegulations] = useState<RegulationItem[]>(() =>
+    loadLocal('cendana_regs_v1', INITIAL_REGULATIONS)
+  );
+  const [dutyLogs, setDutyLogs] = useState<DutyLog[]>(() =>
+    loadLocal('cendana_duties_v1', INITIAL_DUTY_LOGS)
+  );
+  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>(() =>
+    loadLocal('cendana_payrolls_v1', INITIAL_PAYROLL_RECORDS)
+  );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
+  // LocalStorage persistence for all modules
   useEffect(() => {
     localStorage.setItem('cendana_staff_v1', JSON.stringify(staffAccounts));
   }, [staffAccounts]);
+  useEffect(() => {
+    localStorage.setItem('cendana_schedules_v1', JSON.stringify(doctorSchedules));
+  }, [doctorSchedules]);
+  useEffect(() => {
+    localStorage.setItem('cendana_sks_v1', JSON.stringify(sksRecords));
+  }, [sksRecords]);
+  useEffect(() => {
+    localStorage.setItem('cendana_psy_v1', JSON.stringify(psychologyRecords));
+  }, [psychologyRecords]);
+  useEffect(() => {
+    localStorage.setItem('cendana_pls_v1', JSON.stringify(plasticSurgeryRecords));
+  }, [plasticSurgeryRecords]);
+  useEffect(() => {
+    localStorage.setItem('cendana_cb_v1', JSON.stringify(colorBlindResults));
+  }, [colorBlindResults]);
+  useEffect(() => {
+    localStorage.setItem('cendana_apt_v1', JSON.stringify(appointments));
+  }, [appointments]);
+  useEffect(() => {
+    localStorage.setItem('cendana_cmp_v1', JSON.stringify(complaints));
+  }, [complaints]);
+  useEffect(() => {
+    localStorage.setItem('cendana_rec_status_v1', JSON.stringify(recruitmentStatus));
+  }, [recruitmentStatus]);
+  useEffect(() => {
+    localStorage.setItem('cendana_rec_app_v1', JSON.stringify(recruitmentApplicants));
+  }, [recruitmentApplicants]);
+  useEffect(() => {
+    localStorage.setItem('cendana_votes_v1', JSON.stringify(votingPolls));
+  }, [votingPolls]);
+  useEffect(() => {
+    localStorage.setItem('cendana_leaves_v1', JSON.stringify(leaveRequests));
+  }, [leaveRequests]);
+  useEffect(() => {
+    localStorage.setItem('cendana_resigns_v1', JSON.stringify(resignRequests));
+  }, [resignRequests]);
+  useEffect(() => {
+    localStorage.setItem('cendana_sops_v1', JSON.stringify(sopDocuments));
+  }, [sopDocuments]);
+  useEffect(() => {
+    localStorage.setItem('cendana_regs_v1', JSON.stringify(regulations));
+  }, [regulations]);
+  useEffect(() => {
+    localStorage.setItem('cendana_duties_v1', JSON.stringify(dutyLogs));
+  }, [dutyLogs]);
+  useEffect(() => {
+    localStorage.setItem('cendana_payrolls_v1', JSON.stringify(payrollRecords));
+  }, [payrollRecords]);
 
   useEffect(() => {
     if (currentUserId) localStorage.setItem('cendana_current_user_id_v1', currentUserId);
     else localStorage.removeItem('cendana_current_user_id_v1');
   }, [currentUserId]);
 
-  // Real-time synchronization from Cloud Firestore across devices / Vercel deployments
+  // Real-time synchronization from Cloud Firestore across all public & internal staff modules
   useEffect(() => {
     const unsubscribe = subscribeToPortalRecords((cloudRecords) => {
       if (!cloudRecords.length) return;
@@ -149,6 +238,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cloudRecords.forEach((docItem) => {
         const p = docItem.payload || {};
         switch (docItem.module) {
+          case 'staff_account': {
+            const stItem = p as unknown as StaffAccount;
+            if (stItem && stItem.id) {
+              if (docItem.status === 'DELETED') {
+                setStaffAccounts((prev) => prev.filter((x) => x.id !== stItem.id));
+              } else {
+                setStaffAccounts((prev) => {
+                  const exists = prev.some((x) => x.id === stItem.id);
+                  if (exists) {
+                    return prev.map((x) => (x.id === stItem.id ? { ...x, ...stItem } : x));
+                  }
+                  return [stItem, ...prev];
+                });
+              }
+            }
+            break;
+          }
           case 'recruitment_config': {
             if (docItem.status === 'OPEN' || docItem.status === 'CLOSED') {
               setRecruitmentStatus(docItem.status);
@@ -163,7 +269,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (exists) {
                   return prev.map((x) =>
                     x.id === recItem.id
-                      ? { ...x, ...recItem, status: (docItem.status as RecruitmentApplicant['status']) || recItem.status }
+                      ? {
+                          ...x,
+                          ...recItem,
+                          status: (docItem.status as RecruitmentApplicant['status']) || recItem.status,
+                        }
                       : x
                   );
                 }
@@ -197,7 +307,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (exists) {
                   return prev.map((x) =>
                     x.id === psyItem.id
-                      ? { ...x, ...psyItem, status: (docItem.status as PsychologyRecord['status']) || psyItem.status }
+                      ? {
+                          ...x,
+                          ...psyItem,
+                          status: (docItem.status as PsychologyRecord['status']) || psyItem.status,
+                        }
                       : x
                   );
                 }
@@ -211,7 +325,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (plsItem && plsItem.id) {
               setPlasticSurgeryRecords((prev) => {
                 const exists = prev.some((x) => x.id === plsItem.id);
-                return exists ? prev.map((x) => (x.id === plsItem.id ? { ...x, ...plsItem } : x)) : [plsItem, ...prev];
+                return exists
+                  ? prev.map((x) => (x.id === plsItem.id ? { ...x, ...plsItem } : x))
+                  : [plsItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'color_blind_result': {
+            const cbItem = p as unknown as ColorBlindResult;
+            if (cbItem && cbItem.id) {
+              setColorBlindResults((prev) => {
+                const exists = prev.some((x) => x.id === cbItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === cbItem.id ? { ...x, ...cbItem } : x))
+                  : [cbItem, ...prev];
               });
             }
             break;
@@ -224,7 +352,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (exists) {
                   return prev.map((x) =>
                     x.id === aptItem.id
-                      ? { ...x, ...aptItem, status: (docItem.status as AppointmentRecord['status']) || aptItem.status }
+                      ? {
+                          ...x,
+                          ...aptItem,
+                          status: (docItem.status as AppointmentRecord['status']) || aptItem.status,
+                        }
                       : x
                   );
                 }
@@ -241,11 +373,115 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (exists) {
                   return prev.map((x) =>
                     x.id === cmpItem.id
-                      ? { ...x, ...cmpItem, status: (docItem.status as ComplaintRecord['status']) || cmpItem.status }
+                      ? {
+                          ...x,
+                          ...cmpItem,
+                          status: (docItem.status as ComplaintRecord['status']) || cmpItem.status,
+                        }
                       : x
                   );
                 }
                 return [cmpItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'leave_request': {
+            const lvItem = p as unknown as LeaveRequest;
+            if (lvItem && lvItem.id) {
+              setLeaveRequests((prev) => {
+                const exists = prev.some((x) => x.id === lvItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === lvItem.id ? { ...x, ...lvItem } : x))
+                  : [lvItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'resign_request': {
+            const rsgItem = p as unknown as ResignRequest;
+            if (rsgItem && rsgItem.id) {
+              setResignRequests((prev) => {
+                const exists = prev.some((x) => x.id === rsgItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === rsgItem.id ? { ...x, ...rsgItem } : x))
+                  : [rsgItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'voting_poll': {
+            const pollItem = p as unknown as VotingPoll;
+            if (pollItem && pollItem.id) {
+              setVotingPolls((prev) => {
+                const exists = prev.some((x) => x.id === pollItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === pollItem.id ? { ...x, ...pollItem } : x))
+                  : [pollItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'doctor_schedule': {
+            const schItem = p as unknown as DoctorSchedule;
+            if (schItem && schItem.id) {
+              if (docItem.status === 'DELETED') {
+                setDoctorSchedules((prev) => prev.filter((x) => x.id !== schItem.id));
+              } else {
+                setDoctorSchedules((prev) => {
+                  const exists = prev.some((x) => x.id === schItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === schItem.id ? { ...x, ...schItem } : x))
+                    : [schItem, ...prev];
+                });
+              }
+            }
+            break;
+          }
+          case 'sop_document': {
+            const sopItem = p as unknown as SOPDocument;
+            if (sopItem && sopItem.id) {
+              setSopDocuments((prev) => {
+                const exists = prev.some((x) => x.id === sopItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === sopItem.id ? { ...x, ...sopItem } : x))
+                  : [sopItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'duty_log': {
+            const dutyItem = p as unknown as DutyLog;
+            if (dutyItem && dutyItem.id) {
+              setDutyLogs((prev) => {
+                const exists = prev.some((x) => x.id === dutyItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === dutyItem.id ? { ...x, ...dutyItem } : x))
+                  : [dutyItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'payroll_record': {
+            const payItem = p as unknown as PayrollRecord;
+            if (payItem && payItem.id) {
+              setPayrollRecords((prev) => {
+                const exists = prev.some((x) => x.id === payItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === payItem.id ? { ...x, ...payItem } : x))
+                  : [payItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'regulation_item': {
+            const regItem = p as unknown as RegulationItem;
+            if (regItem && regItem.id) {
+              setRegulations((prev) => {
+                const exists = prev.some((x) => x.id === regItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === regItem.id ? { ...x, ...regItem } : x))
+                  : [regItem, ...prev];
               });
             }
             break;
@@ -325,12 +561,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       registeredAt: new Date().toISOString().slice(0, 10),
     };
     setStaffAccounts((prev) => [newAcc, ...prev]);
-    void syncRecordToFirestore(newAcc.id, 'staff_account', newAcc.name, newAcc.status, {
-      email: newAcc.email,
-      role: newAcc.role,
-      level: newAcc.level,
-      registeredAt: newAcc.registeredAt,
-    });
+    void syncRecordToFirestore(newAcc.id, 'staff_account', newAcc.name, newAcc.status, { ...newAcc });
     addToast('info', 'Registrasi Berhasil (Pending Approval)', 'Akun Anda masih menunggu persetujuan administrator.');
     return {
       success: true,
@@ -375,12 +606,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const id = `cb-${Date.now()}`;
     const rec: ColorBlindResult = { ...data, id, testDate: nowFormatted() };
     setColorBlindResults((prev) => [rec, ...prev]);
-    void syncRecordToFirestore(id, 'color_blind_result', data.fullName, data.category, {
-      scorePercentage: data.scorePercentage,
-      correctCount: data.correctCount,
-      wrongCount: data.wrongCount,
-      category: data.category,
-    });
+    void syncRecordToFirestore(id, 'color_blind_result', data.fullName, data.category, { ...rec });
     addToast('success', 'Hasil Tes Buta Warna Disimpan', `Hasil tes ${data.fullName} (${data.category}) direkam ke Database.`);
   };
 
@@ -410,14 +636,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateProfileAvatar = (avatarUrl: string) => {
     if (!currentUser) return;
-    setStaffAccounts((prev) => prev.map((s) => (s.id === currentUser.id ? { ...s, avatarUrl } : s)));
-    addToast('success', 'Foto Profil Diperbarui', 'Foto profil JPG Anda berhasil disimpan.');
+    setStaffAccounts((prev) =>
+      prev.map((s) => {
+        if (s.id === currentUser.id) {
+          const updated = { ...s, avatarUrl };
+          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+          return updated;
+        }
+        return s;
+      })
+    );
+    addToast('success', 'Foto Profil Diperbarui', 'Foto profil Anda berhasil disimpan ke Database.');
   };
 
   const updateProfileName = (name: string, bio?: string) => {
     if (!currentUser) return;
-    setStaffAccounts((prev) => prev.map((s) => (s.id === currentUser.id ? { ...s, name, bio: bio ?? s.bio } : s)));
-    addToast('success', 'Profil Diperbarui', 'Data profil Anda berhasil diperbarui.');
+    setStaffAccounts((prev) =>
+      prev.map((s) => {
+        if (s.id === currentUser.id) {
+          const updated = { ...s, name, bio: bio ?? s.bio };
+          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+          return updated;
+        }
+        return s;
+      })
+    );
+    addToast('success', 'Profil Diperbarui', 'Data profil Anda berhasil diperbarui di Database.');
   };
 
   const changePassword = (currentPassword: string, newPassword: string) => {
@@ -426,8 +670,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addToast('error', 'Password Salah', 'Password saat ini tidak sesuai.');
       return { success: false, message: 'Password saat ini tidak sesuai.' };
     }
-    setStaffAccounts((prev) => prev.map((s) => (s.id === currentUser.id ? { ...s, password: newPassword } : s)));
-    addToast('success', 'Password Diperbarui', 'Password akun Anda telah berhasil diganti.');
+    setStaffAccounts((prev) =>
+      prev.map((s) => {
+        if (s.id === currentUser.id) {
+          const updated = { ...s, password: newPassword };
+          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+          return updated;
+        }
+        return s;
+      })
+    );
+    addToast('success', 'Password Diperbarui', 'Password akun Anda telah berhasil diganti di Database.');
     return { success: true, message: 'Password berhasil diperbarui.' };
   };
 
@@ -437,16 +690,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addToast('error', 'Password Salah', 'Password saat ini tidak sesuai.');
       return { success: false, message: 'Password saat ini tidak sesuai.' };
     }
-    setStaffAccounts((prev) => prev.map((s) => (s.id === currentUser.id ? { ...s, email: newEmail.trim() } : s)));
-    addToast('success', 'Email Diperbarui', `Email berhasil diubah menjadi ${newEmail}.`);
+    setStaffAccounts((prev) =>
+      prev.map((s) => {
+        if (s.id === currentUser.id) {
+          const updated = { ...s, email: newEmail.trim() };
+          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+          return updated;
+        }
+        return s;
+      })
+    );
+    addToast('success', 'Email Diperbarui', `Email berhasil diubah menjadi ${newEmail} di Database.`);
     return { success: true, message: 'Email berhasil diperbarui.' };
   };
 
   const approveOrRejectAccount = (accountId: string, action: 'Approve' | 'Reject') => {
     if (!currentUser || currentUser.level < 7 || accountId === currentUser.id) return;
     const newStatus: AccountStatus = action === 'Approve' ? 'Active' : 'Rejected';
-    setStaffAccounts((prev) => prev.map((s) => (s.id === accountId ? { ...s, status: newStatus } : s)));
-    addToast(action === 'Approve' ? 'success' : 'warning', `Akun ${newStatus}`, `Status akun diubah menjadi ${newStatus}.`);
+    setStaffAccounts((prev) =>
+      prev.map((s) => {
+        if (s.id === accountId) {
+          const updated = { ...s, status: newStatus };
+          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+          return updated;
+        }
+        return s;
+      })
+    );
+    addToast(action === 'Approve' ? 'success' : 'warning', `Akun ${newStatus}`, `Status akun diubah menjadi ${newStatus} di Database.`);
   };
 
   const updateStaffRoleAndInfo = (staffId: string, newRole: RoleName, newName: string, newSpecialty: string) => {
@@ -457,24 +728,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
     setStaffAccounts((prev) =>
-      prev.map((s) => (s.id === staffId ? { ...s, role: newRole, level: newLevel, name: newName, specialty: newSpecialty } : s))
+      prev.map((s) => {
+        if (s.id === staffId) {
+          const updated = { ...s, role: newRole, level: newLevel, name: newName, specialty: newSpecialty };
+          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+          return updated;
+        }
+        return s;
+      })
     );
     setDutyLogs((prev) => prev.map((log) => (log.staffId === staffId ? { ...log, staffName: newName, role: newRole } : log)));
     setPayrollRecords((prev) => prev.map((pay) => (pay.staffId === staffId ? { ...pay, staffName: newName, role: newRole } : pay)));
     setDoctorSchedules((prev) => prev.map((sch) => (sch.doctorId === staffId ? { ...sch, doctorName: newName, doctorRole: newRole } : sch)));
-    addToast('success', 'Jabatan Staff Diperbarui', `Jabatan menjadi ${newRole} (Level ${newLevel}) & RBAC diperbarui.`);
+    addToast('success', 'Jabatan Staff Diperbarui', `Jabatan menjadi ${newRole} (Level ${newLevel}) & RBAC diperbarui di Database.`);
   };
 
   const deactivateStaff = (staffId: string) => {
     if (!currentUser || currentUser.level < 7 || staffId === currentUser.id) return;
-    setStaffAccounts((prev) => prev.map((s) => (s.id === staffId ? { ...s, status: 'Inactive' } : s)));
-    addToast('warning', 'Staff Dinonaktifkan', 'Status staff diubah ke Inactive. Data historis tetap aman.');
+    setStaffAccounts((prev) =>
+      prev.map((s) => {
+        if (s.id === staffId) {
+          const updated: StaffAccount = { ...s, status: 'Inactive' };
+          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+          return updated;
+        }
+        return s;
+      })
+    );
+    addToast('warning', 'Staff Dinonaktifkan', 'Status staff diubah ke Inactive di Database. Data historis tetap aman.');
   };
 
   const updateAccountStatus = (staffId: string, newStatus: AccountStatus) => {
     if (!currentUser || currentUser.level < 7) return;
-    setStaffAccounts((prev) => prev.map((s) => (s.id === staffId ? { ...s, status: newStatus } : s)));
-    addToast('info', 'Status Akun Diperbarui', `Status akun diubah menjadi ${newStatus}.`);
+    setStaffAccounts((prev) =>
+      prev.map((s) => {
+        if (s.id === staffId) {
+          const updated = { ...s, status: newStatus };
+          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+          return updated;
+        }
+        return s;
+      })
+    );
+    addToast('info', 'Status Akun Diperbarui', `Status akun diubah menjadi ${newStatus} di Database.`);
   };
 
   const deleteInactiveAccount = (staffId: string) => {
@@ -482,42 +778,87 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const target = staffAccounts.find((s) => s.id === staffId);
     if (!target || target.status !== 'Inactive') return;
     setStaffAccounts((prev) => prev.filter((s) => s.id !== staffId));
-    addToast('success', 'Akun Inactive Dihapus', `Akun ${target.name} dihapus. Data historis duty/payroll tetap terjaga.`);
+    void syncRecordToFirestore(target.id, 'staff_account', target.name, 'DELETED', { id: target.id });
+    addToast('success', 'Akun Inactive Dihapus', `Akun ${target.name} dihapus dari Database. Data historis tetap terjaga.`);
   };
 
   const submitLeaveRequest = (data: Omit<LeaveRequest, 'id' | 'staffId' | 'staffName' | 'staffRole' | 'submittedAt' | 'status'>) => {
     if (!currentUser) return;
-    setLeaveRequests((prev) => [
-      { ...data, id: `lv-${Date.now()}`, staffId: currentUser.id, staffName: currentUser.name, staffRole: currentUser.role, submittedAt: new Date().toISOString().slice(0, 10), status: 'Pending' },
-      ...prev,
-    ]);
-    addToast('success', 'Pengajuan Cuti Terkirim', 'Permohonan cuti Anda menunggu persetujuan.');
+    const id = `lv-${Date.now()}`;
+    const newLeave: LeaveRequest = {
+      ...data,
+      id,
+      staffId: currentUser.id,
+      staffName: currentUser.name,
+      staffRole: currentUser.role,
+      submittedAt: new Date().toISOString().slice(0, 10),
+      status: 'Pending',
+    };
+    setLeaveRequests((prev) => [newLeave, ...prev]);
+    void syncRecordToFirestore(id, 'leave_request', `${currentUser.name} - ${data.leaveType}`, 'Pending', { ...newLeave });
+    addToast('success', 'Pengajuan Cuti Terkirim', 'Permohonan cuti Anda tersimpan di Database & menunggu persetujuan.');
   };
 
   const reviewLeaveRequest = (leaveId: string, status: 'Approved' | 'Rejected', rejectionReason?: string) => {
     if (!currentUser || currentUser.level < 7) return;
-    setLeaveRequests((prev) => prev.map((lv) => (lv.id === leaveId ? { ...lv, status, rejectionReason, reviewedBy: currentUser.name } : lv)));
-    addToast(status === 'Approved' ? 'success' : 'warning', `Cuti ${status}`, `Pengajuan cuti telah ${status}.`);
+    setLeaveRequests((prev) =>
+      prev.map((lv) => {
+        if (lv.id === leaveId) {
+          const updated = { ...lv, status, rejectionReason, reviewedBy: currentUser.name };
+          void syncRecordToFirestore(leaveId, 'leave_request', `${updated.staffName} - ${updated.leaveType}`, status, {
+            ...updated,
+          });
+          return updated;
+        }
+        return lv;
+      })
+    );
+    addToast(status === 'Approved' ? 'success' : 'warning', `Cuti ${status}`, `Pengajuan cuti telah ${status} di Database.`);
   };
 
   const submitResignRequest = (data: Omit<ResignRequest, 'id' | 'staffId' | 'staffName' | 'staffRole' | 'status'>) => {
     if (!currentUser) return;
-    setResignRequests((prev) => [
-      { ...data, id: `rsg-${Date.now()}`, staffId: currentUser.id, staffName: currentUser.name, staffRole: currentUser.role, status: 'Pending' },
-      ...prev,
-    ]);
-    addToast('info', 'Pengajuan Resign Terkirim', 'Permohonan resign menunggu review Heads of Departments.');
+    const id = `rsg-${Date.now()}`;
+    const newResign: ResignRequest = {
+      ...data,
+      id,
+      staffId: currentUser.id,
+      staffName: currentUser.name,
+      staffRole: currentUser.role,
+      status: 'Pending',
+    };
+    setResignRequests((prev) => [newResign, ...prev]);
+    void syncRecordToFirestore(id, 'resign_request', `Resign - ${currentUser.name}`, 'Pending', { ...newResign });
+    addToast('info', 'Pengajuan Resign Terkirim', 'Permohonan resign tersimpan di Database & menunggu review Heads.');
   };
 
   const reviewResignRequest = (resignId: string, status: 'Approved' | 'Rejected', rejectionReason?: string) => {
     if (!currentUser || currentUser.level < 7) return;
     const target = resignRequests.find((r) => r.id === resignId);
-    setResignRequests((prev) => prev.map((r) => (r.id === resignId ? { ...r, status, rejectionReason, reviewedBy: currentUser.name } : r)));
+    setResignRequests((prev) =>
+      prev.map((r) => {
+        if (r.id === resignId) {
+          const updated = { ...r, status, rejectionReason, reviewedBy: currentUser.name };
+          void syncRecordToFirestore(resignId, 'resign_request', `Resign - ${updated.staffName}`, status, { ...updated });
+          return updated;
+        }
+        return r;
+      })
+    );
     if (status === 'Approved' && target) {
-      setStaffAccounts((prev) => prev.map((s) => (s.id === target.staffId ? { ...s, status: 'Inactive' } : s)));
-      addToast('success', 'Resign Disetujui', `Status ${target.staffName} menjadi Inactive. Data historis aman.`);
+      setStaffAccounts((prev) =>
+        prev.map((s) => {
+          if (s.id === target.staffId) {
+            const updatedStaff: StaffAccount = { ...s, status: 'Inactive' };
+            void syncRecordToFirestore(updatedStaff.id, 'staff_account', updatedStaff.name, 'Inactive', { ...updatedStaff });
+            return updatedStaff;
+          }
+          return s;
+        })
+      );
+      addToast('success', 'Resign Disetujui', `Status ${target.staffName} menjadi Inactive di Database. Data historis aman.`);
     } else {
-      addToast('warning', 'Resign Ditolak', 'Alasan penolakan disimpan.');
+      addToast('warning', 'Resign Ditolak', 'Alasan penolakan disimpan ke Database.');
     }
   };
 
@@ -526,28 +867,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setVotingPolls((prev) =>
       prev.map((poll) => {
         if (poll.id !== pollId || poll.options.some((o) => o.votes.includes(currentUser.id))) return poll;
-        return { ...poll, options: poll.options.map((o) => (o.id === optionId ? { ...o, votes: [...o.votes, currentUser.id] } : o)) };
+        const updated: VotingPoll = {
+          ...poll,
+          options: poll.options.map((o) => (o.id === optionId ? { ...o, votes: [...o.votes, currentUser.id] } : o)),
+        };
+        void syncRecordToFirestore(updated.id, 'voting_poll', updated.title, updated.status, { ...updated });
+        return updated;
       })
     );
-    addToast('success', 'Suara Direkam', 'Terima kasih atas suara Anda.');
+    addToast('success', 'Suara Direkam', 'Suara Anda telah disimpan ke Database.');
   };
 
   const createVotingPoll = (title: string, description: string, deadline: string, optionLabels: string[]) => {
     if (!currentUser || currentUser.level < 7) return;
-    setVotingPolls((prev) => [
-      {
-        id: `vote-${Date.now()}`,
-        title,
-        description,
-        deadline,
-        status: 'Open',
-        createdBy: currentUser.name,
-        createdAt: new Date().toISOString().slice(0, 10),
-        options: optionLabels.map((label, idx) => ({ id: `opt-${Date.now()}-${idx}`, label, votes: [] })),
-      },
-      ...prev,
-    ]);
-    addToast('success', 'Voting Baru Dibuat', `Voting "${title}" telah dibuka.`);
+    const id = `vote-${Date.now()}`;
+    const newPoll: VotingPoll = {
+      id,
+      title,
+      description,
+      deadline,
+      status: 'Open',
+      createdBy: currentUser.name,
+      createdAt: new Date().toISOString().slice(0, 10),
+      options: optionLabels.map((label, idx) => ({ id: `opt-${Date.now()}-${idx}`, label, votes: [] })),
+    };
+    setVotingPolls((prev) => [newPoll, ...prev]);
+    void syncRecordToFirestore(id, 'voting_poll', title, 'Open', { ...newPoll });
+    addToast('success', 'Voting Baru Dibuat', `Voting "${title}" telah dibuka dan disimpan di Database.`);
   };
 
   const toggleRecruitmentStatus = (status: 'OPEN' | 'CLOSED') => {
@@ -637,53 +983,98 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addDoctorSchedule = (data: Omit<DoctorSchedule, 'id'>) => {
     if (!currentUser || currentUser.level < 5) return;
-    setDoctorSchedules((prev) => [{ ...data, id: `sch-${Date.now()}` }, ...prev]);
-    addToast('success', 'Jadwal Dokter Ditambahkan', `Jadwal ${data.doctorName} tampil di halaman publik.`);
+    const id = `sch-${Date.now()}`;
+    const newSch: DoctorSchedule = { ...data, id };
+    setDoctorSchedules((prev) => [newSch, ...prev]);
+    void syncRecordToFirestore(id, 'doctor_schedule', data.doctorName, data.status, { ...newSch });
+    addToast('success', 'Jadwal Dokter Ditambahkan', `Jadwal ${data.doctorName} tersimpan di Database & tampil di publik.`);
   };
 
   const deleteDoctorSchedule = (id: string) => {
     if (!currentUser || currentUser.level < 5) return;
     setDoctorSchedules((prev) => prev.filter((s) => s.id !== id));
-    addToast('info', 'Jadwal Dihapus', 'Jadwal praktik dokter dihapus.');
+    void syncRecordToFirestore(id, 'doctor_schedule', id, 'DELETED', { id });
+    addToast('info', 'Jadwal Dihapus', 'Jadwal praktik dokter dihapus dari Database.');
   };
 
   const addOrUpdateSOP = (sop: Omit<SOPDocument, 'id' | 'updatedAt' | 'author'>, existingId?: string) => {
     if (!currentUser || currentUser.level < 7) return;
     const updatedAt = new Date().toISOString().slice(0, 10);
     if (existingId) {
-      setSopDocuments((prev) => prev.map((d) => (d.id === existingId ? { ...d, ...sop, updatedAt, author: currentUser.name } : d)));
+      setSopDocuments((prev) =>
+        prev.map((d) => {
+          if (d.id === existingId) {
+            const updated: SOPDocument = { ...d, ...sop, updatedAt, author: currentUser.name };
+            void syncRecordToFirestore(existingId, 'sop_document', updated.title, updated.version, { ...updated });
+            return updated;
+          }
+          return d;
+        })
+      );
     } else {
-      setSopDocuments((prev) => [{ ...sop, id: `sop-${Date.now()}`, updatedAt, author: currentUser.name }, ...prev]);
+      const id = `sop-${Date.now()}`;
+      const newSop: SOPDocument = { ...sop, id, updatedAt, author: currentUser.name };
+      setSopDocuments((prev) => [newSop, ...prev]);
+      void syncRecordToFirestore(id, 'sop_document', newSop.title, newSop.version, { ...newSop });
     }
-    addToast('success', 'SOP Medis Disimpan', `Dokumen "${sop.title}" telah disimpan.`);
+    addToast('success', 'SOP Medis Disimpan', `Dokumen "${sop.title}" telah disimpan ke Database.`);
   };
 
   const addDutyLogsBatch = (logs: Omit<DutyLog, 'id'>[]) => {
     if (!currentUser || currentUser.level < 7) return;
     const created: DutyLog[] = logs.map((l, idx) => ({ ...l, id: `duty-${Date.now()}-${idx}` }));
     setDutyLogs((prev) => [...created, ...prev]);
-    addToast('success', 'Log Duty Disimpan', `${created.length} sesi duty ditambahkan ke Rekap & Leaderboard.`);
+    created.forEach((dutyItem) => {
+      void syncRecordToFirestore(dutyItem.id, 'duty_log', dutyItem.staffName, dutyItem.weekKey, { ...dutyItem });
+    });
+    addToast('success', 'Log Duty Disimpan', `${created.length} sesi duty disimpan ke Database, Rekap & Leaderboard.`);
   };
 
   const addOrUpdatePayroll = (record: Omit<PayrollRecord, 'id'>, existingId?: string) => {
     if (!currentUser || currentUser.level < 7) return;
     if (existingId) {
-      setPayrollRecords((prev) => prev.map((p) => (p.id === existingId ? { ...record, id: existingId } : p)));
+      setPayrollRecords((prev) =>
+        prev.map((p) => {
+          if (p.id === existingId) {
+            const updated: PayrollRecord = { ...record, id: existingId };
+            void syncRecordToFirestore(existingId, 'payroll_record', updated.staffName, updated.paymentStatus, {
+              ...updated,
+            });
+            return updated;
+          }
+          return p;
+        })
+      );
     } else {
-      setPayrollRecords((prev) => [{ ...record, id: `pay-${Date.now()}` }, ...prev]);
+      const id = `pay-${Date.now()}`;
+      const newPay: PayrollRecord = { ...record, id };
+      setPayrollRecords((prev) => [newPay, ...prev]);
+      void syncRecordToFirestore(id, 'payroll_record', newPay.staffName, newPay.paymentStatus, { ...newPay });
     }
-    addToast('success', 'Payroll Disimpan', `Skema gaji ${record.staffName} berhasil disimpan.`);
+    addToast('success', 'Payroll Disimpan', `Skema gaji ${record.staffName} berhasil disimpan ke Database.`);
   };
 
   const addOrUpdateRegulation = (reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>, existingId?: string) => {
     if (!currentUser || currentUser.level < 7) return;
     const updatedAt = new Date().toISOString().slice(0, 10);
     if (existingId) {
-      setRegulations((prev) => prev.map((r) => (r.id === existingId ? { ...r, ...reg, updatedAt, updatedBy: currentUser.name } : r)));
+      setRegulations((prev) =>
+        prev.map((r) => {
+          if (r.id === existingId) {
+            const updated: RegulationItem = { ...r, ...reg, updatedAt, updatedBy: currentUser.name };
+            void syncRecordToFirestore(existingId, 'regulation_item', updated.title, updated.category, { ...updated });
+            return updated;
+          }
+          return r;
+        })
+      );
     } else {
-      setRegulations((prev) => [{ ...reg, id: `reg-${Date.now()}`, updatedAt, updatedBy: currentUser.name }, ...prev]);
+      const id = `reg-${Date.now()}`;
+      const newReg: RegulationItem = { ...reg, id, updatedAt, updatedBy: currentUser.name };
+      setRegulations((prev) => [newReg, ...prev]);
+      void syncRecordToFirestore(id, 'regulation_item', newReg.title, newReg.category, { ...newReg });
     }
-    addToast('success', 'Regulasi Diperbarui', `Regulasi "${reg.title}" telah disimpan.`);
+    addToast('success', 'Regulasi Diperbarui', `Regulasi "${reg.title}" telah disimpan ke Database.`);
   };
 
   return (
