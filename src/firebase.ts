@@ -162,6 +162,10 @@ export function subscribeToPortalRecords(
     'payroll_record',
     'regulation_item',
     'role_salary_config',
+    'skwb_claim',
+    'skwb_paket_sedang_claim',
+    'skwb_kartu_pasien_claim',
+    'skwb_oplas_claim',
   ];
 
   let recordsBatch1: CloudPortalRecord[] = [];

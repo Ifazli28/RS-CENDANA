@@ -454,7 +454,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
           </div>
 
           {/* 05 — Tes Psikologi */}
-          <div className="p-6 rounded-2xl bg-white border border-pink-100 shadow-xs flex flex-col justify-between space-y-5 md:col-span-2">
+          <div className="p-6 rounded-2xl bg-white border border-pink-100 shadow-xs flex flex-col justify-between space-y-5 lg:col-span-1">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono font-bold text-[#E83E8C]">05. Kesehatan Mental</span>
@@ -462,9 +462,8 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
               </div>
               <h3 className="text-xl font-bold text-slate-900">05 — Tes Psikologi</h3>
               <p className="text-sm text-slate-600">Pemeriksaan dan evaluasi kesehatan mental untuk:</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600">
-                <div>• Evaluasi mandiri</div>
-                <div>• Pekerjaan / rekrutmen</div>
+              <div className="grid grid-cols-1 gap-1.5 text-xs text-slate-600">
+                <div>• Evaluasi mandiri & rekrutmen</div>
                 <div>• Lisensi / izin khusus</div>
                 <div>• Rujukan konsultasi & terapi medis</div>
               </div>
@@ -474,6 +473,46 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
               className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
             >
               Daftar Tes Psikologi
+            </button>
+          </div>
+
+          {/* 06 — Klaim Benefit SKWB */}
+          <div
+            onClick={() => setActiveModal('skwb_claim')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setActiveModal('skwb_claim');
+              }
+            }}
+            className="p-6 rounded-2xl bg-white border border-pink-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition flex flex-col justify-between space-y-5 lg:col-span-1 cursor-pointer group"
+          >
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-[#20C997]">06. Layanan Warga Baru</span>
+                <ShieldCheck className="w-5 h-5 text-[#20C997] group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">Klaim Benefit SKWB</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Pendaftaran & klaim benefit kesehatan resmi 7 hari bagi pemegang Surat Keterangan Warga Baru (SKWB):
+              </p>
+              <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4">
+                <li>Paket Sedang harian (Obat & Perban)</li>
+                <li>Diskon 50% Pembuatan Kartu Pasien</li>
+                <li>Free 1x Operasi Plastik (Oplas)</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveModal('skwb_claim');
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
+            >
+              Ajukan Klaim Benefit SKWB
             </button>
           </div>
         </div>

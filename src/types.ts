@@ -313,6 +313,57 @@ export interface RoleSalaryConfig {
   bonusPerStepAmount: number;  // Nominal Bonus per Kelipatan Jam ($)
 }
 
+export interface SKWBPaketSedangClaim {
+  id: string;
+  skwbClaimId: string;
+  claimDate: string; // YYYY-MM-DD
+  claimTime: string; // HH:mm
+  staffId: string;
+  staffName: string; // Snapshot nama staff pada saat transaksi
+  staffRole: RoleName; // Snapshot jabatan staff pada saat transaksi
+  status: 'Claimed';
+  createdAt: string;
+}
+
+export interface SKWBPatientCardClaim {
+  id: string;
+  skwbClaimId: string;
+  claimDate: string; // YYYY-MM-DD
+  claimTime: string; // HH:mm
+  staffId: string;
+  staffName: string; // Snapshot nama staff pada saat transaksi
+  staffRole: RoleName; // Snapshot jabatan staff pada saat transaksi
+  status: 'Claimed';
+  createdAt: string;
+}
+
+export interface SKWBOplasClaim {
+  id: string;
+  skwbClaimId: string;
+  claimDate: string; // YYYY-MM-DD
+  claimTime: string; // HH:mm
+  staffId: string;
+  staffName: string; // Snapshot nama staff pada saat transaksi
+  staffRole: RoleName; // Snapshot jabatan staff pada saat transaksi
+  status: 'Claimed';
+  createdAt: string;
+}
+
+export interface SKWBClaim {
+  id: string;
+  icName: string;
+  birthDate: string;      // YYYY-MM-DD
+  issueDate: string;      // Tanggal Terbit SKWB (YYYY-MM-DD)
+  startDate: string;      // Tanggal Mulai Benefit (= Tanggal Terbit SKWB)
+  endDate: string;        // Tanggal Berakhir Benefit (= Tanggal Terbit SKWB + 7 hari)
+  photoFileName: string;
+  photoFileSize: number;  // dalam bytes
+  photoDataUrl: string;   // Persistent image data URL stored in Firestore
+  status: 'Aktif' | 'Kadaluarsa';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ToastMessage {
   id: string;
   type: 'success' | 'error' | 'info' | 'warning';

@@ -28,7 +28,8 @@ export type PublicModalType =
   | 'doctor_schedule'
   | 'appointment'
   | 'regulation'
-  | 'recruitment';
+  | 'recruitment'
+  | 'skwb_claim';
 
 interface PublicModalsProps {
   activeModal: PublicModalType;
@@ -54,7 +55,104 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     submitPlasticSurgery,
     submitAppointment,
     submitRecruitment,
+    submitSKWBClaim,
   } = useApp();
+
+  // SKWB Benefit Claim Form State
+  const [skwbForm, setSkwbForm] = useState({
+    icName: '',
+    birthDate: '',
+    issueDate: new Date().toISOString().slice(0, 10),
+    photoFileName: '',
+    photoFileSize: 0,
+    photoDataUrl: '',
+  });
+  const [skwbUploadError, setSkwbUploadError] = useState('');
+  const [skwbUploading, setSkwbUploading] = useState(false);
+  const [skwbSubmittedClaim, setSkwbSubmittedClaim] = useState<{
+    icName: string;
+    birthDate: string;
+    issueDate: string;
+    startDate: string;
+    endDate: string;
+    status: 'Aktif' | 'Kadaluarsa';
+  } | null>(null);
+
+  const handleSKWBImageUpload = (file: File) => {
+    setSkwbUploadError('');
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setSkwbUploadError('Format file tidak didukung. Harap unggah gambar JPG, JPEG, PNG, atau WEBP.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setSkwbUploadError('Ukuran file terlalu besar. Maksimal ukuran file foto SKWB adalah 5 MB.');
+      return;
+    }
+    setSkwbUploading(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 1100;
+        let width = img.width;
+        let height = img.height;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width > height) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          setSkwbForm((prev) => ({
+            ...prev,
+            photoFileName: file.name,
+            photoFileSize: file.size,
+            photoDataUrl: compressedDataUrl,
+          }));
+        } else {
+          setSkwbForm((prev) => ({
+            ...prev,
+            photoFileName: file.name,
+            photoFileSize: file.size,
+            photoDataUrl: String(reader.result || ''),
+          }));
+        }
+        setSkwbUploading(false);
+      };
+      img.onerror = () => {
+        setSkwbUploadError('Gagal memproses gambar. Pastikan file gambar tidak rusak.');
+        setSkwbUploading(false);
+      };
+      img.src = String(reader.result || '');
+    };
+    reader.onerror = () => {
+      setSkwbUploadError('Gagal membaca file gambar.');
+      setSkwbUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const computePreviewEndDate = (issueDateStr: string) => {
+    if (!issueDateStr) return '-';
+    const parts = issueDateStr.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return issueDateStr;
+    const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+    dt.setDate(dt.getDate() + 7);
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
   // SKS Form State
   const [sksForm, setSksForm] = useState({
@@ -1608,6 +1706,362 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                   >
                     Kirim Formulir Pendaftaran
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* 9. MODAL FORM KLAIM BENEFIT SKWB */}
+        {activeModal === 'skwb_claim' && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-pink-100 pb-4">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Klaim Benefit SKWB</h2>
+                <p className="text-xs text-slate-500">
+                  Formulir Pendaftaran & Klaim Benefit Kesehatan Surat Keterangan Warga Baru (Berlaku 7 Hari Sejak Tanggal Terbit SKWB)
+                </p>
+              </div>
+            </div>
+
+            {skwbSubmittedClaim ? (
+              <div className="p-6 sm:p-8 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-center space-y-5">
+                <div className="w-14 h-14 rounded-2xl bg-[#20C997] text-white flex items-center justify-center mx-auto shadow-sm">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Pengajuan Klaim Benefit SKWB Berhasil Disimpan!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto">
+                    Data SKWB Anda telah tersimpan secara terpusat di Database Paramedic Cendana. Silakan kunjungi petugas medis (Paramedic ke atas) untuk melakukan pengambilan benefit.
+                  </p>
+                </div>
+
+                <div className="max-w-md mx-auto bg-white rounded-xl border border-emerald-200 p-4 text-left space-y-2 text-xs">
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Nama IC:</span>
+                    <span className="font-bold text-slate-900">{skwbSubmittedClaim.icName}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Tanggal Lahir:</span>
+                    <span className="font-mono font-semibold text-slate-800">{skwbSubmittedClaim.birthDate}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Tanggal Terbit SKWB:</span>
+                    <span className="font-mono font-semibold text-slate-800">{skwbSubmittedClaim.issueDate}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Masa Berlaku Benefit (7 Hari):</span>
+                    <span className="font-mono font-bold text-[#D63384]">
+                      {skwbSubmittedClaim.startDate} s/d {skwbSubmittedClaim.endDate}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-slate-500">Status Benefit:</span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
+                        skwbSubmittedClaim.status === 'Aktif'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-rose-100 text-rose-700'
+                      }`}
+                    >
+                      {skwbSubmittedClaim.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap justify-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSkwbSubmittedClaim(null);
+                      setSkwbForm({
+                        icName: '',
+                        birthDate: '',
+                        issueDate: new Date().toISOString().slice(0, 10),
+                        photoFileName: '',
+                        photoFileSize: 0,
+                        photoDataUrl: '',
+                      });
+                    }}
+                    className="px-5 py-2.5 rounded-xl border border-pink-200 bg-white text-[#D63384] text-xs font-semibold hover:bg-pink-50 cursor-pointer"
+                  >
+                    Ajukan SKWB Lainnya
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSkwbSubmittedClaim(null);
+                      onClose();
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-xs cursor-pointer"
+                  >
+                    Selesai & Tutup
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setSkwbUploadError('');
+                  if (!skwbForm.icName.trim()) {
+                    setSkwbUploadError('Nama IC wajib diisi sesuai identitas.');
+                    return;
+                  }
+                  if (!skwbForm.birthDate) {
+                    setSkwbUploadError('Tanggal Lahir wajib dipilih.');
+                    return;
+                  }
+                  if (!skwbForm.issueDate) {
+                    setSkwbUploadError('Tanggal Terbit SKWB wajib dipilih.');
+                    return;
+                  }
+                  if (!skwbForm.photoDataUrl || !skwbForm.photoFileName) {
+                    setSkwbUploadError('Anda wajib mengunggah Foto Surat Keterangan Warga Baru (SKWB).');
+                    return;
+                  }
+
+                  const res = submitSKWBClaim({
+                    icName: skwbForm.icName.trim(),
+                    birthDate: skwbForm.birthDate,
+                    issueDate: skwbForm.issueDate,
+                    photoFileName: skwbForm.photoFileName,
+                    photoFileSize: skwbForm.photoFileSize,
+                    photoDataUrl: skwbForm.photoDataUrl,
+                  });
+
+                  if (res.success && res.claim) {
+                    setSkwbSubmittedClaim({
+                      icName: res.claim.icName,
+                      birthDate: res.claim.birthDate,
+                      issueDate: res.claim.issueDate,
+                      startDate: res.claim.startDate,
+                      endDate: res.claim.endDate,
+                      status: res.claim.status,
+                    });
+                  }
+                }}
+                className="space-y-5"
+              >
+                {/* Ringkasan Benefit SKWB */}
+                <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-200/80 space-y-2">
+                  <p className="text-xs font-bold text-[#D63384]">
+                    Informasi Hak & Masa Berlaku Benefit SKWB (7 Hari Sejak Tanggal Terbit SKWB):
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                      <p className="font-bold text-slate-900">1. Paket Sedang</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Obat & Perban · Dapat diklaim 1x setiap hari selama SKWB aktif (Oleh Co-ass+)
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                      <p className="font-bold text-slate-900">2. Diskon 50% Kartu Pasien</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Berlaku 1x klaim selama periode SKWB aktif (Oleh Paramedic+)
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                      <p className="font-bold text-slate-900">3. Free 1x Oplas</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Gratis 1x Operasi Plastik selama periode SKWB aktif (Oleh Doctor+)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {skwbUploadError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
+                    {skwbUploadError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Nama IC */}
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Nama IC (Sesuai Identitas) *
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      value={skwbForm.icName}
+                      onChange={(e) => setSkwbForm({ ...skwbForm, icName: e.target.value })}
+                      placeholder="Masukkan nama lengkap sesuai identitas IC Anda"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                    />
+                  </div>
+
+                  {/* Tanggal Lahir */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Tanggal Lahir *
+                    </label>
+                    <input
+                      required
+                      type="date"
+                      value={skwbForm.birthDate}
+                      onChange={(e) => setSkwbForm({ ...skwbForm, birthDate: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                    />
+                  </div>
+
+                  {/* Tanggal Terbit SKWB */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Tanggal Terbit SKWB *
+                    </label>
+                    <input
+                      required
+                      type="date"
+                      value={skwbForm.issueDate}
+                      onChange={(e) => setSkwbForm({ ...skwbForm, issueDate: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Kalkulasi Otomatis Masa Berlaku */}
+                {skwbForm.issueDate && (
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-500">Perhitungan Masa Berlaku Otomatis (7 Hari): </span>
+                      <strong className="font-mono text-slate-900">
+                        {skwbForm.issueDate} s/d {computePreviewEndDate(skwbForm.issueDate)}
+                      </strong>
+                    </div>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-md font-bold self-start sm:self-auto ${
+                        new Date().toISOString().slice(0, 10) <= computePreviewEndDate(skwbForm.issueDate)
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-rose-100 text-rose-700'
+                      }`}
+                    >
+                      {new Date().toISOString().slice(0, 10) <= computePreviewEndDate(skwbForm.issueDate)
+                        ? 'Status: Aktif'
+                        : 'Status: Kadaluarsa'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Upload Foto Surat Keterangan Warga Baru (SKWB) */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Upload Foto Surat Keterangan Warga Baru (SKWB) *
+                  </label>
+
+                  {!skwbForm.photoDataUrl ? (
+                    <label className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-pink-300 bg-[#FFF5F8] hover:bg-pink-50/80 transition cursor-pointer text-center space-y-2">
+                      <div className="w-11 h-11 rounded-xl bg-white border border-pink-100 text-[#E83E8C] flex items-center justify-center shadow-2xs">
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">
+                          {skwbUploading ? 'Memproses gambar...' : 'Klik untuk memilih Foto Surat SKWB'}
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Mendukung format JPG, JPEG, PNG, WEBP (Maks. 5 MB)
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        disabled={skwbUploading}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleSKWBImageUpload(file);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-[#FFF5F8] border border-pink-200 space-y-3">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={skwbForm.photoDataUrl}
+                            alt="Preview SKWB"
+                            className="w-20 h-20 rounded-xl object-cover border border-pink-200 bg-white shrink-0"
+                          />
+                          <div className="min-w-0 space-y-1">
+                            <p className="text-xs font-bold text-slate-900 truncate">
+                              {skwbForm.photoFileName}
+                            </p>
+                            <p className="text-[11px] font-mono text-slate-500">
+                              Ukuran File: {(skwbForm.photoFileSize / 1024).toFixed(1)} KB
+                            </p>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#20C997]">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Siap diunggah ke Database
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-center">
+                          {/* Tombol Mengganti File */}
+                          <label className="px-3 py-1.5 rounded-xl bg-white border border-pink-200 text-[#D63384] hover:bg-pink-50 text-xs font-semibold cursor-pointer transition">
+                            Ganti File
+                            <input
+                              type="file"
+                              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleSKWBImageUpload(file);
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                          {/* Tombol Menghapus File sebelum submit */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSkwbForm((prev) => ({
+                                ...prev,
+                                photoFileName: '',
+                                photoFileSize: 0,
+                                photoDataUrl: '',
+                              }))
+                            }
+                            className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 text-xs font-semibold cursor-pointer transition"
+                          >
+                            Hapus File
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Full Preview Image */}
+                      <div className="rounded-xl overflow-hidden border border-pink-100 bg-white max-h-64 flex items-center justify-center p-2">
+                        <img
+                          src={skwbForm.photoDataUrl}
+                          alt="Preview Surat SKWB"
+                          className="max-h-56 w-auto object-contain rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 flex justify-end gap-3 border-t border-pink-100">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={skwbUploading}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer"
+                  >
+                    Simpan / Ajukan Klaim
                   </button>
                 </div>
               </form>

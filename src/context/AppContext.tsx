@@ -20,6 +20,10 @@ import {
   DutyLog,
   PayrollRecord,
   RoleSalaryConfig,
+  SKWBClaim,
+  SKWBPaketSedangClaim,
+  SKWBPatientCardClaim,
+  SKWBOplasClaim,
   ToastMessage,
 } from '../types';
 import {
@@ -68,6 +72,10 @@ interface AppContextType {
   dutyLogs: DutyLog[];
   payrollRecords: PayrollRecord[];
   roleSalaryConfigs: RoleSalaryConfig[];
+  skwbClaims: SKWBClaim[];
+  skwbPaketSedangClaims: SKWBPaketSedangClaim[];
+  skwbPatientCardClaims: SKWBPatientCardClaim[];
+  skwbOplasClaims: SKWBOplasClaim[];
   toasts: ToastMessage[];
   addToast: (type: ToastMessage['type'], title: string, message: string) => void;
   removeToast: (id: string) => void;
@@ -113,6 +121,17 @@ interface AppContextType {
   addOrUpdatePayroll: (record: Omit<PayrollRecord, 'id'>, existingId?: string) => void;
   updateRoleSalaryConfig: (config: RoleSalaryConfig) => void;
   addOrUpdateRegulation: (reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>, existingId?: string) => void;
+  submitSKWBClaim: (data: {
+    icName: string;
+    birthDate: string;
+    issueDate: string;
+    photoFileName: string;
+    photoFileSize: number;
+    photoDataUrl: string;
+  }) => { success: boolean; claim?: SKWBClaim; message: string };
+  claimSKWBPaketSedang: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
+  claimSKWBPatientCard: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
+  claimSKWBOplas: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -184,6 +203,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [roleSalaryConfigs, setRoleSalaryConfigs] = useState<RoleSalaryConfig[]>(() =>
     loadLocal('cendana_role_salaries_v1', INITIAL_ROLE_SALARY_CONFIGS)
   );
+  // SKWB Benefit records — 100% centralized in Cloud Firestore (no localStorage or mock arrays)
+  const [skwbClaims, setSkwbClaims] = useState<SKWBClaim[]>([]);
+  const [skwbPaketSedangClaims, setSkwbPaketSedangClaims] = useState<SKWBPaketSedangClaim[]>([]);
+  const [skwbPatientCardClaims, setSkwbPatientCardClaims] = useState<SKWBPatientCardClaim[]>([]);
+  const [skwbOplasClaims, setSkwbOplasClaims] = useState<SKWBOplasClaim[]>([]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // LocalStorage persistence for all modules
@@ -515,6 +539,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 return exists
                   ? prev.map((x) => (x.role === roleCfg.role ? { ...x, ...roleCfg } : x))
                   : [roleCfg, ...prev];
+              });
+            }
+            break;
+          }
+          case 'skwb_claim': {
+            const skwbItem = p as unknown as SKWBClaim;
+            if (skwbItem && skwbItem.id) {
+              setSkwbClaims((prev) => {
+                const exists = prev.some((x) => x.id === skwbItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === skwbItem.id ? { ...x, ...skwbItem } : x))
+                  : [skwbItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'skwb_paket_sedang_claim': {
+            const pktItem = p as unknown as SKWBPaketSedangClaim;
+            if (pktItem && pktItem.id) {
+              setSkwbPaketSedangClaims((prev) => {
+                const exists = prev.some((x) => x.id === pktItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === pktItem.id ? { ...x, ...pktItem } : x))
+                  : [pktItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'skwb_kartu_pasien_claim': {
+            const kpItem = p as unknown as SKWBPatientCardClaim;
+            if (kpItem && kpItem.id) {
+              setSkwbPatientCardClaims((prev) => {
+                const exists = prev.some((x) => x.id === kpItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === kpItem.id ? { ...x, ...kpItem } : x))
+                  : [kpItem, ...prev];
+              });
+            }
+            break;
+          }
+          case 'skwb_oplas_claim': {
+            const opItem = p as unknown as SKWBOplasClaim;
+            if (opItem && opItem.id) {
+              setSkwbOplasClaims((prev) => {
+                const exists = prev.some((x) => x.id === opItem.id);
+                return exists
+                  ? prev.map((x) => (x.id === opItem.id ? { ...x, ...opItem } : x))
+                  : [opItem, ...prev];
               });
             }
             break;
@@ -1171,6 +1243,333 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast('success', 'Regulasi Diperbarui', `Regulasi "${reg.title}" telah disimpan ke Database.`);
   };
 
+  // Helper: Calculate SKWB End Date = Issue Date + 7 days (YYYY-MM-DD)
+  const calculateSKWBEndDate = (issueDateStr: string): string => {
+    const parts = issueDateStr.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return issueDateStr;
+    const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+    dt.setDate(dt.getDate() + 7);
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // Helper: Check whether SKWB is currently Active based on issueDate + 7 days
+  const isSKWBCurrentlyActive = (issueDateStr: string, endDateStr: string): boolean => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
+    const computedEnd = endDateStr || calculateSKWBEndDate(issueDateStr);
+    return todayStr <= computedEnd;
+  };
+
+  const submitSKWBClaim = (data: {
+    icName: string;
+    birthDate: string;
+    issueDate: string;
+    photoFileName: string;
+    photoFileSize: number;
+    photoDataUrl: string;
+  }) => {
+    if (!data.icName.trim() || !data.birthDate || !data.issueDate || !data.photoDataUrl) {
+      addToast('error', 'Data Tidak Valid', 'Seluruh kolom dan foto SKWB wajib dilengkapi.');
+      return { success: false, message: 'Data tidak lengkap.' };
+    }
+
+    const startDate = data.issueDate;
+    const endDate = calculateSKWBEndDate(data.issueDate);
+    const active = isSKWBCurrentlyActive(startDate, endDate);
+    const status: 'Aktif' | 'Kadaluarsa' = active ? 'Aktif' : 'Kadaluarsa';
+    const nowStr = nowFormatted();
+    const id = `skwb-${Date.now()}`;
+
+    const newClaim: SKWBClaim = {
+      id,
+      icName: data.icName.trim(),
+      birthDate: data.birthDate,
+      issueDate: data.issueDate,
+      startDate,
+      endDate,
+      photoFileName: data.photoFileName,
+      photoFileSize: data.photoFileSize,
+      photoDataUrl: data.photoDataUrl,
+      status,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    setSkwbClaims((prev) => [newClaim, ...prev]);
+    void syncRecordToFirestore(id, 'skwb_claim', newClaim.icName, status, { ...newClaim });
+    addToast(
+      'success',
+      'Klaim Benefit SKWB Berhasil Disimpan',
+      `Data SKWB ${newClaim.icName} berlaku s/d ${endDate} telah tersimpan di Database.`
+    );
+    return { success: true, claim: newClaim, message: 'Pengajuan Benefit SKWB berhasil disimpan.' };
+  };
+
+  // Benefit 1: Paket Sedang (Obat dan Perban) — 1x per hari selama aktif, Staff minimal Co-ass (Level >= 4)
+  const claimSKWBPaketSedang = (skwbClaimId: string, handlingStaffId: string) => {
+    if (!currentUser || currentUser.level < 3) {
+      addToast('error', 'Akses Ditolak', 'Anda tidak memiliki hak akses untuk memproses Benefit SKWB.');
+      return { success: false, message: 'Anda tidak memiliki hak akses.' };
+    }
+
+    const skwb = skwbClaims.find((c) => c.id === skwbClaimId);
+    if (!skwb) {
+      addToast('error', 'Data Tidak Ditemukan', 'Data SKWB warga tidak ditemukan.');
+      return { success: false, message: 'Data SKWB tidak ditemukan.' };
+    }
+
+    // 1. Cek apakah SKWB masih berlaku (Tanggal Terbit + 7 hari)
+    if (!isSKWBCurrentlyActive(skwb.issueDate, skwb.endDate)) {
+      addToast(
+        'error',
+        'Benefit Kadaluarsa',
+        'Klaim tidak dapat dilakukan karena masa berlaku SKWB telah berakhir.'
+      );
+      return {
+        success: false,
+        message: 'Klaim tidak dapat dilakukan karena masa berlaku SKWB telah berakhir.',
+      };
+    }
+
+    // 2. Cek apakah warga sudah melakukan klaim Paket Sedang hari ini
+    const now = new Date();
+    const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
+    const alreadyClaimedToday = skwbPaketSedangClaims.some(
+      (c) => c.skwbClaimId === skwbClaimId && c.claimDate === todayDate
+    );
+    if (alreadyClaimedToday) {
+      addToast('warning', 'Sudah Diklaim Hari Ini', 'Paket Sedang sudah diklaim untuk hari ini.');
+      return { success: false, message: 'Paket Sedang sudah diklaim untuk hari ini.' };
+    }
+
+    // 3. Cek apakah staff yang menangani sudah dipilih
+    if (!handlingStaffId) {
+      addToast('error', 'Staff Wajib Dipilih', 'Staff yang menangani wajib dipilih.');
+      return { success: false, message: 'Staff yang menangani wajib dipilih.' };
+    }
+
+    // 4. Cek apakah staff aktif dan memiliki role Co-ass ke atas (Level >= 4)
+    const staff = staffAccounts.find((s) => s.id === handlingStaffId && s.status === 'Active');
+    if (!staff || staff.level < ROLE_LEVELS['Co-ass']) {
+      addToast(
+        'error',
+        'Kewenangan Tidak Sesuai',
+        'Staff tersebut tidak memiliki kewenangan untuk menangani klaim ini.'
+      );
+      return {
+        success: false,
+        message: 'Staff tersebut tidak memiliki kewenangan untuk menangani klaim ini.',
+      };
+    }
+
+    const claimTime = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}`;
+    const id = `skwb_pkt_${Date.now()}`;
+    const record: SKWBPaketSedangClaim = {
+      id,
+      skwbClaimId,
+      claimDate: todayDate,
+      claimTime,
+      staffId: staff.id,
+      staffName: staff.name,
+      staffRole: staff.role,
+      status: 'Claimed',
+      createdAt: nowFormatted(),
+    };
+
+    setSkwbPaketSedangClaims((prev) => [record, ...prev]);
+    void syncRecordToFirestore(
+      id,
+      'skwb_paket_sedang_claim',
+      `Paket Sedang - ${skwb.icName} (${todayDate})`,
+      'Claimed',
+      { ...record }
+    );
+    addToast(
+      'success',
+      'Klaim Paket Sedang Berhasil',
+      `Paket Sedang (${skwb.icName}) berhasil diklaim dan ditangani oleh ${staff.name} (${staff.role}).`
+    );
+    return { success: true, message: 'Klaim Paket Sedang berhasil disimpan.' };
+  };
+
+  // Benefit 2: Diskon 50% Pembuatan Kartu Pasien — 1x sepanjang SKWB, Staff minimal Paramedic (Level >= 3)
+  const claimSKWBPatientCard = (skwbClaimId: string, handlingStaffId: string) => {
+    if (!currentUser || currentUser.level < 3) {
+      addToast('error', 'Akses Ditolak', 'Anda tidak memiliki hak akses untuk memproses Benefit SKWB.');
+      return { success: false, message: 'Anda tidak memiliki hak akses.' };
+    }
+
+    const skwb = skwbClaims.find((c) => c.id === skwbClaimId);
+    if (!skwb) {
+      addToast('error', 'Data Tidak Ditemukan', 'Data SKWB warga tidak ditemukan.');
+      return { success: false, message: 'Data SKWB tidak ditemukan.' };
+    }
+
+    // 1. Cek masa berlaku SKWB
+    if (!isSKWBCurrentlyActive(skwb.issueDate, skwb.endDate)) {
+      addToast('error', 'Benefit Kadaluarsa', 'Benefit SKWB sudah tidak berlaku.');
+      return { success: false, message: 'Benefit SKWB sudah tidak berlaku.' };
+    }
+
+    // 2. Cek apakah belum pernah diklaim
+    const alreadyClaimed = skwbPatientCardClaims.some((c) => c.skwbClaimId === skwbClaimId);
+    if (alreadyClaimed) {
+      addToast(
+        'warning',
+        'Sudah Pernah Digunakan',
+        'Diskon 50% pembuatan kartu pasien sudah pernah digunakan.'
+      );
+      return {
+        success: false,
+        message: 'Diskon 50% pembuatan kartu pasien sudah pernah digunakan.',
+      };
+    }
+
+    // 3. Cek staff yang menangani (Paramedic ke atas, Level >= 3)
+    if (!handlingStaffId) {
+      addToast('error', 'Staff Wajib Dipilih', 'Staff yang membuatkan kartu pasien wajib dipilih.');
+      return { success: false, message: 'Staff yang membuatkan kartu pasien wajib dipilih.' };
+    }
+
+    const staff = staffAccounts.find((s) => s.id === handlingStaffId && s.status === 'Active');
+    if (!staff || staff.level < ROLE_LEVELS['Paramedic']) {
+      addToast(
+        'error',
+        'Kewenangan Tidak Sesuai',
+        'Staff harus memiliki jabatan minimal Paramedic ke atas.'
+      );
+      return {
+        success: false,
+        message: 'Staff harus memiliki jabatan minimal Paramedic ke atas.',
+      };
+    }
+
+    const now = new Date();
+    const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
+    const claimTime = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}`;
+    const id = `skwb_kp_${Date.now()}`;
+    const record: SKWBPatientCardClaim = {
+      id,
+      skwbClaimId,
+      claimDate: todayDate,
+      claimTime,
+      staffId: staff.id,
+      staffName: staff.name,
+      staffRole: staff.role,
+      status: 'Claimed',
+      createdAt: nowFormatted(),
+    };
+
+    setSkwbPatientCardClaims((prev) => [record, ...prev]);
+    void syncRecordToFirestore(
+      id,
+      'skwb_kartu_pasien_claim',
+      `Diskon 50% Kartu Pasien - ${skwb.icName}`,
+      'Claimed',
+      { ...record }
+    );
+    addToast(
+      'success',
+      'Klaim Diskon 50% Kartu Pasien Berhasil',
+      `Benefit Kartu Pasien (${skwb.icName}) berhasil diklaim oleh ${staff.name} (${staff.role}).`
+    );
+    return { success: true, message: 'Klaim Diskon 50% Kartu Pasien berhasil disimpan.' };
+  };
+
+  // Benefit 3: Free 1x Oplas — 1x sepanjang SKWB, Staff minimal Doctor (Level >= 5)
+  const claimSKWBOplas = (skwbClaimId: string, handlingStaffId: string) => {
+    if (!currentUser || currentUser.level < 3) {
+      addToast('error', 'Akses Ditolak', 'Anda tidak memiliki hak akses untuk memproses Benefit SKWB.');
+      return { success: false, message: 'Anda tidak memiliki hak akses.' };
+    }
+
+    const skwb = skwbClaims.find((c) => c.id === skwbClaimId);
+    if (!skwb) {
+      addToast('error', 'Data Tidak Ditemukan', 'Data SKWB warga tidak ditemukan.');
+      return { success: false, message: 'Data SKWB tidak ditemukan.' };
+    }
+
+    // 1. Cek masa berlaku SKWB
+    if (!isSKWBCurrentlyActive(skwb.issueDate, skwb.endDate)) {
+      addToast('error', 'Benefit Kadaluarsa', 'Benefit SKWB sudah tidak berlaku.');
+      return { success: false, message: 'Benefit SKWB sudah tidak berlaku.' };
+    }
+
+    // 2. Cek apakah belum pernah diklaim
+    const alreadyClaimed = skwbOplasClaims.some((c) => c.skwbClaimId === skwbClaimId);
+    if (alreadyClaimed) {
+      addToast('warning', 'Sudah Pernah Digunakan', 'Free 1x Oplas sudah pernah digunakan.');
+      return { success: false, message: 'Free 1x Oplas sudah pernah digunakan.' };
+    }
+
+    // 3. Cek staff yang menangani (Doctor ke atas, Level >= 5)
+    if (!handlingStaffId) {
+      addToast('error', 'Staff Wajib Dipilih', 'Staff dokter yang menangani wajib dipilih.');
+      return { success: false, message: 'Staff dokter yang menangani wajib dipilih.' };
+    }
+
+    const staff = staffAccounts.find((s) => s.id === handlingStaffId && s.status === 'Active');
+    if (!staff || staff.level < ROLE_LEVELS['Doctor']) {
+      addToast(
+        'error',
+        'Kewenangan Tidak Sesuai',
+        'Staff harus memiliki jabatan minimal Doctor ke atas.'
+      );
+      return {
+        success: false,
+        message: 'Staff harus memiliki jabatan minimal Doctor ke atas.',
+      };
+    }
+
+    const now = new Date();
+    const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
+    const claimTime = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}`;
+    const id = `skwb_op_${Date.now()}`;
+    const record: SKWBOplasClaim = {
+      id,
+      skwbClaimId,
+      claimDate: todayDate,
+      claimTime,
+      staffId: staff.id,
+      staffName: staff.name,
+      staffRole: staff.role,
+      status: 'Claimed',
+      createdAt: nowFormatted(),
+    };
+
+    setSkwbOplasClaims((prev) => [record, ...prev]);
+    void syncRecordToFirestore(
+      id,
+      'skwb_oplas_claim',
+      `Free 1x Oplas - ${skwb.icName}`,
+      'Claimed',
+      { ...record }
+    );
+    addToast(
+      'success',
+      'Klaim Free 1x Oplas Berhasil',
+      `Benefit Free 1x Oplas (${skwb.icName}) berhasil diklaim dan ditangani oleh ${staff.name} (${staff.role}).`
+    );
+    return { success: true, message: 'Klaim Free 1x Oplas berhasil disimpan.' };
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1197,6 +1596,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dutyLogs,
         payrollRecords,
         roleSalaryConfigs,
+        skwbClaims,
+        skwbPaketSedangClaims,
+        skwbPatientCardClaims,
+        skwbOplasClaims,
         toasts,
         addToast,
         removeToast,
@@ -1238,6 +1641,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addOrUpdatePayroll,
         updateRoleSalaryConfig,
         addOrUpdateRegulation,
+        submitSKWBClaim,
+        claimSKWBPaketSedang,
+        claimSKWBPatientCard,
+        claimSKWBOplas,
       }}
     >
       {children}

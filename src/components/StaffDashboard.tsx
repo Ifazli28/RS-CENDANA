@@ -32,6 +32,7 @@ import {
   PayrollManagementView,
   RegulationManagementView,
 } from './dashboard/ManagementViewsPart2';
+import { SKWBBenefitView } from './dashboard/SKWBBenefitView';
 import {
   LayoutDashboard,
   User,
@@ -67,6 +68,7 @@ export type StaffRouteId =
   | 'dashboard'
   | 'profile'
   | 'staff-directory'
+  | 'benefit-skwb'
   | 'sks-results'
   | 'psychology-results'
   | 'color-blind-results'
@@ -138,7 +140,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     { id: 'resign-request', label: 'Pengajuan Resign', minLevel: 1, category: 'Utama & Pribadi', icon: UserMinus },
     { id: 'sop-medis', label: 'SOP Medis', minLevel: 1, category: 'Utama & Pribadi', icon: BookOpen },
 
-    // Level 3+ (Paramedic+): SKS
+    // Level 3+ (Paramedic+): Benefit SKWB & SKS
+    { id: 'benefit-skwb', label: 'Benefit SKWB', minLevel: 3, category: 'Rekam & Layanan Medis', icon: ShieldCheck },
     { id: 'sks-results', label: 'Hasil Surat Keterangan Sehat', minLevel: 3, category: 'Rekam & Layanan Medis', icon: FileText },
     // Level 4+ (Co-ass+): Psikologi
     { id: 'psychology-results', label: 'Hasil Tes Psikologi', minLevel: 4, category: 'Rekam & Layanan Medis', icon: Brain },
@@ -234,6 +237,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         return <LeaveAndResignView mode="resign" />;
       case 'sop-medis':
         return <SOPMedisView />;
+      case 'benefit-skwb':
+        return <SKWBBenefitView />;
       case 'sks-results':
         return <SKSResultsView />;
       case 'psychology-results':
