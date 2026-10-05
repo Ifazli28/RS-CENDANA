@@ -97,6 +97,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     surgeryType: 'Rhinoplasty & Facial Contouring',
     idPhotoName: '',
     legalDocName: '',
+    patientCardPhotoName: '',
   });
   const [plasticUploadError, setPlasticUploadError] = useState('');
 
@@ -504,9 +505,13 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!plasticForm.idPhotoName || !plasticForm.legalDocName) {
+                if (
+                  !plasticForm.idPhotoName ||
+                  !plasticForm.legalDocName ||
+                  !plasticForm.patientCardPhotoName
+                ) {
                   setPlasticUploadError(
-                    'Harap unggah Foto Identitas/KTP dan Dokumen SKB (Kepolisian) atau SKWB sebelum mengirim.'
+                    'Harap unggah Foto Identitas/KTP, Foto Kartu Pasien, dan Dokumen SKB (Kepolisian) atau SKWB sebelum mengirim.'
                   );
                   return;
                 }
@@ -520,6 +525,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   surgeryType: plasticForm.surgeryType,
                   idPhotoName: plasticForm.idPhotoName,
                   legalDocName: plasticForm.legalDocName,
+                  patientCardPhotoName: plasticForm.patientCardPhotoName,
                 });
                 onClose();
               }}
@@ -659,6 +665,30 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       if (file) {
                         setPlasticUploadError('');
                         setPlasticForm({ ...plasticForm, legalDocName: file.name });
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Upload Foto Kartu Pasien (JPG/PNG) *
+                </label>
+                <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
+                  <span className="truncate text-slate-700">
+                    {plasticForm.patientCardPhotoName || 'Pilih file foto Kartu Pasien...'}
+                  </span>
+                  <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setPlasticUploadError('');
+                        setPlasticForm({ ...plasticForm, patientCardPhotoName: file.name });
                       }
                     }}
                   />

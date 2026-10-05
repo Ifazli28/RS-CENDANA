@@ -777,7 +777,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
                 <th className="py-3.5 px-4">Nama Pasien</th>
                 <th className="py-3.5 px-4">Tanggal Pengajuan</th>
                 <th className="py-3.5 px-4">Prosedur Operasi Plastik</th>
-                <th className="py-3.5 px-4">Dokumen KTP & SKB/SKWB</th>
+                <th className="py-3.5 px-4">Dokumen KTP, Kartu Pasien & SKB/SKWB</th>
                 <th className="py-3.5 px-4">Dokter yang Menangani</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4 text-right">Action</th>
@@ -804,10 +804,14 @@ export const PlasticSurgeryDataView: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-slate-800">{r.surgeryType}</td>
                     <td className="py-3.5 px-4 text-xs text-slate-600 space-y-0.5">
-                      <div className="truncate max-w-[180px]" title={r.idPhotoName}>
+                      <div className="truncate max-w-[190px]" title={r.idPhotoName}>
                         <span className="font-semibold text-slate-700">KTP:</span> {r.idPhotoName}
                       </div>
-                      <div className="truncate max-w-[180px]" title={r.legalDocName}>
+                      <div className="truncate max-w-[190px]" title={r.patientCardPhotoName || '-'}>
+                        <span className="font-semibold text-emerald-700">Kartu Pasien:</span>{' '}
+                        {r.patientCardPhotoName || '-'}
+                      </div>
+                      <div className="truncate max-w-[190px]" title={r.legalDocName}>
                         <span className="font-semibold text-[#D63384]">SKB/SKWB:</span> {r.legalDocName}
                       </div>
                     </td>
@@ -905,6 +909,9 @@ export const PlasticSurgeryDataView: React.FC = () => {
               </p>
               <p className="col-span-2">
                 <strong>Lampiran KTP:</strong> {selectedRecord.idPhotoName}
+              </p>
+              <p className="col-span-2">
+                <strong>Foto Kartu Pasien:</strong> {selectedRecord.patientCardPhotoName || '-'}
               </p>
               <p className="col-span-2">
                 <strong>Dokumen SKB (Kepolisian) / SKWB:</strong> {selectedRecord.legalDocName}

@@ -109,6 +109,7 @@ export interface PlasticSurgeryRecord {
   surgeryType: string;
   idPhotoName: string;
   legalDocName: string; // Dokumen SKB (Kepolisian) atau SKWB
+  patientCardPhotoName?: string; // Foto Kartu Pasien
   handlingDoctorName?: string; // Nama dokter yang menangani / menyetujui
   approvedAt?: string;
   createdAt: string;
