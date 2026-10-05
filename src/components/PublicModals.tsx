@@ -94,7 +94,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     age: '',
     occupation: '',
     phoneOrIC: '',
-    surgeryType: 'Rhinoplasty & Facial Contouring',
+    surgeryType: 'Rhinoplasty & Facial Contouring/Oplas ($2,500)',
     idPhotoName: '',
     legalDocName: '',
     patientCardPhotoName: '',
@@ -616,10 +616,15 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   onChange={(e) => setPlasticForm({ ...plasticForm, surgeryType: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
                 >
-                  <option value="Rhinoplasty & Facial Contouring">Rhinoplasty & Facial Contouring ($2,500)</option>
-                  <option value="Blepharoplasty & Rejuvenation">Blepharoplasty & Rejuvenation ($2,500)</option>
-                  <option value="Full Aesthetic Reconstruction">Full Aesthetic Reconstruction ($2,500)</option>
-                  <option value="Klaim Gratis Oplas SKWB (Warga Baru)">Klaim Gratis Oplas SKWB (Warga Baru)</option>
+                  <option value="Rhinoplasty & Facial Contouring/Oplas ($2,500)">
+                    Rhinoplasty & Facial Contouring/Oplas ($2,500)
+                  </option>
+                  <option value="Full Aesthetic Reconstruction/Half Ped/Full Ped ($1,000)">
+                    Full Aesthetic Reconstruction/Half Ped/Full Ped ($1,000)
+                  </option>
+                  <option value="Klaim Gratis Oplas SKWB (Warga Baru)">
+                    Klaim Gratis Oplas SKWB (Warga Baru)
+                  </option>
                 </select>
               </div>
 
