@@ -1761,7 +1761,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
-                          Kartu Identitas Warga IME Medical Center (KTP)
+                          Kartu Identitas Warga Cendana (KTP)
                         </span>
                       </label>
 
