@@ -80,6 +80,16 @@ export interface SKSRecord {
   status: 'Issued' | 'Verified' | 'Pending';
 }
 
+export interface PsychologyQuestionAnswer {
+  questionNumber: number;
+  section?: 'GHQ-12' | 'DASS-21';
+  subscale?: 'Item Positif' | 'Item Negatif' | 'Depresi' | 'Kecemasan' | 'Stres';
+  questionText: string;
+  selectedOptionCode?: string; // 'A'|'B'|'C'|'D' or '0'|'1'|'2'|'3'
+  selectedOptionLabel: string;
+  score: number; // 0 - 3 scale
+}
+
 export interface PsychologyRecord {
   id: string;
   fullName: string;
@@ -94,6 +104,29 @@ export interface PsychologyRecord {
     | 'Lampiran Pengajuan Lisensi / Izin Khusus'
     | 'Rujukan Konsultasi & Terapi Medis';
   historyNotes?: string;
+  // Bagian 1: Skrining Kesehatan Mental Umum (GHQ-12)
+  ghqScore?: number; // 0 - 36
+  ghqMaxScore?: number; // 36
+  ghqInterpretation?: string;
+  // Bagian 2: Skala Depresi, Kecemasan, dan Stres (DASS-21, dikalikan 2 untuk DASS-42)
+  dassDepressionRaw?: number;
+  dassDepressionScore?: number; // Raw * 2
+  dassDepressionCategory?: 'Normal' | 'Ringan' | 'Sedang' | 'Berat' | 'Sangat Berat';
+  dassAnxietyRaw?: number;
+  dassAnxietyScore?: number; // Raw * 2
+  dassAnxietyCategory?: 'Normal' | 'Ringan' | 'Sedang' | 'Berat' | 'Sangat Berat';
+  dassStressRaw?: number;
+  dassStressScore?: number; // Raw * 2
+  dassStressCategory?: 'Normal' | 'Ringan' | 'Sedang' | 'Berat' | 'Sangat Berat';
+  // Ringkasan Total & Interpretasi Terpadu
+  totalScore?: number;
+  maxScore?: number;
+  scorePercentage?: number;
+  interpretationCategory?: string;
+  interpretationSummary?: string;
+  recommendation?: string;
+  answersDetail?: PsychologyQuestionAnswer[];
+  examinerName?: string;
   createdAt: string;
   status: 'Reviewed' | 'Scheduled' | 'Completed';
 }

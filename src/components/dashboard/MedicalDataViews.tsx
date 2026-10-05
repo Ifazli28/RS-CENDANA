@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
+  PsychologyCertificateCard,
+  ColorBlindCertificateCard,
+} from '../CertificateGenerator';
+import {
+  SPECIALIST_CATEGORIES,
+  formatDoctorNameWithTitleAndDegree,
+} from '../../utils/doctorFormatting';
+import {
   FileText,
   Brain,
   Eye,
@@ -12,6 +20,8 @@ import {
   CheckCircle2,
   X,
   Sparkles,
+  Award,
+  Download,
 } from 'lucide-react';
 
 // 1. DATA SURAT KETERANGAN SEHAT (Sec 59 — Paramedic+ Level 3+)
@@ -174,25 +184,29 @@ export const SKSResultsView: React.FC = () => {
   );
 };
 
-// 2. DATA TES PSIKOLOGI (Sec 60 — Co-ass+ Level 4+)
+// 2. DATA TES PSIKOLOGI (Sec 60 — Co-ass+ Level 4+ — Lengkap dengan Hasil Skoring, Interpretasi & Sertifikat JPEG)
 export const PsychologyResultsView: React.FC = () => {
-  const { psychologyRecords, updatePsychologyStatus } = useApp();
+  const { psychologyRecords, updatePsychologyStatus, currentUser } = useApp();
   const [search, setSearch] = useState('');
   const [selectedPsy, setSelectedPsy] = useState<typeof psychologyRecords[0] | null>(null);
+  const [activeTab, setActiveTab] = useState<'evaluasi' | 'sertifikat'>('evaluasi');
 
   const filtered = psychologyRecords.filter(
     (r) =>
       r.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      r.purpose.toLowerCase().includes(search.toLowerCase())
+      r.purpose.toLowerCase().includes(search.toLowerCase()) ||
+      (r.interpretationCategory || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Data Hasil & Evaluasi Tes Psikologi</h2>
+          <h2 className="text-lg font-bold text-slate-900">
+            Data Hasil & Penilaian Tes & Evaluasi Psikologi
+          </h2>
           <p className="text-xs text-slate-500">
-            Data Privat Kesehatan Mental · Hanya dapat diakses oleh Co-ass ke atas (Level 4+)
+            Data Privat Kesehatan Mental · Skor, Interpretasi & Sertifikat (.JPEG) · Diakses oleh Co-ass ke atas (Level 4+)
           </p>
         </div>
         <div className="relative w-full sm:w-64">
@@ -201,7 +215,7 @@ export const PsychologyResultsView: React.FC = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama / tujuan..."
+            placeholder="Cari nama / tujuan / hasil..."
             className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#E83E8C] focus:outline-none"
           />
         </div>
@@ -215,33 +229,91 @@ export const PsychologyResultsView: React.FC = () => {
                 <th className="py-3.5 px-4">Nama Peserta</th>
                 <th className="py-3.5 px-4">Tanggal</th>
                 <th className="py-3.5 px-4">Tujuan Evaluasi</th>
-                <th className="py-3.5 px-4">Pekerjaan</th>
+                <th className="py-3.5 px-4">Skor & Penilaian</th>
+                <th className="py-3.5 px-4">Interpretasi Psikologis</th>
                 <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Detail</th>
+                <th className="py-3.5 px-4 text-right">Detail & Sertifikat</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
-              {filtered.map((r) => (
-                <tr key={r.id} className="hover:bg-pink-50/30 transition">
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">{r.fullName}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-500 tabular-nums">
-                    {r.createdAt}
-                  </td>
-                  <td className="py-3.5 px-4 text-slate-700">{r.purpose}</td>
-                  <td className="py-3.5 px-4 text-slate-600">{r.occupation}</td>
-                  <td className="py-3.5 px-4">
-                    <span className="text-xs font-bold text-[#20C997]">{r.status}</span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={() => setSelectedPsy(r)}
-                      className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
-                    >
-                      Buka Detail Privat
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((r) => {
+                const ghqScore = r.ghqScore ?? r.totalScore ?? 6;
+                const ghqInterp =
+                  r.ghqInterpretation ||
+                  (ghqScore <= 11
+                    ? 'Kondisi psikologis stabil / Distres rendah.'
+                    : ghqScore <= 20
+                    ? 'Terdapat indikasi distres emosional sedang.'
+                    : 'Indikasi distres emosional tinggi.');
+                const depScore = r.dassDepressionScore ?? 4;
+                const depCat = r.dassDepressionCategory || 'Normal';
+                const anxScore = r.dassAnxietyScore ?? 4;
+                const anxCat = r.dassAnxietyCategory || 'Normal';
+                const strScore = r.dassStressScore ?? 8;
+                const strCat = r.dassStressCategory || 'Normal';
+                return (
+                  <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                    <td className="py-3.5 px-4">
+                      <div className="font-semibold text-slate-900">{r.fullName}</div>
+                      <div className="text-[11px] text-slate-500">
+                        {r.gender} · {r.age} th · {r.occupation}
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-500 tabular-nums">
+                      {r.createdAt}
+                    </td>
+                    <td className="py-3.5 px-4 text-xs text-slate-700">{r.purpose}</td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-900 tabular-nums space-y-0.5">
+                      <div>
+                        <span className="text-slate-500">GHQ-12:</span>{' '}
+                        <strong>{ghqScore}/36</strong>
+                      </div>
+                      <div className="text-[11px] text-slate-600">
+                        D:{depScore} ({depCat}) · K:{anxScore} ({anxCat}) · S:{strScore} ({strCat})
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`inline-block px-2.5 py-1 rounded-lg text-[11px] font-bold ${
+                          ghqScore <= 11
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : ghqScore <= 20
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        }`}
+                      >
+                        {ghqInterp}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="text-xs font-bold text-[#20C997]">{r.status}</span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            setSelectedPsy(r);
+                            setActiveTab('evaluasi');
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
+                        >
+                          Hasil & Penilaian
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedPsy(r);
+                            setActiveTab('sertifikat');
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold flex items-center gap-1 cursor-pointer shadow-2xs"
+                        >
+                          <Award className="w-3.5 h-3.5" />
+                          <span>Sertifikat JPEG</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -249,47 +321,220 @@ export const PsychologyResultsView: React.FC = () => {
 
       {selectedPsy && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
           onClick={() => setSelectedPsy(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-lg w-full space-y-4"
+            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-4xl w-full space-y-5 max-h-[90vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900">Rekam Psikologis — {selectedPsy.fullName}</h3>
-              <button onClick={() => setSelectedPsy(null)} className="text-slate-400">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-2 text-xs text-slate-700">
-              <p><strong>Tanggal Lahir & Umur:</strong> {selectedPsy.birthDate} ({selectedPsy.age} th)</p>
-              <p><strong>Gender:</strong> {selectedPsy.gender}</p>
-              <p><strong>Pekerjaan:</strong> {selectedPsy.occupation}</p>
-              <p><strong>No HP / IC:</strong> {selectedPsy.phoneOrIC}</p>
-              <p><strong>Tujuan:</strong> {selectedPsy.purpose}</p>
-              <div className="p-3.5 rounded-xl bg-[#FFF5F8] border border-pink-100 mt-2">
-                <p className="font-bold text-[#D63384] mb-1">Keluhan / Riwayat Psikologis Singkat:</p>
-                <p>{selectedPsy.historyNotes || 'Tidak ada catatan tambahan.'}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Hasil & Evaluasi Psikologi — {selectedPsy.fullName}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Tanggal Pengajuan: {selectedPsy.createdAt} · Tujuan: {selectedPsy.purpose}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-[#FFF5F8] p-1 rounded-xl border border-pink-100 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('evaluasi')}
+                    className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                      activeTab === 'evaluasi'
+                        ? 'bg-[#E83E8C] text-white'
+                        : 'text-slate-600 hover:text-[#D63384]'
+                    }`}
+                  >
+                    Detail Skoring & Jawaban
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('sertifikat')}
+                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer ${
+                      activeTab === 'sertifikat'
+                        ? 'bg-[#E83E8C] text-white'
+                        : 'text-slate-600 hover:text-[#D63384]'
+                    }`}
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Sertifikat (.JPEG)</span>
+                  </button>
+                </div>
+                <button
+                  onClick={() => setSelectedPsy(null)}
+                  className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => {
-                  updatePsychologyStatus(selectedPsy.id, 'Completed');
-                  setSelectedPsy(null);
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-[#20C997] text-white text-xs font-semibold cursor-pointer"
-              >
-                Tandai Selesai (Completed)
-              </button>
-              <button
-                onClick={() => setSelectedPsy(null)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold"
-              >
-                Tutup
-              </button>
-            </div>
+
+            {activeTab === 'evaluasi' ? (
+              <div className="space-y-4">
+                {/* Ringkasan Identitas & Hasil Skoring */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs text-slate-700">
+                    <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">
+                      1. Data Diri Peserta
+                    </p>
+                    <p>
+                      <strong>Nama Lengkap:</strong> {selectedPsy.fullName}
+                    </p>
+                    <p>
+                      <strong>Tanggal Lahir & Umur:</strong> {selectedPsy.birthDate} (
+                      {selectedPsy.age} th)
+                    </p>
+                    <p>
+                      <strong>Gender:</strong> {selectedPsy.gender}
+                    </p>
+                    <p>
+                      <strong>Pekerjaan:</strong> {selectedPsy.occupation}
+                    </p>
+                    <p>
+                      <strong>No HP / IC:</strong> {selectedPsy.phoneOrIC}
+                    </p>
+                    <p>
+                      <strong>Keluhan / Catatan Awal:</strong>{' '}
+                      {selectedPsy.historyNotes || 'Tidak ada catatan tambahan.'}
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-200 space-y-2.5 text-xs">
+                    <p className="font-bold text-[#D63384] uppercase tracking-wider text-[11px]">
+                      2. Hasil Skoring & Interpretasi (GHQ-12 & DASS-21)
+                    </p>
+                    <div className="p-2.5 rounded-lg bg-white border border-pink-100 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-700">
+                          Bagian 1 — Skor Total GHQ-12 (Likert 0–3):
+                        </span>
+                        <span className="font-mono text-sm font-extrabold text-[#D63384]">
+                          {selectedPsy.ghqScore ?? selectedPsy.totalScore ?? 6} / 36
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-800">
+                        {selectedPsy.ghqInterpretation ||
+                          ((selectedPsy.ghqScore ?? 6) <= 11
+                            ? 'Kondisi psikologis stabil / Distres rendah.'
+                            : (selectedPsy.ghqScore ?? 6) <= 20
+                            ? 'Terdapat indikasi distres emosional sedang.'
+                            : 'Indikasi distres emosional tinggi (disarankan konsultasi dengan profesional kesehatan mental).')}
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-white border border-pink-100 space-y-1.5">
+                      <span className="font-semibold text-slate-700 block">
+                        Bagian 2 — Skor Akhir DASS-21 (Subskala × 2):
+                      </span>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="p-1.5 rounded bg-slate-50 border border-slate-200/70">
+                          <span className="text-[10px] text-slate-500 block">Depresi</span>
+                          <strong className="font-mono text-xs text-slate-900">
+                            {selectedPsy.dassDepressionScore ?? 4}
+                          </strong>
+                          <span className="block text-[10px] font-bold text-[#D63384]">
+                            {selectedPsy.dassDepressionCategory || 'Normal'}
+                          </span>
+                        </div>
+                        <div className="p-1.5 rounded bg-slate-50 border border-slate-200/70">
+                          <span className="text-[10px] text-slate-500 block">Kecemasan</span>
+                          <strong className="font-mono text-xs text-slate-900">
+                            {selectedPsy.dassAnxietyScore ?? 4}
+                          </strong>
+                          <span className="block text-[10px] font-bold text-[#0D9488]">
+                            {selectedPsy.dassAnxietyCategory || 'Normal'}
+                          </span>
+                        </div>
+                        <div className="p-1.5 rounded bg-slate-50 border border-slate-200/70">
+                          <span className="text-[10px] text-slate-500 block">Stres</span>
+                          <strong className="font-mono text-xs text-slate-900">
+                            {selectedPsy.dassStressScore ?? 8}
+                          </strong>
+                          <span className="block text-[10px] font-bold text-amber-700">
+                            {selectedPsy.dassStressCategory || 'Normal'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-0.5">
+                      <span className="text-slate-500 block">Kesimpulan & Rekomendasi Klinis:</span>
+                      <p className="font-bold text-[#20C997]">
+                        {selectedPsy.recommendation ||
+                          'DIREKOMENDASIKAN (LAYAK) — Kondisi kesehatan mental stabil, tingkat depresi, kecemasan, dan stres dalam batas wajar.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rincian Jawaban Soal */}
+                {selectedPsy.answersDetail && selectedPsy.answersDetail.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-slate-800">
+                      Rincian Jawaban Instrumen Tes Psikologi ({selectedPsy.answersDetail.length}{' '}
+                      Butir — GHQ-12 & DASS-21):
+                    </p>
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {selectedPsy.answersDetail.map((ans, idx) => (
+                        <div
+                          key={`${ans.section || 'Q'}-${ans.questionNumber}-${idx}`}
+                          className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                        >
+                          <div className="space-y-0.5">
+                            <p className="font-bold text-slate-800">
+                              [{ans.section || 'Tes'}] #{ans.questionNumber}. {ans.questionText}
+                            </p>
+                            <p className="text-slate-600">
+                              Jawaban: <strong>{ans.selectedOptionLabel}</strong>
+                            </p>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-lg bg-pink-100 text-[#D63384] font-mono font-bold shrink-0 self-start sm:self-center">
+                            Skor: {ans.score}/3
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-pink-100">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('sertifikat')}
+                    className="px-4 py-2.5 rounded-xl bg-[#FFF5F8] border border-pink-200 text-[#D63384] text-xs font-bold flex items-center gap-2 cursor-pointer"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>Buka & Download Sertifikat (.JPEG)</span>
+                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        updatePsychologyStatus(selectedPsy.id, 'Completed');
+                        setSelectedPsy({ ...selectedPsy, status: 'Completed' });
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-[#20C997] text-white text-xs font-semibold cursor-pointer"
+                    >
+                      Tandai Selesai (Completed)
+                    </button>
+                    <button
+                      onClick={() => setSelectedPsy(null)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold cursor-pointer"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <PsychologyCertificateCard
+                record={selectedPsy}
+                signerName={currentUser?.name}
+              />
+            )}
           </div>
         </div>
       )}
@@ -297,11 +542,12 @@ export const PsychologyResultsView: React.FC = () => {
   );
 };
 
-// 3. HASIL TES BUTA WARNA (Sec 24 & 61 — Doctor+ Level 5+)
+// 3. HASIL TES BUTA WARNA (Sec 24 & 61 — Doctor+ Level 5+ — Dilengkapi Sertifikat JPEG)
 export const ColorBlindResultsView: React.FC = () => {
-  const { colorBlindResults } = useApp();
+  const { colorBlindResults, currentUser } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCB, setSelectedCB] = useState<typeof colorBlindResults[0] | null>(null);
+  const [cbTab, setCbTab] = useState<'detail' | 'sertifikat'>('detail');
 
   const filtered = colorBlindResults.filter(
     (r) =>
@@ -313,9 +559,11 @@ export const ColorBlindResultsView: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Hasil Tes Buta Warna (20 Lempeng Ishihara)</h2>
+          <h2 className="text-lg font-bold text-slate-900">
+            Hasil Tes Buta Warna (20 Lempeng Ishihara) & Sertifikat
+          </h2>
           <p className="text-xs text-slate-500">
-            Akses Khusus Doctor ke atas (Level 5+) · Evaluasi Diagnostik Penglihatan Warna
+            Akses Khusus Doctor ke atas (Level 5+) · Evaluasi Diagnostik Penglihatan Warna & Download Sertifikat (.JPEG)
           </p>
         </div>
         <div className="relative w-full sm:w-64">
@@ -341,7 +589,7 @@ export const ColorBlindResultsView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Jawaban Benar</th>
                 <th className="py-3.5 px-4 text-right">Jawaban Salah</th>
                 <th className="py-3.5 px-4">Kategori</th>
-                <th className="py-3.5 px-4 text-right">Detail</th>
+                <th className="py-3.5 px-4 text-right">Detail & Sertifikat</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
@@ -370,12 +618,27 @@ export const ColorBlindResultsView: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={() => setSelectedCB(r)}
-                      className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
-                    >
-                      Detail Jawaban
-                    </button>
+                    <div className="inline-flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setSelectedCB(r);
+                          setCbTab('detail');
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
+                      >
+                        Detail Jawaban
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedCB(r);
+                          setCbTab('sertifikat');
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#20C997] to-[#0D9488] text-white text-xs font-semibold flex items-center gap-1 cursor-pointer shadow-2xs"
+                      >
+                        <Award className="w-3.5 h-3.5" />
+                        <span>Sertifikat JPEG</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -386,41 +649,102 @@ export const ColorBlindResultsView: React.FC = () => {
 
       {selectedCB && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
           onClick={() => setSelectedCB(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-lg w-full space-y-4 max-h-[85vh] overflow-y-auto"
+            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-4xl w-full space-y-4 max-h-[90vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900">
-                Detail Tes Ishihara — {selectedCB.fullName}
-              </h3>
-              <button onClick={() => setSelectedCB(null)} className="text-slate-400">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="text-xs text-slate-700 space-y-1">
-              <p><strong>Tanggal Tes:</strong> {selectedCB.testDate}</p>
-              <p><strong>Kategori Diagnosis:</strong> {selectedCB.category} ({selectedCB.scorePercentage}%)</p>
-              <p><strong>Benar / Salah:</strong> {selectedCB.correctCount} Benar · {selectedCB.wrongCount} Salah</p>
-            </div>
-            <div className="border-t border-pink-100 pt-3 space-y-1.5">
-              <p className="text-xs font-bold text-slate-700">Rincian Lempeng:</p>
-              {selectedCB.answersDetail.map((ans) => (
-                <div
-                  key={ans.plateNumber}
-                  className="flex items-center justify-between text-xs py-1.5 px-3 rounded-lg bg-slate-50 font-mono tabular-nums"
-                >
-                  <span>Plate #{ans.plateNumber} ({ans.type})</span>
-                  <span>
-                    Jawab: <strong>{ans.userAnswer}</strong> (Kunci: {ans.expected}){' '}
-                    {ans.isCorrect ? '✓' : '✗'}
-                  </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Hasil & Sertifikat Tes Ishihara — {selectedCB.fullName}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Tanggal Tes: {selectedCB.testDate} · Kategori: {selectedCB.category} (
+                  {selectedCB.scorePercentage}%)
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setCbTab('detail')}
+                    className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                      cbTab === 'detail' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'
+                    }`}
+                  >
+                    Rincian 20 Lempeng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCbTab('sertifikat')}
+                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer ${
+                      cbTab === 'sertifikat'
+                        ? 'bg-[#20C997] text-white shadow-2xs'
+                        : 'text-slate-600'
+                    }`}
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Sertifikat (.JPEG)</span>
+                  </button>
                 </div>
-              ))}
+                <button
+                  onClick={() => setSelectedCB(null)}
+                  className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+
+            {cbTab === 'detail' ? (
+              <>
+                <div className="text-xs text-slate-700 space-y-1 bg-[#FFF5F8] p-4 rounded-xl border border-pink-100">
+                  <p>
+                    <strong>Tanggal Tes:</strong> {selectedCB.testDate}
+                  </p>
+                  <p>
+                    <strong>Kategori Diagnosis:</strong> {selectedCB.category} (
+                    {selectedCB.scorePercentage}%)
+                  </p>
+                  <p>
+                    <strong>Benar / Salah:</strong> {selectedCB.correctCount} Benar ·{' '}
+                    {selectedCB.wrongCount} Salah
+                  </p>
+                </div>
+                <div className="border-t border-pink-100 pt-3 space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                  <p className="text-xs font-bold text-slate-700">Rincian Lempeng:</p>
+                  {selectedCB.answersDetail.map((ans) => (
+                    <div
+                      key={ans.plateNumber}
+                      className="flex items-center justify-between text-xs py-1.5 px-3 rounded-lg bg-slate-50 font-mono tabular-nums"
+                    >
+                      <span>
+                        Plate #{ans.plateNumber} ({ans.type})
+                      </span>
+                      <span>
+                        Jawab: <strong>{ans.userAnswer}</strong> (Kunci: {ans.expected}){' '}
+                        {ans.isCorrect ? '✓' : '✗'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setCbTab('sertifikat')}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#20C997] to-[#0D9488] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>Buka & Download Sertifikat (.JPEG)</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <ColorBlindCertificateCard result={selectedCB} signerName={currentUser?.name} />
+            )}
           </div>
         </div>
       )}
@@ -565,54 +889,62 @@ export const DoctorScheduleManageView: React.FC = () => {
           </p>
         </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const doc = staffAccounts.find((s) => s.id === selectedDocId);
-            if (!doc) return;
-            addDoctorSchedule({
-              doctorId: doc.id,
-              doctorName: doc.name,
-              doctorRole: doc.role,
-              doctorAvatar: doc.avatarUrl,
-              specialty,
-              days,
-              startTime,
-              endTime,
-              status,
-            });
-          }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
-        >
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Pilih Dokter *</label>
-            <select
-              value={selectedDocId}
-              onChange={(e) => setSelectedDocId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
-            >
-              {doctorsList.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.role})
-                </option>
-              ))}
-            </select>
-          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const doc = staffAccounts.find((s) => s.id === selectedDocId);
+              if (!doc) return;
+              const formattedDocName = formatDoctorNameWithTitleAndDegree(
+                doc.name,
+                doc.role,
+                specialty
+              );
+              addDoctorSchedule({
+                doctorId: doc.id,
+                doctorName: formattedDocName,
+                doctorRole: doc.role,
+                doctorAvatar: doc.avatarUrl,
+                specialty,
+                days,
+                startTime,
+                endTime,
+                status,
+              });
+            }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+          >
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Pilih Dokter *</label>
+              <select
+                value={selectedDocId}
+                onChange={(e) => setSelectedDocId(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+              >
+                {doctorsList.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {formatDoctorNameWithTitleAndDegree(d.name, d.role, d.specialty)} ({d.role})
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Kategori / Spesialisasi *
-            </label>
-            <select
-              value={specialty}
-              onChange={(e) => setSpecialty(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
-            >
-              <option value="Doctor">Doctor (Poli Umum)</option>
-              <option value="Specialist Doctor">Specialist Doctor</option>
-              <option value="Spesialis Bedah">Spesialis Bedah</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Kategori / Spesialisasi *
+              </label>
+              <select
+                value={specialty}
+                onChange={(e) => setSpecialty(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+              >
+                <option value="Doctor">Doctor (Poli Umum — dr. ..., S.Ked)</option>
+                {SPECIALIST_CATEGORIES.map((sp) => (
+                  <option key={sp.id} value={sp.id}>
+                    {sp.label} ({sp.degreeSuffix})
+                  </option>
+                ))}
+              </select>
+            </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">Hari Praktik *</label>

@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { DoctorSchedule } from '../types';
+import { DoctorSchedule, SKSRecord } from '../types';
 import { IshiharaTestSection } from './IshiharaTest';
+import {
+  GHQ12_QUESTIONS,
+  DASS21_QUESTIONS,
+  evaluateFullPsychologyAssessment,
+} from '../utils/psychologyAssessment';
 import {
   X,
   FileText,
@@ -168,7 +173,8 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
       | 'Lampiran Melamar Pekerjaan',
   });
 
-  // Psychology Form State
+  // Psychology Form State (Dua Tahap: 1. Isi Data Diri -> 2. Tes & Evaluasi Psikologi [Bagian 1 GHQ-12 & Bagian 2 DASS-21])
+  const [psyStep, setPsyStep] = useState<'data_diri' | 'tes_evaluasi' | 'selesai'>('data_diri');
   const [psyForm, setPsyForm] = useState({
     fullName: '',
     birthDate: '',
@@ -183,6 +189,16 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
       | 'Rujukan Konsultasi & Terapi Medis',
     historyNotes: '',
   });
+  const [ghqAnswers, setGhqAnswers] = useState<
+    Record<number, { code: string; label: string; score: number }>
+  >({});
+  const [dassAnswers, setDassAnswers] = useState<
+    Record<number, { code: string; label: string; score: number }>
+  >({});
+  const [psyError, setPsyError] = useState('');
+  const [psyLastResult, setPsyLastResult] = useState<ReturnType<
+    typeof evaluateFullPsychologyAssessment
+  > | null>(null);
 
   // Plastic Surgery Form State
   const [plasticForm, setPlasticForm] = useState({
@@ -418,164 +434,550 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
           </div>
         )}
 
-        {/* 2. MODAL TES PSIKOLOGI (Sec 22 — No Tatap Muka/Online option) */}
+        {/* 2. MODAL TES & EVALUASI PSIKOLOGI (Dua Form Utama: 1. Isi Data Diri & 2. Tes & Evaluasi Psikologi) */}
         {activeModal === 'psychology' && (
           <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b border-pink-100 pb-4">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center">
-                <Brain className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center shrink-0">
+                  <Brain className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">Tes & Evaluasi Psikologi</h2>
+                  <p className="text-xs text-slate-500">
+                    Kerahasiaan Medis Terjamin · Hasil & Sertifikat dievaluasi oleh Co-ass ke atas di Portal Staff
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Pendaftaran Tes & Evaluasi Psikologi</h2>
-                <p className="text-xs text-slate-500">
-                  Kerahasiaan Medis Terjamin · Diakses khusus oleh Co-ass ke atas
-                </p>
-              </div>
+
+              {/* Step Indicator: Form 1 (Isi Data Diri) & Form 2 (Tes & Evaluasi Psikologi) */}
+              {psyStep !== 'selesai' && (
+                <div className="flex items-center gap-1.5 bg-[#FFF5F8] p-1.5 rounded-xl border border-pink-100 text-xs font-bold self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setPsyStep('data_diri')}
+                    className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                      psyStep === 'data_diri'
+                        ? 'bg-[#E83E8C] text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-[#D63384]'
+                    }`}
+                  >
+                    1. Isi Data Diri
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        !psyForm.fullName.trim() ||
+                        !psyForm.birthDate ||
+                        !psyForm.age ||
+                        !psyForm.occupation.trim() ||
+                        !psyForm.phoneOrIC.trim()
+                      ) {
+                        setPsyError('Harap lengkapi seluruh kolom wajib pada Form Isi Data Diri terlebih dahulu.');
+                        return;
+                      }
+                      setPsyError('');
+                      setPsyStep('tes_evaluasi');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                      psyStep === 'tes_evaluasi'
+                        ? 'bg-[#E83E8C] text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-[#D63384]'
+                    }`}
+                  >
+                    2. Tes & Evaluasi Psikologi
+                  </button>
+                </div>
+              )}
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                submitPsychology({
-                  fullName: psyForm.fullName,
-                  birthDate: psyForm.birthDate,
-                  age: Number(psyForm.age) || 21,
-                  gender: psyForm.gender,
-                  occupation: psyForm.occupation,
-                  phoneOrIC: psyForm.phoneOrIC,
-                  purpose: psyForm.purpose,
-                  historyNotes: psyForm.historyNotes,
-                });
-                onClose();
-              }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-            >
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
-                <input
-                  required
-                  type="text"
-                  value={psyForm.fullName}
-                  onChange={(e) => setPsyForm({ ...psyForm, fullName: e.target.value })}
-                  placeholder="Nama lengkap peserta"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
-                />
+            {psyError && (
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
+                {psyError}
               </div>
+            )}
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Tanggal Lahir *</label>
-                <input
-                  required
-                  type="date"
-                  value={psyForm.birthDate}
-                  onChange={(e) => setPsyForm({ ...psyForm, birthDate: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Umur (Tahun) *</label>
-                <input
-                  required
-                  type="number"
-                  min={1}
-                  max={120}
-                  value={psyForm.age}
-                  onChange={(e) => setPsyForm({ ...psyForm, age: e.target.value })}
-                  placeholder="Contoh: 24"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Gender *</label>
-                <select
-                  value={psyForm.gender}
-                  onChange={(e) =>
-                    setPsyForm({ ...psyForm, gender: e.target.value as 'Laki-laki' | 'Perempuan' })
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
-                >
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Pekerjaan *</label>
-                <input
-                  required
-                  type="text"
-                  value={psyForm.occupation}
-                  onChange={(e) => setPsyForm({ ...psyForm, occupation: e.target.value })}
-                  placeholder="Pekerjaan saat ini"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">No HP / IC *</label>
-                <input
-                  required
-                  type="text"
-                  value={psyForm.phoneOrIC}
-                  onChange={(e) => setPsyForm({ ...psyForm, phoneOrIC: e.target.value })}
-                  placeholder="Nomor kontak aktif"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Tujuan Pemeriksaan *</label>
-                <select
-                  value={psyForm.purpose}
-                  onChange={(e) =>
-                    setPsyForm({ ...psyForm, purpose: e.target.value as typeof psyForm.purpose })
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
-                >
-                  <option value="Evaluasi Kesehatan Mental Mandiri">Evaluasi Kesehatan Mental Mandiri</option>
-                  <option value="Syarat Kelayakan Kerja / Rekrutmen">Syarat Kelayakan Kerja / Rekrutmen</option>
-                  <option value="Lampiran Pengajuan Lisensi / Izin Khusus">Lampiran Pengajuan Lisensi / Izin Khusus</option>
-                  <option value="Rujukan Konsultasi & Terapi Medis">Rujukan Konsultasi & Terapi Medis</option>
-                </select>
-              </div>
-
-              <div className="sm:col-span-2">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-semibold text-slate-700">
-                    Keluhan / Riwayat Psikologis Singkat
-                  </label>
-                  <span className="text-xs font-medium text-[#20C997] flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5" />
-                    Opsional & Kerahasiaan Terjamin
+            {/* FORM UTAMA 1: ISI DATA DIRI */}
+            {psyStep === 'data_diri' && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setPsyError('');
+                  setPsyStep('tes_evaluasi');
+                }}
+                className="space-y-4"
+              >
+                <div className="p-3.5 rounded-xl bg-[#FFF5F8] border border-pink-100 flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#D63384]">
+                    TAHAP 1 DARI 2 — FORMULIR ISI DATA DIRI PESERTA
                   </span>
+                  <span className="text-[11px] text-slate-500">Wajib diisi lengkap sebelum memulai tes</span>
                 </div>
-                <textarea
-                  rows={3}
-                  value={psyForm.historyNotes}
-                  onChange={(e) => setPsyForm({ ...psyForm, historyNotes: e.target.value })}
-                  placeholder="Jelaskan secara singkat keluhan, kendala emosional, atau latar belakang pengajuan tes psikologi Anda."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
-                />
-              </div>
 
-              <div className="sm:col-span-2 pt-3 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
-                >
-                  Daftar Tes Psikologi
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
+                    <input
+                      required
+                      type="text"
+                      value={psyForm.fullName}
+                      onChange={(e) => setPsyForm({ ...psyForm, fullName: e.target.value })}
+                      placeholder="Nama lengkap peserta sesuai identitas IC"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tanggal Lahir *</label>
+                    <input
+                      required
+                      type="date"
+                      value={psyForm.birthDate}
+                      onChange={(e) => setPsyForm({ ...psyForm, birthDate: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Umur (Tahun) *</label>
+                    <input
+                      required
+                      type="number"
+                      min={1}
+                      max={120}
+                      value={psyForm.age}
+                      onChange={(e) => setPsyForm({ ...psyForm, age: e.target.value })}
+                      placeholder="Contoh: 24"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Gender *</label>
+                    <select
+                      value={psyForm.gender}
+                      onChange={(e) =>
+                        setPsyForm({ ...psyForm, gender: e.target.value as 'Laki-laki' | 'Perempuan' })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                    >
+                      <option value="Laki-laki">Laki-laki</option>
+                      <option value="Perempuan">Perempuan</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Pekerjaan *</label>
+                    <input
+                      required
+                      type="text"
+                      value={psyForm.occupation}
+                      onChange={(e) => setPsyForm({ ...psyForm, occupation: e.target.value })}
+                      placeholder="Pekerjaan saat ini"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">No HP / IC *</label>
+                    <input
+                      required
+                      type="text"
+                      value={psyForm.phoneOrIC}
+                      onChange={(e) => setPsyForm({ ...psyForm, phoneOrIC: e.target.value })}
+                      placeholder="Nomor kontak aktif"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tujuan Pemeriksaan *</label>
+                    <select
+                      value={psyForm.purpose}
+                      onChange={(e) =>
+                        setPsyForm({ ...psyForm, purpose: e.target.value as typeof psyForm.purpose })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                    >
+                      <option value="Evaluasi Kesehatan Mental Mandiri">Evaluasi Kesehatan Mental Mandiri</option>
+                      <option value="Syarat Kelayakan Kerja / Rekrutmen">Syarat Kelayakan Kerja / Rekrutmen</option>
+                      <option value="Lampiran Pengajuan Lisensi / Izin Khusus">Lampiran Pengajuan Lisensi / Izin Khusus</option>
+                      <option value="Rujukan Konsultasi & Terapi Medis">Rujukan Konsultasi & Terapi Medis</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Keluhan / Riwayat Psikologis Singkat
+                      </label>
+                      <span className="text-xs font-medium text-[#20C997] flex items-center gap-1">
+                        <Lock className="w-3.5 h-3.5" />
+                        Opsional & Kerahasiaan Terjamin
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={psyForm.historyNotes}
+                      onChange={(e) => setPsyForm({ ...psyForm, historyNotes: e.target.value })}
+                      placeholder="Jelaskan secara singkat keluhan, kendala emosional, atau latar belakang pengajuan tes psikologi Anda."
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 flex justify-end gap-3 border-t border-pink-100">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                  >
+                    Lanjut ke Form Tes & Evaluasi Psikologi →
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* FORM UTAMA 2: TES & EVALUASI PSIKOLOGI (Bagian 1: GHQ-12 & Bagian 2: DASS-21) */}
+            {psyStep === 'tes_evaluasi' && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setPsyError('');
+                  const ghqCount = Object.keys(ghqAnswers).length;
+                  const dassCount = Object.keys(dassAnswers).length;
+                  if (ghqCount < GHQ12_QUESTIONS.length || dassCount < DASS21_QUESTIONS.length) {
+                    setPsyError(
+                      `Harap menjawab seluruh pertanyaan pada Bagian 1 GHQ-12 (${ghqCount}/12 terjawab) dan Bagian 2 DASS-21 (${dassCount}/21 terjawab) sebelum mengirim evaluasi.`
+                    );
+                    return;
+                  }
+
+                  const evalResult = evaluateFullPsychologyAssessment(ghqAnswers, dassAnswers);
+
+                  submitPsychology({
+                    fullName: psyForm.fullName.trim(),
+                    birthDate: psyForm.birthDate,
+                    age: Number(psyForm.age) || 21,
+                    gender: psyForm.gender,
+                    occupation: psyForm.occupation.trim(),
+                    phoneOrIC: psyForm.phoneOrIC.trim(),
+                    purpose: psyForm.purpose,
+                    historyNotes: psyForm.historyNotes,
+                    ghqScore: evalResult.ghqScore,
+                    ghqMaxScore: evalResult.ghqMaxScore,
+                    ghqInterpretation: evalResult.ghqInterpretation,
+                    dassDepressionRaw: evalResult.dassDepressionRaw,
+                    dassDepressionScore: evalResult.dassDepressionScore,
+                    dassDepressionCategory: evalResult.dassDepressionCategory,
+                    dassAnxietyRaw: evalResult.dassAnxietyRaw,
+                    dassAnxietyScore: evalResult.dassAnxietyScore,
+                    dassAnxietyCategory: evalResult.dassAnxietyCategory,
+                    dassStressRaw: evalResult.dassStressRaw,
+                    dassStressScore: evalResult.dassStressScore,
+                    dassStressCategory: evalResult.dassStressCategory,
+                    totalScore: evalResult.totalScore,
+                    maxScore: evalResult.maxScore,
+                    scorePercentage: evalResult.scorePercentage,
+                    interpretationCategory: evalResult.interpretationCategory,
+                    interpretationSummary: evalResult.interpretationSummary,
+                    recommendation: evalResult.recommendation,
+                    answersDetail: evalResult.answersDetail,
+                  });
+
+                  setPsyLastResult(evalResult);
+                  setPsyStep('selesai');
+                }}
+                className="space-y-5"
+              >
+                <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-bold text-[#D63384]">
+                      TAHAP 2 DARI 2 — TES & EVALUASI PSIKOLOGI (GHQ-12 & DASS-21)
+                    </p>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      Peserta: <strong>{psyForm.fullName}</strong> · Jawab seluruh butir Bagian 1 (12 Soal) & Bagian 2 (21 Soal).
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="px-2.5 py-1 rounded-lg bg-white border border-pink-200 text-[11px] font-mono font-bold text-[#D63384]">
+                      GHQ-12: {Object.keys(ghqAnswers).length}/12
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white border border-pink-200 text-[11px] font-mono font-bold text-[#0D9488]">
+                      DASS-21: {Object.keys(dassAnswers).length}/21
+                    </span>
+                  </div>
+                </div>
+
+                {/* Scrollable Container for Bagian 1 & Bagian 2 */}
+                <div className="space-y-6 max-h-[56vh] overflow-y-auto pr-1">
+                  {/* BAGIAN 1: SKRINING KESEHATAN MENTAL UMUM (GHQ-12) */}
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2">
+                      <h3 className="text-sm sm:text-base font-extrabold text-pink-300">
+                        Bagian 1: Skrining Kesehatan Mental Umum (GHQ-12)
+                      </h3>
+                      <p className="text-xs text-slate-200">
+                        <strong>Petunjuk:</strong> Pilih jawaban berdasarkan kondisi yang Anda rasakan selama 2 minggu terakhir.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 text-[11px] text-slate-300">
+                        <div>• <strong>A:</strong> Sama sekali tidak</div>
+                        <div>• <strong>B:</strong> Tidak lebih dari biasanya</div>
+                        <div>• <strong>C:</strong> Lebih dari biasanya</div>
+                        <div>• <strong>D:</strong> Jauh lebih dari biasanya</div>
+                      </div>
+                    </div>
+
+                    {GHQ12_QUESTIONS.map((q) => {
+                      const currentAns = ghqAnswers[q.number];
+                      return (
+                        <div
+                          key={`ghq-${q.number}`}
+                          className="p-4 rounded-2xl bg-white border border-pink-100 shadow-2xs space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[11px] font-mono font-bold text-[#E83E8C] uppercase">
+                              GHQ-12 · Soal #{q.number} ({q.itemType})
+                            </span>
+                            {currentAns && (
+                              <span className="text-[11px] font-semibold text-[#20C997] flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Terjawab ({currentAns.code})
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-relaxed">
+                            {q.number}. {q.questionText}
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {q.options.map((opt) => {
+                              const isChecked = currentAns?.code === opt.code;
+                              return (
+                                <label
+                                  key={opt.code}
+                                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition ${
+                                    isChecked
+                                      ? 'border-[#E83E8C] bg-[#FFF5F8] font-bold text-slate-900'
+                                      : 'border-slate-200 bg-white hover:border-pink-200 text-slate-700'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`ghq_q_${q.number}`}
+                                    checked={isChecked}
+                                    onChange={() => {
+                                      setPsyError('');
+                                      setGhqAnswers((prev) => ({
+                                        ...prev,
+                                        [q.number]: {
+                                          code: opt.code,
+                                          label: opt.label,
+                                          score: opt.score,
+                                        },
+                                      }));
+                                    }}
+                                    className="accent-[#E83E8C]"
+                                  />
+                                  <span>{opt.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* BAGIAN 2: SKALA DEPRESI, KECEMASAN, DAN STRES (DASS-21) */}
+                  <div className="space-y-4 pt-2">
+                    <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2">
+                      <h3 className="text-sm sm:text-base font-extrabold text-teal-300">
+                        Bagian 2: Skala Depresi, Kecemasan, dan Stres (DASS-21)
+                      </h3>
+                      <p className="text-xs text-slate-200">
+                        <strong>Petunjuk:</strong> Berikan penilaian seberapa sering pernyataan berikut berlaku untuk Anda selama seminggu terakhir.
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 text-[11px] text-slate-300">
+                        <div>• <strong>0:</strong> Tidak pernah</div>
+                        <div>• <strong>1:</strong> Kadang-kadang</div>
+                        <div>• <strong>2:</strong> Sering</div>
+                        <div>• <strong>3:</strong> Sangat sering</div>
+                      </div>
+                    </div>
+
+                    {DASS21_QUESTIONS.map((q) => {
+                      const currentAns = dassAnswers[q.number];
+                      return (
+                        <div
+                          key={`dass-${q.number}`}
+                          className="p-4 rounded-2xl bg-white border border-pink-100 shadow-2xs space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[11px] font-mono font-bold text-[#0D9488] uppercase">
+                              DASS-21 · Soal #{q.number} ({q.subscale})
+                            </span>
+                            {currentAns && (
+                              <span className="text-[11px] font-semibold text-[#20C997] flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Terjawab (Skala {currentAns.code})
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 leading-relaxed">
+                            {q.number}. {q.questionText}{' '}
+                            <span className="italic font-medium text-slate-500">({q.subscale})</span>
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {q.options.map((opt) => {
+                              const isChecked = currentAns?.code === opt.code;
+                              return (
+                                <label
+                                  key={opt.code}
+                                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition ${
+                                    isChecked
+                                      ? 'border-[#0D9488] bg-teal-50/70 font-bold text-slate-900'
+                                      : 'border-slate-200 bg-white hover:border-teal-200 text-slate-700'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`dass_q_${q.number}`}
+                                    checked={isChecked}
+                                    onChange={() => {
+                                      setPsyError('');
+                                      setDassAnswers((prev) => ({
+                                        ...prev,
+                                        [q.number]: {
+                                          code: opt.code,
+                                          label: opt.label,
+                                          score: opt.score,
+                                        },
+                                      }));
+                                    }}
+                                    className="accent-[#0D9488]"
+                                  />
+                                  <span>{opt.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="pt-3 flex items-center justify-between gap-3 border-t border-pink-100">
+                  <button
+                    type="button"
+                    onClick={() => setPsyStep('data_diri')}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs sm:text-sm font-medium hover:bg-slate-50 cursor-pointer"
+                  >
+                    ← Kembali ke Data Diri
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs sm:text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                  >
+                    Selesai & Kirim Hasil Evaluasi Psikologi
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* KONFIRMASI SELESAI TES PSIKOLOGI */}
+            {psyStep === 'selesai' && psyLastResult && (
+              <div className="p-6 rounded-2xl bg-[#FFF5F8] border border-pink-200 text-center space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#20C997] text-white flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-[#D63384] uppercase">
+                    TES & EVALUASI PSIKOLOGI BERHASIL DIKIRIM
+                  </p>
+                  <h3 className="text-xl font-bold text-slate-900">{psyForm.fullName}</h3>
+                </div>
+                <div className="max-w-xl mx-auto p-4 rounded-xl bg-white border border-pink-100 text-left space-y-2.5 text-xs">
+                  <div className="pb-2 border-b border-slate-100">
+                    <span className="text-[11px] font-bold text-[#D63384] uppercase block">
+                      Bagian 1: Skrining Kesehatan Mental Umum (GHQ-12)
+                    </span>
+                    <div className="flex justify-between items-center mt-1">
+                      <span className="text-slate-600">Skor Total GHQ-12 (Likert 0–3):</span>
+                      <span className="font-mono font-bold text-slate-900">
+                        {psyLastResult.ghqScore} / 36
+                      </span>
+                    </div>
+                    <p className="text-slate-700 font-semibold mt-0.5">
+                      Interpretasi: {psyLastResult.ghqInterpretation}
+                    </p>
+                  </div>
+
+                  <div className="pb-2 border-b border-slate-100">
+                    <span className="text-[11px] font-bold text-[#0D9488] uppercase block mb-1">
+                      Bagian 2: Skala Depresi, Kecemasan, dan Stres (DASS-21 × 2)
+                    </span>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="p-2 rounded-lg bg-slate-50 border border-slate-200/70">
+                        <span className="text-[10px] text-slate-500 block">Depresi</span>
+                        <strong className="font-mono text-sm text-slate-900">
+                          {psyLastResult.dassDepressionScore}
+                        </strong>
+                        <span className="block text-[10px] font-bold text-[#D63384]">
+                          {psyLastResult.dassDepressionCategory}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-50 border border-slate-200/70">
+                        <span className="text-[10px] text-slate-500 block">Kecemasan</span>
+                        <strong className="font-mono text-sm text-slate-900">
+                          {psyLastResult.dassAnxietyScore}
+                        </strong>
+                        <span className="block text-[10px] font-bold text-[#0D9488]">
+                          {psyLastResult.dassAnxietyCategory}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-50 border border-slate-200/70">
+                        <span className="text-[10px] text-slate-500 block">Stres</span>
+                        <strong className="font-mono text-sm text-slate-900">
+                          {psyLastResult.dassStressScore}
+                        </strong>
+                        <span className="block text-[10px] font-bold text-amber-700">
+                          {psyLastResult.dassStressCategory}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-0.5">
+                    <span className="text-slate-500 block mb-0.5">Rekomendasi Evaluasi:</span>
+                    <span className="font-semibold text-slate-800">{psyLastResult.recommendation}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Hasil penilaian GHQ-12 & DASS-21 lengkap beserta <strong>Sertifikat Tes & Evaluasi Psikologi (.JPEG)</strong> telah tersimpan di Database dan dapat dilihat pada Menu <strong>Tes Psikologi</strong> di Portal Staff.
+                </p>
+                <div className="flex justify-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPsyStep('data_diri');
+                      setGhqAnswers({});
+                      setDassAnswers({});
+                      setPsyLastResult(null);
+                      onClose();
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold cursor-pointer"
+                  >
+                    Tutup Halaman
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         )}
 
@@ -833,7 +1235,15 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
               {/* Interactive Filter Controls */}
               <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100">
-                {['Semua', 'Doctor', 'Specialist Doctor', 'Spesialis Bedah'].map((cat) => (
+                {[
+                  'Semua',
+                  'Doctor',
+                  'Spesialis Obgyn',
+                  'Spesialis Kecantikan',
+                  'Spesialis Forensik',
+                  'Spesialis Jantung',
+                  'Spesialis Bedah',
+                ].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setScheduleFilter(cat)}

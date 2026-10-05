@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ROLE_LIST, RoleName, AccountStatus } from '../../types';
 import {
+  SPECIALIST_CATEGORIES,
+  formatDoctorNameWithTitleAndDegree,
+} from '../../utils/doctorFormatting';
+import {
   Users,
   UserCheck,
   ShieldAlert,
@@ -225,8 +229,45 @@ export const StaffManagementView: React.FC = () => {
                       type="text"
                       value={editSpecialty}
                       onChange={(e) => setEditSpecialty(e.target.value)}
+                      placeholder="Contoh: Spesialis Obgyn / Spesialis Jantung"
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm"
                     />
+                    {/* Pilihan Cepat Spesialis Dokter (Obgyn, Kecantikan, Forensik, Jantung, dll) */}
+                    {[
+                      'Doctor',
+                      'Specialist Doctor',
+                      'Heads of Departments',
+                      'Deputy Chief',
+                      'Chief Executive Officer',
+                      'Executive Board',
+                    ].includes(editRole) && (
+                      <div className="pt-2 space-y-1.5">
+                        <p className="text-[11px] font-semibold text-slate-500">
+                          Pilih Spesialis (Otomatis menambahkan gelar <code className="text-[#D63384]">dr.</code> di depan & gelar pendidikan di belakang nama):
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {SPECIALIST_CATEGORIES.map((sp) => (
+                            <button
+                              key={sp.id}
+                              type="button"
+                              onClick={() => {
+                                setEditSpecialty(sp.id);
+                                setEditName(
+                                  formatDoctorNameWithTitleAndDegree(editName, editRole, sp.id)
+                                );
+                              }}
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
+                                editSpecialty === sp.id
+                                  ? 'bg-[#E83E8C] text-white border-[#E83E8C]'
+                                  : 'bg-[#FFF5F8] text-[#D63384] border-pink-200 hover:bg-pink-100'
+                              }`}
+                            >
+                              {sp.id} ({sp.degreeSuffix})
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">

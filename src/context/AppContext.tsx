@@ -47,6 +47,7 @@ import {
 } from '../data/initialData';
 import { createStaffAvatarSvg } from '../components/BrandAssets';
 import { syncRecordToFirestore, subscribeToPortalRecords } from '../firebase';
+import { formatDoctorNameWithTitleAndDegree } from '../utils/doctorFormatting';
 
 interface AppContextType {
   currentUser: StaffAccount | null;
@@ -832,20 +833,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addToast('error', 'Akses Ditolak', 'Staff tidak dapat menaikkan role dirinya sendiri.');
       return;
     }
+    const formattedName = formatDoctorNameWithTitleAndDegree(newName, newRole, newSpecialty);
     setStaffAccounts((prev) =>
       prev.map((s) => {
         if (s.id === staffId) {
-          const updated = { ...s, role: newRole, level: newLevel, name: newName, specialty: newSpecialty };
+          const updated = { ...s, role: newRole, level: newLevel, name: formattedName, specialty: newSpecialty };
           void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
           return updated;
         }
         return s;
       })
     );
-    setDutyLogs((prev) => prev.map((log) => (log.staffId === staffId ? { ...log, staffName: newName, role: newRole } : log)));
-    setPayrollRecords((prev) => prev.map((pay) => (pay.staffId === staffId ? { ...pay, staffName: newName, role: newRole } : pay)));
-    setDoctorSchedules((prev) => prev.map((sch) => (sch.doctorId === staffId ? { ...sch, doctorName: newName, doctorRole: newRole } : sch)));
-    addToast('success', 'Jabatan Staff Diperbarui', `Jabatan menjadi ${newRole} (Level ${newLevel}) & RBAC diperbarui di Database.`);
+    setDutyLogs((prev) => prev.map((log) => (log.staffId === staffId ? { ...log, staffName: formattedName, role: newRole } : log)));
+    setPayrollRecords((prev) => prev.map((pay) => (pay.staffId === staffId ? { ...pay, staffName: formattedName, role: newRole } : pay)));
+    setDoctorSchedules((prev) => prev.map((sch) => (sch.doctorId === staffId ? { ...sch, doctorName: formattedName, doctorRole: newRole } : sch)));
+    addToast('success', 'Jabatan Staff Diperbarui', `Data ${formattedName} (${newRole} · Level ${newLevel}) diperbarui di Database.`);
   };
 
   const deactivateStaff = (staffId: string) => {
