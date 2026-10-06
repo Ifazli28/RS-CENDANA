@@ -17,6 +17,9 @@ import {
   AlertTriangle,
   MessageSquareWarning,
   UserPlus,
+  Eye,
+  FileText,
+  X,
 } from 'lucide-react';
 
 // 1. PENGELOLAAN STAFF & EDIT STAFF + CONFIRMATION MODAL (Sec 44, 45, 46, 47)
@@ -872,6 +875,30 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
   );
 };
 
+// Helper membuat pratinjau visual dokumen lampiran (untuk pelamar yang datanya disimpan sebelum dataUrl aktif)
+function buildFallbackDocSvgDataUrl(docTitle: string, applicantName: string, fileName: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="580" viewBox="0 0 900 580">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#FFF5F8" />
+        <stop offset="100%" stop-color="#FFFFFF" />
+      </linearGradient>
+    </defs>
+    <rect width="900" height="580" rx="24" fill="url(#bg)" stroke="#FBCFE8" stroke-width="4"/>
+    <rect x="36" y="36" width="828" height="508" rx="16" fill="#FFFFFF" stroke="#E83E8C" stroke-width="2" stroke-dasharray="8 6"/>
+    <rect x="64" y="64" width="772" height="76" rx="12" fill="#FFF5F8"/>
+    <text x="90" y="102" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#D63384">PEMERINTAH KOTA CENDANA — DOKUMEN LAMPIRAN RECRUITMENT</text>
+    <text x="90" y="126" font-family="Arial, sans-serif" font-size="14" fill="#64748B">Cendana Medical Center · Sistem Verifikasi Dokumen Pelamar Kerja</text>
+    <text x="90" y="200" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#0F172A">${docTitle.replace(/[<>&"']/g, '')}</text>
+    <text x="90" y="255" font-family="Arial, sans-serif" font-size="18" fill="#334155">Nama Karakter (IC) : ${applicantName.replace(/[<>&"']/g, '')}</text>
+    <text x="90" y="295" font-family="monospace" font-size="16" fill="#D63384">Nama File Terlampir : ${fileName.replace(/[<>&"']/g, '')}</text>
+    <rect x="90" y="340" width="280" height="46" rx="10" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="112" y="369" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#047857">✓ LAMPIRAN DOKUMEN TERVERIFIKASI</text>
+    <text x="90" y="470" font-family="Arial, sans-serif" font-size="13" fill="#94A3B8">Pratinjau Dokumen Digital · HRD Cendana Medical Center</text>
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 // 5. RECRUITMENT MANAGEMENT & COMPLAINT MANAGEMENT (Sec 64 & 65 — Heads+ Level 7+)
 export const RecruitmentAndComplaintManageView: React.FC<{
   mode: 'recruitment' | 'complaint';
@@ -885,10 +912,23 @@ export const RecruitmentAndComplaintManageView: React.FC<{
     updateComplaintStatus,
   } = useApp();
 
+  const [selectedApplicant, setSelectedApplicant] = useState<
+    typeof recruitmentApplicants[0] | null
+  >(null);
+  const [previewPhoto, setPreviewPhoto] = useState<{
+    title: string;
+    fileName: string;
+    url: string;
+  } | null>(null);
+
   const [selectedComplaint, setSelectedComplaint] = useState<typeof complaints[0] | null>(null);
   const [internalNote, setInternalNote] = useState('');
 
   if (mode === 'recruitment') {
+    const activeApp = selectedApplicant
+      ? recruitmentApplicants.find((a) => a.id === selectedApplicant.id) || selectedApplicant
+      : null;
+
     return (
       <div className="space-y-6">
         <div className="bg-white p-6 rounded-2xl border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -922,103 +962,473 @@ export const RecruitmentAndComplaintManageView: React.FC<{
           </div>
         </div>
 
+        {/* Tabel Ringkas: Hanya Nama Pelamar Kerja + Button Cek Detail Lamaran Kerja + Status */}
         <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
-                  <th className="py-3.5 px-4">Karakter IC & Syarat</th>
-                  <th className="py-3.5 px-4">CV IC & Pengalaman RP</th>
-                  <th className="py-3.5 px-4">Dokumen & Info OOC</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-right">Ubah Status</th>
+                <tr className="border-b border-pink-100 text-xs font-bold text-slate-500 bg-[#FFF5F8]/60">
+                  <th className="py-3.5 px-5">Nama Pelamar Kerja</th>
+                  <th className="py-3.5 px-5">Detail Lamaran Kerja</th>
+                  <th className="py-3.5 px-5">Status</th>
+                  <th className="py-3.5 px-5 text-right">Ubah Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
-                {recruitmentApplicants.map((app) => (
-                  <tr key={app.id} className="hover:bg-pink-50/30 transition align-top">
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-slate-900">
-                        {app.fullName} ({app.gender})
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-mono mt-0.5">
-                        {app.birthDateIC ? `Lahir IC: ${app.birthDateIC}` : app.phoneOrIC}
-                      </div>
-                      {app.icInterviewRequirements && (
-                        <div className="mt-2 space-y-0.5 text-[11px] text-slate-600">
-                          <div>
-                            KTP: <strong>{app.icInterviewRequirements.hasKtpIme ? 'Ya' : 'Tidak'}</strong> · SKB:{' '}
-                            <strong>{app.icInterviewRequirements.hasSkb ? 'Ya' : 'Tidak'}</strong> · SIM:{' '}
-                            <strong>{app.icInterviewRequirements.hasSim ? 'Ya' : 'Menyusul'}</strong>
-                          </div>
-                          <div>
-                            SKS: <strong>{app.icInterviewRequirements.hasSuratKesehatan ? 'Ya' : 'Tidak'}</strong> · Psikolog:{' '}
-                            <strong>{app.icInterviewRequirements.hasSuratPsikolog ? 'Ya' : 'Tidak'}</strong>
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-slate-600 max-w-md space-y-1">
-                      <div>
-                        <strong>Pengalaman Medis/EMS:</strong> {app.experience}
-                      </div>
-                      <div>
-                        <strong>Motivasi CMC:</strong> {app.motivation}
-                      </div>
-                      {app.rpExperienceOOC && (
-                        <div>
-                          <strong>Pengalaman RP (OOC):</strong> {app.rpExperienceOOC}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-slate-600 space-y-1">
-                      {app.ktpPhotoName && (
-                        <div className="font-mono text-[11px] text-[#D63384]">
-                          📎 KTP: {app.ktpPhotoName} | SKB: {app.skbPhotoName}
-                        </div>
-                      )}
-                      {app.suratKesehatanPhotoName && (
-                        <div className="font-mono text-[11px] text-[#20C997]">
-                          📎 SKS: {app.suratKesehatanPhotoName} | Psikolog: {app.suratPsikologPhotoName}
-                        </div>
-                      )}
-                      {app.onlineHoursOOC ? (
-                        <div className="text-[11px] text-slate-600 pt-1">
-                          <div>
-                            <strong>Kota Lain:</strong> {app.otherCityResponsibilityOOC}
-                          </div>
-                          <div>
-                            <strong>Online:</strong> {app.onlineHoursOOC} ({app.onlineDaysOOC})
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-[11px] text-slate-500">{app.education}</div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 font-bold text-[#E83E8C]">{app.status}</td>
-                    <td className="py-3.5 px-4 text-right">
-                      <select
-                        value={app.status}
-                        onChange={(e) =>
-                          updateRecruitmentApplicantStatus(
-                            app.id,
-                            e.target.value as typeof app.status
-                          )
-                        }
-                        className="px-2.5 py-1.5 rounded-lg border border-pink-200 text-xs bg-white font-semibold"
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Interview">Interview</option>
-                        <option value="Accepted">Accepted</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
+                {recruitmentApplicants.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-10 text-center text-slate-400">
+                      Belum ada data pelamar kerja yang masuk.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  recruitmentApplicants.map((app) => (
+                    <tr key={app.id} className="hover:bg-pink-50/30 transition">
+                      <td className="py-4 px-5">
+                        <div className="font-bold text-slate-900 text-sm">
+                          {app.fullName}{' '}
+                          <span className="font-medium text-slate-500">({app.gender})</span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                          Dikirim: {app.appliedAt}
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedApplicant(app)}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-2xs hover:opacity-95 transition inline-flex items-center gap-2 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Cek Detail Lamaran Kerja</span>
+                        </button>
+                      </td>
+
+                      <td className="py-4 px-5">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${
+                            app.status === 'Accepted'
+                              ? 'bg-emerald-50 text-[#20C997] border border-emerald-200'
+                              : app.status === 'Rejected'
+                              ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                              : app.status === 'Interview'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : 'bg-pink-50 text-[#E83E8C] border border-pink-200'
+                          }`}
+                        >
+                          {app.status}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-5 text-right">
+                        <select
+                          value={app.status}
+                          onChange={(e) =>
+                            updateRecruitmentApplicantStatus(
+                              app.id,
+                              e.target.value as typeof app.status
+                            )
+                          }
+                          className="px-3 py-1.5 rounded-xl border border-pink-200 text-xs bg-white font-semibold cursor-pointer"
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Interview">Interview</option>
+                          <option value="Accepted">Accepted</option>
+                          <option value="Rejected">Rejected</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* MODAL DETAIL LAMARAN KERJA & PREVIEW FOTO DOKUMEN */}
+        {activeApp && (
+          <div
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+            onClick={() => setSelectedApplicant(null)}
+          >
+            <div
+              className="bg-white rounded-3xl border border-pink-100 p-6 sm:p-7 max-w-4xl w-full space-y-6 max-h-[90vh] overflow-y-auto shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header Modal */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-4">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#E83E8C]">
+                    DETAIL FORMULIR LAMARAN KERJA PARAMEDIC
+                  </span>
+                  <h3 className="text-xl font-bold text-slate-900 mt-0.5">
+                    {activeApp.fullName} ({activeApp.gender})
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Tanggal Pendaftaran: {activeApp.appliedAt} · Status Saat Ini:{' '}
+                    <strong className="text-[#D63384]">{activeApp.status}</strong>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <select
+                    value={activeApp.status}
+                    onChange={(e) =>
+                      updateRecruitmentApplicantStatus(
+                        activeApp.id,
+                        e.target.value as typeof activeApp.status
+                      )
+                    }
+                    className="px-3 py-2 rounded-xl border border-pink-200 text-xs bg-[#FFF5F8] text-[#D63384] font-bold cursor-pointer"
+                  >
+                    <option value="Pending">Status: Pending</option>
+                    <option value="Interview">Status: Interview</option>
+                    <option value="Accepted">Status: Accepted</option>
+                    <option value="Rejected">Status: Rejected</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedApplicant(null)}
+                    className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 1. JAWABAN BAGIAN INFORMASI IC (Persyaratan Umum & Syarat Interview) */}
+              <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-4">
+                <h4 className="text-sm font-bold text-[#D63384] uppercase tracking-wider">
+                  1. Informasi IC — Persyaratan Umum & Kelengkapan Sebelum Interview
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="p-3.5 rounded-xl bg-white border border-pink-100 space-y-2">
+                    <p className="font-bold text-slate-800">
+                      Persyaratan Umum Bergabung EMS:
+                    </p>
+                    <ul className="space-y-1.5 text-slate-700">
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• Berusia 17 Tahun Saat Mendaftar (IC)</span>
+                        <strong className="text-[#20C997]">
+                          {activeApp.icGeneralRequirements?.age17Plus ?? true ? '✓ Ya' : '✗ Tidak'}
+                        </strong>
+                      </li>
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• Berdedikasi tinggi & mampu bekerja dalam tekanan</span>
+                        <strong className="text-[#20C997]">
+                          {activeApp.icGeneralRequirements?.dedicatedUnderPressure ?? true
+                            ? '✓ Ya'
+                            : '✗ Tidak'}
+                        </strong>
+                      </li>
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• Bersedia mengikuti masa training 1-3 hari</span>
+                        <strong className="text-[#20C997]">
+                          {activeApp.icGeneralRequirements?.willingTraining1To3Days ?? true
+                            ? '✓ Ya'
+                            : '✗ Tidak'}
+                        </strong>
+                      </li>
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• Bersedia mengikuti SOP selama menjadi anggota EMS</span>
+                        <strong className="text-[#20C997]">
+                          {activeApp.icGeneralRequirements?.willingFollowSOP ?? true
+                            ? '✓ Ya'
+                            : '✗ Tidak'}
+                        </strong>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-white border border-pink-100 space-y-2">
+                    <p className="font-bold text-slate-800">
+                      Syarat IC yang Dimiliki Sebelum Interview:
+                    </p>
+                    <ul className="space-y-1.5 text-slate-700">
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• Kartu Identitas Warga Cendana (KTP)</span>
+                        <strong
+                          className={
+                            activeApp.icInterviewRequirements?.hasKtpIme ?? true
+                              ? 'text-[#20C997]'
+                              : 'text-rose-600'
+                          }
+                        >
+                          {activeApp.icInterviewRequirements?.hasKtpIme ?? true ? '✓ Ada' : '✗ Belum'}
+                        </strong>
+                      </li>
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• Memiliki SKB</span>
+                        <strong
+                          className={
+                            activeApp.icInterviewRequirements?.hasSkb ?? true
+                              ? 'text-[#20C997]'
+                              : 'text-rose-600'
+                          }
+                        >
+                          {activeApp.icInterviewRequirements?.hasSkb ?? true ? '✓ Ada' : '✗ Belum'}
+                        </strong>
+                      </li>
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• SIM (bisa menyusul kalau sudah diterima)</span>
+                        <strong className="text-slate-800">
+                          {activeApp.icInterviewRequirements?.hasSim ? '✓ Ada' : 'Menyusul'}
+                        </strong>
+                      </li>
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• Memiliki Surat Kesehatan</span>
+                        <strong
+                          className={
+                            activeApp.icInterviewRequirements?.hasSuratKesehatan ?? true
+                              ? 'text-[#20C997]'
+                              : 'text-rose-600'
+                          }
+                        >
+                          {activeApp.icInterviewRequirements?.hasSuratKesehatan ?? true
+                            ? '✓ Ada'
+                            : '✗ Belum'}
+                        </strong>
+                      </li>
+                      <li className="flex items-center justify-between gap-2">
+                        <span>• Memiliki Surat Psikolog</span>
+                        <strong
+                          className={
+                            activeApp.icInterviewRequirements?.hasSuratPsikolog ?? true
+                              ? 'text-[#20C997]'
+                              : 'text-rose-600'
+                          }
+                        >
+                          {activeApp.icInterviewRequirements?.hasSuratPsikolog ?? true
+                            ? '✓ Ada'
+                            : '✗ Belum'}
+                        </strong>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. JAWABAN BAGIAN CURRICULUM VITAE IC */}
+              <div className="p-5 rounded-2xl bg-white border border-pink-100 space-y-4">
+                <h4 className="text-sm font-bold text-[#D63384] uppercase tracking-wider">
+                  2. Curriculum Vitae IC & Jawaban Pelamar
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                    <span className="text-slate-500 block">Nama Karakter (IC):</span>
+                    <strong className="text-slate-900 text-sm">{activeApp.fullName}</strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                    <span className="text-slate-500 block">Jenis Kelamin:</span>
+                    <strong className="text-slate-900 text-sm">{activeApp.gender}</strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                    <span className="text-slate-500 block">Tanggal Lahir (IC):</span>
+                    <strong className="text-slate-900 text-sm font-mono">
+                      {activeApp.birthDateIC || activeApp.phoneOrIC}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+                    <span className="font-bold text-slate-700 block">
+                      Pengalaman Menjadi Anggota Medis / Petinggi EMS:
+                    </span>
+                    <p className="text-slate-900 leading-relaxed">{activeApp.experience || '0'}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+                    <span className="font-bold text-slate-700 block">
+                      Mengapa Anda Ingin Bergabung dengan Cendana Medical Center?
+                    </span>
+                    <p className="text-slate-900 leading-relaxed">{activeApp.motivation || '-'}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+                    <span className="font-bold text-slate-700 block">
+                      Pengalaman Bermain RP (OOC):
+                    </span>
+                    <p className="text-slate-900 leading-relaxed">
+                      {activeApp.rpExperienceOOC || '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. JAWABAN BAGIAN INFORMASI OOC */}
+              <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-3">
+                <h4 className="text-sm font-bold text-[#D63384] uppercase tracking-wider">
+                  3. Informasi OOC (Komitmen & Jam Online)
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="sm:col-span-3 p-3.5 rounded-xl bg-white border border-pink-100 space-y-1">
+                    <span className="font-bold text-slate-700 block">
+                      Apakah ada tanggung jawab di kota lain? Jika ada siap membagi waktu?
+                    </span>
+                    <p className="text-slate-900">
+                      {activeApp.otherCityResponsibilityOOC || 'Tidak ada'}
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-white border border-pink-100">
+                    <span className="text-slate-500 block">Jam Online / Masuk Kota:</span>
+                    <strong className="text-slate-900">
+                      {activeApp.onlineHoursOOC || activeApp.email}
+                    </strong>
+                  </div>
+                  <div className="sm:col-span-2 p-3.5 rounded-xl bg-white border border-pink-100">
+                    <span className="text-slate-500 block">Hari Online / Masuk Kota:</span>
+                    <strong className="text-slate-900">
+                      {activeApp.onlineDaysOOC || activeApp.education}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. FOTO DOKUMEN YANG DIUPLOAD / DIKIRIM (BISA DIBUKA & DILIHAT) */}
+              <div className="p-5 rounded-2xl bg-white border border-pink-100 space-y-4">
+                <div>
+                  <h4 className="text-sm font-bold text-[#D63384] uppercase tracking-wider">
+                    4. Foto Dokumen yang Diupload Pelamar (Klik untuk Membuka / Melihat Ukuran Penuh)
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Seluruh lampiran foto KTP IC, SKB, Surat Kesehatan, dan Surat Psikolog dapat dilihat langsung di bawah ini.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    {
+                      label: 'FOTO KTP IC',
+                      fileName: activeApp.ktpPhotoName || 'ktp_ic.jpg',
+                      dataUrl: activeApp.ktpPhotoDataUrl,
+                    },
+                    {
+                      label: 'FOTO SKB',
+                      fileName: activeApp.skbPhotoName || 'skb_kepolisian.jpg',
+                      dataUrl: activeApp.skbPhotoDataUrl,
+                    },
+                    {
+                      label: 'FOTO SURAT KESEHATAN',
+                      fileName: activeApp.suratKesehatanPhotoName || 'surat_kesehatan.jpg',
+                      dataUrl: activeApp.suratKesehatanPhotoDataUrl,
+                    },
+                    {
+                      label: 'FOTO SURAT PSIKOLOG',
+                      fileName: activeApp.suratPsikologPhotoName || 'surat_psikolog.jpg',
+                      dataUrl: activeApp.suratPsikologPhotoDataUrl,
+                    },
+                  ].map((docItem) => {
+                    const resolvedUrl =
+                      docItem.dataUrl ||
+                      buildFallbackDocSvgDataUrl(
+                        docItem.label,
+                        activeApp.fullName,
+                        docItem.fileName
+                      );
+                    return (
+                      <div
+                        key={docItem.label}
+                        className="p-3.5 rounded-2xl border border-pink-100 bg-[#FFF5F8]/60 flex flex-col justify-between gap-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="text-xs font-extrabold text-[#D63384] block">
+                              {docItem.label}
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-600 truncate block">
+                              📎 {docItem.fileName}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewPhoto({
+                                title: `${docItem.label} — ${activeApp.fullName}`,
+                                fileName: docItem.fileName,
+                                url: resolvedUrl,
+                              })
+                            }
+                            className="px-3 py-1.5 rounded-xl bg-[#E83E8C] text-white text-[11px] font-bold flex items-center gap-1 shrink-0 hover:opacity-95 cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Buka Foto</span>
+                          </button>
+                        </div>
+
+                        <div
+                          onClick={() =>
+                            setPreviewPhoto({
+                              title: `${docItem.label} — ${activeApp.fullName}`,
+                              fileName: docItem.fileName,
+                              url: resolvedUrl,
+                            })
+                          }
+                          className="w-full h-40 rounded-xl bg-white border border-pink-100 overflow-hidden flex items-center justify-center cursor-pointer group relative"
+                        >
+                          <img
+                            src={resolvedUrl}
+                            alt={docItem.label}
+                            className="w-full h-full object-contain group-hover:scale-105 transition duration-200"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2 border-t border-pink-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedApplicant(null)}
+                  className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 cursor-pointer"
+                >
+                  Tutup Detail Lamaran Kerja
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LIGHTBOX MODAL UNTUK MEMBUKA / MELIHAT FOTO UKURAN PENUH */}
+        {previewPhoto && (
+          <div
+            className="fixed inset-0 z-[60] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setPreviewPhoto(null)}
+          >
+            <div
+              className="bg-white rounded-3xl border border-pink-100 p-5 max-w-4xl w-full space-y-4 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+                <div>
+                  <h4 className="text-base font-bold text-slate-900">{previewPhoto.title}</h4>
+                  <p className="text-xs font-mono text-slate-500">Nama File: {previewPhoto.fileName}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewPhoto(null)}
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  Tutup Foto
+                </button>
+              </div>
+
+              <div className="w-full max-h-[75vh] overflow-auto rounded-2xl bg-slate-900/5 p-3 flex items-center justify-center">
+                <img
+                  src={previewPhoto.url}
+                  alt={previewPhoto.title}
+                  className="max-w-full max-h-[70vh] object-contain rounded-xl shadow-sm"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

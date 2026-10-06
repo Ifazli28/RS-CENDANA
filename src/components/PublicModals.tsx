@@ -249,9 +249,13 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     motivation: '',
     rpExperienceOOC: '',
     ktpPhotoName: '',
+    ktpPhotoDataUrl: '',
     skbPhotoName: '',
+    skbPhotoDataUrl: '',
     suratKesehatanPhotoName: '',
+    suratKesehatanPhotoDataUrl: '',
     suratPsikologPhotoName: '',
+    suratPsikologPhotoDataUrl: '',
     // INFORMASI OOC
     otherCityResponsibilityOOC: '',
     onlineHoursOOC: '',
@@ -259,6 +263,53 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
   });
   const [recError, setRecError] = useState<string>('');
   const [recSubmittedSuccess, setRecSubmittedSuccess] = useState<boolean>(false);
+
+  const handleRecruitmentImageUpload = (
+    file: File,
+    nameKey: 'ktpPhotoName' | 'skbPhotoName' | 'suratKesehatanPhotoName' | 'suratPsikologPhotoName',
+    urlKey: 'ktpPhotoDataUrl' | 'skbPhotoDataUrl' | 'suratKesehatanPhotoDataUrl' | 'suratPsikologPhotoDataUrl'
+  ) => {
+    setRecError('');
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 950;
+        let width = img.width;
+        let height = img.height;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width > height) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        const dataUrl = ctx
+          ? (ctx.drawImage(img, 0, 0, width, height), canvas.toDataURL('image/jpeg', 0.8))
+          : String(reader.result || '');
+        setRecForm((prev) => ({
+          ...prev,
+          [nameKey]: file.name,
+          [urlKey]: dataUrl,
+        }));
+      };
+      img.onerror = () => {
+        setRecForm((prev) => ({
+          ...prev,
+          [nameKey]: file.name,
+          [urlKey]: String(reader.result || ''),
+        }));
+      };
+      img.src = String(reader.result || '');
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Regulation Image Zoom State
   const [regZoom, setRegZoom] = useState<number>(100);
@@ -1654,9 +1705,13 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     birthDateIC: recForm.birthDateIC,
                     rpExperienceOOC: recForm.rpExperienceOOC,
                     ktpPhotoName: recForm.ktpPhotoName,
+                    ktpPhotoDataUrl: recForm.ktpPhotoDataUrl,
                     skbPhotoName: recForm.skbPhotoName,
+                    skbPhotoDataUrl: recForm.skbPhotoDataUrl,
                     suratKesehatanPhotoName: recForm.suratKesehatanPhotoName,
+                    suratKesehatanPhotoDataUrl: recForm.suratKesehatanPhotoDataUrl,
                     suratPsikologPhotoName: recForm.suratPsikologPhotoName,
+                    suratPsikologPhotoDataUrl: recForm.suratPsikologPhotoDataUrl,
                     otherCityResponsibilityOOC: recForm.otherCityResponsibilityOOC,
                     onlineHoursOOC: recForm.onlineHoursOOC,
                     onlineDaysOOC: recForm.onlineDaysOOC,
@@ -1950,8 +2005,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              setRecError('');
-                              setRecForm({ ...recForm, ktpPhotoName: file.name });
+                              handleRecruitmentImageUpload(file, 'ktpPhotoName', 'ktpPhotoDataUrl');
                             }
                           }}
                         />
@@ -1977,8 +2031,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              setRecError('');
-                              setRecForm({ ...recForm, skbPhotoName: file.name });
+                              handleRecruitmentImageUpload(file, 'skbPhotoName', 'skbPhotoDataUrl');
                             }
                           }}
                         />
@@ -2004,8 +2057,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              setRecError('');
-                              setRecForm({ ...recForm, suratKesehatanPhotoName: file.name });
+                              handleRecruitmentImageUpload(
+                                file,
+                                'suratKesehatanPhotoName',
+                                'suratKesehatanPhotoDataUrl'
+                              );
                             }
                           }}
                         />
@@ -2031,8 +2087,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              setRecError('');
-                              setRecForm({ ...recForm, suratPsikologPhotoName: file.name });
+                              handleRecruitmentImageUpload(
+                                file,
+                                'suratPsikologPhotoName',
+                                'suratPsikologPhotoDataUrl'
+                              );
                             }
                           }}
                         />

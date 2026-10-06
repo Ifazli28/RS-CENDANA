@@ -226,9 +226,13 @@ export interface RecruitmentApplicant {
   birthDateIC?: string;
   rpExperienceOOC?: string;
   ktpPhotoName?: string;
+  ktpPhotoDataUrl?: string;
   skbPhotoName?: string;
+  skbPhotoDataUrl?: string;
   suratKesehatanPhotoName?: string;
+  suratKesehatanPhotoDataUrl?: string;
   suratPsikologPhotoName?: string;
+  suratPsikologPhotoDataUrl?: string;
   otherCityResponsibilityOOC?: string;
   onlineHoursOOC?: string;
   onlineDaysOOC?: string;
