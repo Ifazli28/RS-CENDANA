@@ -22,6 +22,7 @@ import {
   ZoomOut,
   RotateCcw,
   Lock,
+  HeartPulse,
 } from 'lucide-react';
 
 export type PublicModalType =
@@ -34,7 +35,8 @@ export type PublicModalType =
   | 'appointment'
   | 'regulation'
   | 'recruitment'
-  | 'skwb_claim';
+  | 'skwb_claim'
+  | 'character_kill';
 
 interface PublicModalsProps {
   activeModal: PublicModalType;
@@ -61,7 +63,25 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     submitAppointment,
     submitRecruitment,
     submitSKWBClaim,
+    submitCharacterKill,
   } = useApp();
+
+  // Karakter Kill Form State
+  const [ckForm, setCkForm] = useState({
+    fullName: '',
+    birthDate: '',
+    gender: 'Laki-laki' as 'Laki-laki' | 'Perempuan',
+    age: '',
+    occupation: '',
+    citizenId: '',
+    phoneOrIC: '',
+    causeOfDeath: '',
+    chronologyCK: '',
+    burialType: 'Penguburan' as 'Penguburan' | 'Kremasi',
+    accuracyConfirmed: false,
+  });
+  const [ckError, setCkError] = useState('');
+  const [ckSubmitted, setCkSubmitted] = useState(false);
 
   // SKWB Benefit Claim Form State
   const [skwbForm, setSkwbForm] = useState({
@@ -2531,6 +2551,314 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer"
                   >
                     Simpan / Ajukan Klaim
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* 10. MODAL FORM KARAKTER KILL */}
+        {activeModal === 'character_kill' && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-pink-100 pb-4">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center shrink-0">
+                <HeartPulse className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Karakter Kill</h2>
+                <p className="text-xs text-slate-500">
+                  Formulir Pengajuan Kematian Karakter (Character Kill) & Administrasi Pemakaman Warga
+                </p>
+              </div>
+            </div>
+
+            {ckSubmitted ? (
+              <div className="p-6 sm:p-8 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-center space-y-5">
+                <div className="w-14 h-14 rounded-2xl bg-[#20C997] text-white flex items-center justify-center mx-auto shadow-sm">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Pengajuan Karakter Kill Berhasil Dikirim!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto">
+                    Data pengajuan kematian atas nama <strong>{ckForm.fullName}</strong> telah masuk ke Portal Staff pada menu <strong>Daftar Kematian</strong> untuk diverifikasi oleh tim dokter.
+                  </p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCkSubmitted(false);
+                      setCkForm({
+                        fullName: '',
+                        birthDate: '',
+                        gender: 'Laki-laki',
+                        age: '',
+                        occupation: '',
+                        citizenId: '',
+                        phoneOrIC: '',
+                        causeOfDeath: '',
+                        chronologyCK: '',
+                        burialType: 'Penguburan',
+                        accuracyConfirmed: false,
+                      });
+                    }}
+                    className="px-5 py-2.5 rounded-xl border border-pink-200 bg-white text-[#D63384] text-xs font-semibold hover:bg-pink-50 cursor-pointer"
+                  >
+                    Ajukan Data Lainnya
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCkSubmitted(false);
+                      onClose();
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-xs cursor-pointer"
+                  >
+                    Selesai & Tutup
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setCkError('');
+                  if (!ckForm.accuracyConfirmed) {
+                    setCkError(
+                      'Anda wajib mencentang pernyataan keakuratan dan tanggung jawab data sebelum mengirim.'
+                    );
+                    return;
+                  }
+                  submitCharacterKill({
+                    fullName: ckForm.fullName.trim(),
+                    birthDate: ckForm.birthDate,
+                    gender: ckForm.gender,
+                    age: Number(ckForm.age) || 0,
+                    occupation: ckForm.occupation.trim(),
+                    citizenId: ckForm.citizenId.trim(),
+                    phoneOrIC: ckForm.phoneOrIC.trim(),
+                    causeOfDeath: ckForm.causeOfDeath.trim(),
+                    chronologyCK: ckForm.chronologyCK.trim(),
+                    burialType: ckForm.burialType,
+                    accuracyConfirmed: ckForm.accuracyConfirmed,
+                  });
+                  setCkSubmitted(true);
+                }}
+                className="space-y-6"
+              >
+                {ckError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
+                    {ckError}
+                  </div>
+                )}
+
+                {/* BAGIAN 1: DATA DIRI */}
+                <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-4">
+                  <div className="border-b border-pink-100 pb-2.5">
+                    <h3 className="text-base font-bold text-[#D63384]">Data Diri</h3>
+                    <p className="text-xs text-slate-600">
+                      Identitas warga yang diajukan dalam laporan Karakter Kill (CK).
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Nama Lengkap *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={ckForm.fullName}
+                        onChange={(e) => setCkForm({ ...ckForm, fullName: e.target.value })}
+                        placeholder="Masukkan nama lengkap karakter (IC)"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Tanggal Lahir *
+                      </label>
+                      <input
+                        required
+                        type="date"
+                        value={ckForm.birthDate}
+                        onChange={(e) => setCkForm({ ...ckForm, birthDate: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Jenis Kelamin *
+                      </label>
+                      <select
+                        value={ckForm.gender}
+                        onChange={(e) =>
+                          setCkForm({
+                            ...ckForm,
+                            gender: e.target.value as 'Laki-laki' | 'Perempuan',
+                          })
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                      >
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Umur *
+                      </label>
+                      <input
+                        required
+                        type="number"
+                        min={1}
+                        max={120}
+                        value={ckForm.age}
+                        onChange={(e) => setCkForm({ ...ckForm, age: e.target.value })}
+                        placeholder="Contoh: 28"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Pekerjaan *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={ckForm.occupation}
+                        onChange={(e) => setCkForm({ ...ckForm, occupation: e.target.value })}
+                        placeholder="Pekerjaan karakter di kota"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Citizen ID *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={ckForm.citizenId}
+                        onChange={(e) => setCkForm({ ...ckForm, citizenId: e.target.value })}
+                        placeholder="Masukkan Citizen ID (KTP)"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        No HP (IC) *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={ckForm.phoneOrIC}
+                        onChange={(e) => setCkForm({ ...ckForm, phoneOrIC: e.target.value })}
+                        placeholder="Masukkan nomor HP IC"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* BAGIAN 2: KRONOLOGI DAN PENYEBAB KEMATIAN */}
+                <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-4">
+                  <div className="border-b border-pink-100 pb-2.5">
+                    <h3 className="text-base font-bold text-[#D63384]">
+                      Kronologi dan Penyebab Kematian
+                    </h3>
+                    <p className="text-xs text-slate-600">
+                      Rincian medis penyebab kematian, kronologi lengkap kejadian CK, dan jenis pemakaman.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Penyebab Kematian *
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      value={ckForm.causeOfDeath}
+                      onChange={(e) => setCkForm({ ...ckForm, causeOfDeath: e.target.value })}
+                      placeholder="Contoh: Luka tembak di bagian dada / Trauma kepala berat"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Kronologi CK *
+                    </label>
+                    <textarea
+                      required
+                      rows={4}
+                      value={ckForm.chronologyCK}
+                      onChange={(e) => setCkForm({ ...ckForm, chronologyCK: e.target.value })}
+                      placeholder="Tuliskan kronologi lengkap kejadian Character Kill (CK)..."
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Jenis Pemakaman *
+                    </label>
+                    <select
+                      value={ckForm.burialType}
+                      onChange={(e) =>
+                        setCkForm({
+                          ...ckForm,
+                          burialType: e.target.value as 'Penguburan' | 'Kremasi',
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                    >
+                      <option value="Penguburan">Penguburan</option>
+                      <option value="Kremasi">Kremasi</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* VALIDASI CHECKBOX */}
+                <label className="flex items-start gap-3 p-4 rounded-xl bg-white border border-pink-200 hover:border-[#E83E8C] cursor-pointer transition">
+                  <input
+                    required
+                    type="checkbox"
+                    checked={ckForm.accuracyConfirmed}
+                    onChange={(e) =>
+                      setCkForm({ ...ckForm, accuracyConfirmed: e.target.checked })
+                    }
+                    className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded shrink-0"
+                  />
+                  <span className="text-xs sm:text-sm font-medium text-slate-700 leading-relaxed">
+                    Saya yakin seluruh data yang saya isi sudah benar dan saya bertanggung jawab atas keakuratan data tersebut.
+                  </span>
+                </label>
+
+                <div className="pt-2 flex justify-end gap-3 border-t border-pink-100">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                  >
+                    Kirim Pengajuan Karakter Kill
                   </button>
                 </div>
               </form>

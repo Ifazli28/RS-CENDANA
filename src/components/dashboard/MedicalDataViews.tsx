@@ -22,6 +22,7 @@ import {
   Sparkles,
   Award,
   Download,
+  HeartPulse,
 } from 'lucide-react';
 
 // 1. DATA SURAT KETERANGAN SEHAT (Sec 59 — Paramedic+ Level 3+)
@@ -1327,4 +1328,297 @@ export const PlasticSurgeryDataView: React.FC = () => {
     </div>
   );
 };
+
+// 7. DAFTAR KEMATIAN / KARAKTER KILL (Semua Role bisa melihat, keputusan Diterima/Ditolak hanya Doctor ke atas Level 5+)
+export const CharacterKillListView: React.FC = () => {
+  const { characterKillRecords, reviewCharacterKill, currentUser } = useApp();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'Semua' | 'Menunggu' | 'Diterima' | 'Ditolak'>('Semua');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const canDecide = Boolean(currentUser && currentUser.level >= 5);
+
+  const filtered = characterKillRecords.filter((item) => {
+    const matchName = item.fullName.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === 'Semua' || item.status === statusFilter;
+    return matchName && matchStatus;
+  });
+
+  const selectedRecord = characterKillRecords.find((r) => r.id === selectedId) || null;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Daftar Kematian (Karakter Kill)</h2>
+          <p className="text-xs text-slate-500">
+            Seluruh role dapat melihat daftar & detail pengajuan kematian · Persetujuan (Diterima / Ditolak) khusus Doctor ke atas (Level 5+)
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari nama pengaju..."
+              className="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#E83E8C] focus:outline-none"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as 'Semua' | 'Menunggu' | 'Diterima' | 'Ditolak')
+            }
+            className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white"
+          >
+            <option value="Semua">Semua Status</option>
+            <option value="Menunggu">Menunggu</option>
+            <option value="Diterima">Diterima</option>
+            <option value="Ditolak">Ditolak</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Tabel Daftar Kematian: hanya Nama orang yang mengajukan kematian & button Cek Detail Pengajuan */}
+      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+                <th className="py-3.5 px-5">Nama Pengaju Kematian</th>
+                <th className="py-3.5 px-5 text-right">Detail Pengajuan</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="py-8 text-center text-slate-400">
+                    Belum ada data pengajuan kematian yang sesuai pencarian.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((r) => (
+                  <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-slate-900">{r.fullName}</span>
+                        <span
+                          className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md ${
+                            r.status === 'Diterima'
+                              ? 'bg-emerald-50 text-[#20C997] border border-emerald-200'
+                              : r.status === 'Ditolak'
+                              ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                              : 'bg-amber-50 text-amber-600 border border-amber-200'
+                          }`}
+                        >
+                          {r.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-5 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedId(r.id)}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] hover:opacity-95 text-white text-xs font-semibold shadow-2xs cursor-pointer transition"
+                      >
+                        Cek Detail Pengajuan
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal Detail Pengajuan Kematian */}
+      {selectedRecord && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/55 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setSelectedId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-2xl w-full space-y-5 shadow-xl my-8 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E83E8C] flex items-center justify-center">
+                  <HeartPulse className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Detail Pengajuan Karakter Kill (Kematian)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Diajukan pada: <span className="font-mono">{selectedRecord.createdAt}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedId(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Status Banner */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div>
+                <span className="text-slate-500">Status Pengajuan Saat Ini: </span>
+                <span
+                  className={`ml-1.5 px-2.5 py-0.5 rounded-md font-bold ${
+                    selectedRecord.status === 'Diterima'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : selectedRecord.status === 'Ditolak'
+                      ? 'bg-rose-100 text-rose-700'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}
+                >
+                  {selectedRecord.status}
+                </span>
+              </div>
+              {selectedRecord.reviewedBy && (
+                <div className="text-slate-600">
+                  Diputuskan oleh: <strong>{selectedRecord.reviewedBy}</strong>
+                  {selectedRecord.reviewedByRole ? ` (${selectedRecord.reviewedByRole})` : ''}
+                  {selectedRecord.reviewedAt ? ` · ${selectedRecord.reviewedAt}` : ''}
+                </div>
+              )}
+            </div>
+
+            {/* Bagian 1: Data Diri */}
+            <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-100 space-y-3">
+              <p className="text-xs font-bold text-[#D63384] uppercase tracking-wider">
+                1. Data Diri Warga
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                  <span className="block text-[11px] text-slate-400">Nama Lengkap</span>
+                  <span className="font-bold text-slate-900 text-sm">{selectedRecord.fullName}</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                  <span className="block text-[11px] text-slate-400">Tanggal Lahir</span>
+                  <span className="font-mono font-semibold text-slate-800">
+                    {selectedRecord.birthDate}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                  <span className="block text-[11px] text-slate-400">Jenis Kelamin</span>
+                  <span className="font-semibold text-slate-800">{selectedRecord.gender}</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                  <span className="block text-[11px] text-slate-400">Umur</span>
+                  <span className="font-mono font-semibold text-slate-800">
+                    {selectedRecord.age} Tahun
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                  <span className="block text-[11px] text-slate-400">Pekerjaan</span>
+                  <span className="font-semibold text-slate-800">{selectedRecord.occupation}</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                  <span className="block text-[11px] text-slate-400">Citizen ID</span>
+                  <span className="font-mono font-bold text-[#D63384]">
+                    {selectedRecord.citizenId}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100 sm:col-span-2">
+                  <span className="block text-[11px] text-slate-400">No HP (IC)</span>
+                  <span className="font-mono font-semibold text-slate-800">
+                    {selectedRecord.phoneOrIC}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bagian 2: Kronologi dan Penyebab Kematian */}
+            <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-100 space-y-3">
+              <p className="text-xs font-bold text-[#D63384] uppercase tracking-wider">
+                2. Kronologi dan Penyebab Kematian
+              </p>
+              <div className="space-y-2.5 text-xs">
+                <div className="p-3 rounded-lg bg-white border border-pink-100">
+                  <span className="block text-[11px] text-slate-400 mb-0.5">Penyebab Kematian</span>
+                  <p className="font-bold text-slate-900">{selectedRecord.causeOfDeath}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-white border border-pink-100">
+                  <span className="block text-[11px] text-slate-400 mb-0.5">Kronologi CK</span>
+                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                    {selectedRecord.chronologyCK}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-white border border-pink-100 flex items-center justify-between">
+                  <span className="text-slate-500">Jenis Pemakaman</span>
+                  <span className="px-3 py-1 rounded-lg bg-pink-50 text-[#D63384] font-bold">
+                    {selectedRecord.burialType}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Pernyataan Validasi Warga */}
+            <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-start gap-2.5 text-xs text-emerald-900">
+              <CheckCircle2 className="w-4 h-4 text-[#20C997] shrink-0 mt-0.5" />
+              <span>
+                <strong>Validasi Pengaju:</strong> &ldquo;Saya yakin seluruh data yang saya isi sudah benar dan saya bertanggung jawab atas keakuratan data tersebut.&rdquo;
+              </span>
+            </div>
+
+            {/* Action Penentuan Diterima / Ditolak (Khusus Doctor ke atas Level 5+) */}
+            <div className="pt-3 border-t border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {canDecide ? (
+                <>
+                  <p className="text-xs text-slate-500">
+                    Anda login sebagai <strong>{currentUser?.role}</strong> dan berwenang menentukan status pengajuan kematian ini:
+                  </p>
+                  <div className="flex items-center gap-2.5 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        reviewCharacterKill(selectedRecord.id, 'Ditolak');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 text-xs font-bold cursor-pointer transition"
+                    >
+                      Tolak Pengajuan
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        reviewCharacterKill(selectedRecord.id, 'Diterima');
+                      }}
+                      className="px-5 py-2 rounded-xl bg-[#20C997] hover:opacity-95 text-white text-xs font-bold shadow-2xs cursor-pointer transition"
+                    >
+                      Terima Pengajuan
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="w-full flex items-center justify-between gap-3">
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-xl">
+                    Anda dapat melihat rincian pengajuan ini, namun penentuan status <strong>Diterima / Ditolak</strong> hanya dapat dilakukan oleh <strong>Doctor ke atas</strong>.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(null)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 shrink-0 cursor-pointer"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 

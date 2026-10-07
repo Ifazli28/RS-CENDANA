@@ -24,6 +24,7 @@ import {
   Lock,
   UserPlus,
   LogIn,
+  HeartPulse,
 } from 'lucide-react';
 
 interface PublicPortalProps {
@@ -513,6 +514,46 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
               className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
             >
               Ajukan Klaim Benefit SKWB
+            </button>
+          </div>
+
+          {/* 07 — Karakter Kill */}
+          <div
+            onClick={() => setActiveModal('character_kill')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setActiveModal('character_kill');
+              }
+            }}
+            className="p-6 rounded-2xl bg-white border border-pink-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition flex flex-col justify-between space-y-5 lg:col-span-1 cursor-pointer group"
+          >
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-[#E83E8C]">07. Forensik & Administrasi</span>
+                <HeartPulse className="w-5 h-5 text-[#E83E8C] group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">Karakter Kill</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Layanan pengajuan dan pencatatan resmi kematian karakter (Character Kill / CK) serta administrasi pemakaman warga:
+              </p>
+              <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4">
+                <li>Pencatatan data diri & Citizen ID</li>
+                <li>Laporan penyebab kematian & kronologi CK</li>
+                <li>Pilihan pemakaman (Penguburan / Kremasi)</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveModal('character_kill');
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
+            >
+              Ajukan Karakter Kill
             </button>
           </div>
         </div>

@@ -401,6 +401,26 @@ export interface SKWBClaim {
   updatedAt: string;
 }
 
+export interface CharacterKillRecord {
+  id: string;
+  fullName: string;
+  birthDate: string;
+  gender: 'Laki-laki' | 'Perempuan';
+  age: number;
+  occupation: string;
+  citizenId: string;
+  phoneOrIC: string;
+  causeOfDeath: string;
+  chronologyCK: string;
+  burialType: 'Penguburan' | 'Kremasi';
+  accuracyConfirmed: boolean;
+  createdAt: string;
+  status: 'Menunggu' | 'Diterima' | 'Ditolak';
+  reviewedBy?: string;
+  reviewedByRole?: RoleName;
+  reviewedAt?: string;
+}
+
 export interface ToastMessage {
   id: string;
   type: 'success' | 'error' | 'info' | 'warning';

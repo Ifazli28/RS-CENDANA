@@ -24,6 +24,7 @@ import {
   SKWBPaketSedangClaim,
   SKWBPatientCardClaim,
   SKWBOplasClaim,
+  CharacterKillRecord,
   ToastMessage,
 } from '../types';
 import {
@@ -44,6 +45,7 @@ import {
   INITIAL_DUTY_LOGS,
   INITIAL_PAYROLL_RECORDS,
   INITIAL_ROLE_SALARY_CONFIGS,
+  INITIAL_CHARACTER_KILL_RECORDS,
 } from '../data/initialData';
 import { createStaffAvatarSvg } from '../components/BrandAssets';
 import { syncRecordToFirestore, subscribeToPortalRecords } from '../firebase';
@@ -77,6 +79,7 @@ interface AppContextType {
   skwbPaketSedangClaims: SKWBPaketSedangClaim[];
   skwbPatientCardClaims: SKWBPatientCardClaim[];
   skwbOplasClaims: SKWBOplasClaim[];
+  characterKillRecords: CharacterKillRecord[];
   toasts: ToastMessage[];
   addToast: (type: ToastMessage['type'], title: string, message: string) => void;
   removeToast: (id: string) => void;
@@ -87,6 +90,8 @@ interface AppContextType {
   submitAppointment: (data: Omit<AppointmentRecord, 'id' | 'createdAt' | 'status'>) => void;
   submitComplaint: (data: Omit<ComplaintRecord, 'id' | 'createdAt' | 'status'>) => void;
   submitRecruitment: (data: Omit<RecruitmentApplicant, 'id' | 'appliedAt' | 'status'>) => void;
+  submitCharacterKill: (data: Omit<CharacterKillRecord, 'id' | 'createdAt' | 'status'>) => void;
+  reviewCharacterKill: (id: string, status: 'Diterima' | 'Ditolak') => { success: boolean; message: string };
   updateProfileAvatar: (avatarUrl: string) => void;
   updateProfileName: (name: string, bio?: string) => void;
   changePassword: (currentPassword: string, newPassword: string) => { success: boolean; message: string };
@@ -209,6 +214,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [skwbPaketSedangClaims, setSkwbPaketSedangClaims] = useState<SKWBPaketSedangClaim[]>([]);
   const [skwbPatientCardClaims, setSkwbPatientCardClaims] = useState<SKWBPatientCardClaim[]>([]);
   const [skwbOplasClaims, setSkwbOplasClaims] = useState<SKWBOplasClaim[]>([]);
+  const [characterKillRecords, setCharacterKillRecords] = useState<CharacterKillRecord[]>(() =>
+    loadLocal('cendana_ck_v1', INITIAL_CHARACTER_KILL_RECORDS)
+  );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // LocalStorage persistence for all modules
@@ -266,6 +274,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('cendana_role_salaries_v1', JSON.stringify(roleSalaryConfigs));
   }, [roleSalaryConfigs]);
+  useEffect(() => {
+    localStorage.setItem('cendana_ck_v1', JSON.stringify(characterKillRecords));
+  }, [characterKillRecords]);
 
   useEffect(() => {
     if (currentUserId) localStorage.setItem('cendana_current_user_id_v1', currentUserId);
@@ -592,6 +603,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
             break;
           }
+          case 'character_kill': {
+            const ckItem = p as unknown as CharacterKillRecord;
+            if (ckItem && ckItem.id) {
+              setCharacterKillRecords((prev) => {
+                const exists = prev.some((x) => x.id === ckItem.id);
+                if (exists) {
+                  return prev.map((x) =>
+                    x.id === ckItem.id
+                      ? {
+                          ...x,
+                          ...ckItem,
+                          status: (docItem.status as CharacterKillRecord['status']) || ckItem.status,
+                        }
+                      : x
+                  );
+                }
+                return [ckItem, ...prev];
+              });
+            }
+            break;
+          }
           default:
             break;
         }
@@ -738,6 +770,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRecruitmentApplicants((prev) => [rec, ...prev]);
     void syncRecordToFirestore(id, 'recruitment', data.fullName, 'Pending', { ...rec });
     addToast('success', 'Lamaran Paramedic Terkirim', `Berkas rekrutmen ${data.fullName} berhasil dikirim ke Database.`);
+  };
+
+  const submitCharacterKill = (data: Omit<CharacterKillRecord, 'id' | 'createdAt' | 'status'>) => {
+    const id = `ck-${Date.now()}`;
+    const rec: CharacterKillRecord = {
+      ...data,
+      id,
+      createdAt: nowFormatted(),
+      status: 'Menunggu',
+    };
+    setCharacterKillRecords((prev) => [rec, ...prev]);
+    void syncRecordToFirestore(id, 'character_kill', data.fullName, 'Menunggu', { ...rec });
+    addToast(
+      'success',
+      'Pengajuan Karakter Kill Terkirim',
+      `Data pengajuan kematian atas nama ${data.fullName} berhasil dikirim ke Portal Staff.`
+    );
+  };
+
+  const reviewCharacterKill = (id: string, status: 'Diterima' | 'Ditolak') => {
+    if (!currentUser || currentUser.level < ROLE_LEVELS['Doctor']) {
+      addToast(
+        'error',
+        'Akses Ditolak',
+        'Hanya jabatan Doctor ke atas yang dapat menentukan pengajuan kematian diterima atau ditolak.'
+      );
+      return {
+        success: false,
+        message: 'Hanya jabatan Doctor ke atas yang dapat menentukan status pengajuan kematian.',
+      };
+    }
+
+    const reviewedAt = nowFormatted();
+    setCharacterKillRecords((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const updated: CharacterKillRecord = {
+            ...item,
+            status,
+            reviewedBy: currentUser.name,
+            reviewedByRole: currentUser.role,
+            reviewedAt,
+          };
+          void syncRecordToFirestore(id, 'character_kill', updated.fullName, status, { ...updated });
+          return updated;
+        }
+        return item;
+      })
+    );
+
+    addToast(
+      status === 'Diterima' ? 'success' : 'warning',
+      `Pengajuan Kematian ${status}`,
+      `Pengajuan kematian telah ditetapkan ${status} oleh ${currentUser.name} (${currentUser.role}).`
+    );
+    return { success: true, message: `Status berhasil diubah menjadi ${status}.` };
   };
 
   const updateProfileAvatar = (avatarUrl: string) => {
@@ -1602,6 +1690,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         skwbPaketSedangClaims,
         skwbPatientCardClaims,
         skwbOplasClaims,
+        characterKillRecords,
         toasts,
         addToast,
         removeToast,
@@ -1612,6 +1701,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         submitAppointment,
         submitComplaint,
         submitRecruitment,
+        submitCharacterKill,
+        reviewCharacterKill,
         updateProfileAvatar,
         updateProfileName,
         changePassword,

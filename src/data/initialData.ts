@@ -16,6 +16,7 @@ import {
   DutyLog,
   PayrollRecord,
   RoleSalaryConfig,
+  CharacterKillRecord,
   ROLE_LEVELS,
 } from '../types';
 import {
@@ -1223,3 +1224,44 @@ Pekerjaan: Heads of Departments
 Durasi Bekerja: 3 Jam 45 Menit
 Tanggal Mulai: 2026-10-03 19:00
 Tanggal Berakhir: 2026-10-03 22:45`;
+
+export const INITIAL_CHARACTER_KILL_RECORDS: CharacterKillRecord[] = [
+  {
+    id: 'ck-101',
+    fullName: 'Viktor Romanov',
+    birthDate: '1988-04-12',
+    gender: 'Laki-laki',
+    age: 38,
+    occupation: 'Pengusaha Logistik Pelabuhan',
+    citizenId: 'CID-884920',
+    phoneOrIC: '0811-9988-7766',
+    causeOfDeath: 'Luka Tembak di Dada & Henti Jantung Traumatik',
+    chronologyCK:
+      'Korban ditemukan tidak sadarkan diri di area Dermaga Timur Kota Cendana pada pukul 23:15 WIB akibat insiden baku tembak antar kelompok. Tim medis melakukan tindakan resusitasi jantung paru (RJP) selama 30 menit di ruang IGD namun nyawa korban tidak tertolong.',
+    burialType: 'Penguburan',
+    accuracyConfirmed: true,
+    createdAt: '2026-10-04 23:50',
+    status: 'Diterima',
+    reviewedBy: 'dr. Nadia Kusuma',
+    reviewedByRole: 'Doctor',
+    reviewedAt: '2026-10-05 00:15',
+  },
+  {
+    id: 'ck-102',
+    fullName: 'Elena Gilbert Cendana',
+    birthDate: '1997-11-23',
+    gender: 'Perempuan',
+    age: 28,
+    occupation: 'Pembalap Liar / Mekanik',
+    citizenId: 'CID-972314',
+    phoneOrIC: '0813-4455-6677',
+    causeOfDeath: 'Trauma Kepala Berat Akibat Kecelakaan Lalu Lintas',
+    chronologyCK:
+      'Kendaraan korban mengalami kecelakaan tunggal berkecepatan tinggi di jalur pegunungan Great Ocean Highway dan terjun ke jurang. Saat dievakuasi oleh unit Paramedic Cendana, korban sudah tidak memiliki tanda-tanda vital.',
+    burialType: 'Kremasi',
+    accuracyConfirmed: true,
+    createdAt: '2026-10-06 02:10',
+    status: 'Menunggu',
+  },
+];
+

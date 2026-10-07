@@ -2,7 +2,7 @@
   "entities": {
     "PortalRecord": {
       "title": "PortalRecord",
-      "description": "Structured document for Portal Layanan Paramedic Cendana modules (Staff, SKS, Psychology, PlasticSurgery, ColorBlind, Appointment, Complaint, Recruitment, Voting, Leave, Resign, SOP, Regulation, Duty, Payroll, SKWBClaim, SKWBPaketSedangClaim, SKWBPatientCardClaim, SKWBOplasClaim).",
+      "description": "Structured document for Portal Layanan Paramedic Cendana modules (Staff, SKS, Psychology, PlasticSurgery, ColorBlind, Appointment, Complaint, Recruitment, Voting, Leave, Resign, SOP, Regulation, Duty, Payroll, SKWBClaim, SKWBPaketSedangClaim, SKWBPatientCardClaim, SKWBOplasClaim, CharacterKillRecord).",
       "type": "object",
       "properties": {
         "id": {

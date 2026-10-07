@@ -17,6 +17,7 @@ import {
   PlasticSurgeryDataView,
   AppointmentsDataView,
   DoctorScheduleManageView,
+  CharacterKillListView,
 } from './dashboard/MedicalDataViews';
 import {
   StaffManagementView,
@@ -62,12 +63,14 @@ import {
   X,
   ShieldAlert,
   Sparkles,
+  HeartPulse,
 } from 'lucide-react';
 
 export type StaffRouteId =
   | 'dashboard'
   | 'profile'
   | 'staff-directory'
+  | 'daftar-kematian'
   | 'benefit-skwb'
   | 'sks-results'
   | 'psychology-results'
@@ -140,6 +143,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     { id: 'resign-request', label: 'Pengajuan Resign', minLevel: 1, category: 'Utama & Pribadi', icon: UserMinus },
     { id: 'sop-medis', label: 'SOP Medis', minLevel: 1, category: 'Utama & Pribadi', icon: BookOpen },
 
+    // Level 1+ (Semua Role): Daftar Kematian
+    { id: 'daftar-kematian', label: 'Daftar Kematian', minLevel: 1, category: 'Rekam & Layanan Medis', icon: HeartPulse },
     // Level 3+ (Paramedic+): Benefit SKWB & SKS
     { id: 'benefit-skwb', label: 'Benefit SKWB', minLevel: 3, category: 'Rekam & Layanan Medis', icon: ShieldCheck },
     { id: 'sks-results', label: 'Hasil Surat Keterangan Sehat', minLevel: 3, category: 'Rekam & Layanan Medis', icon: FileText },
@@ -237,6 +242,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         return <LeaveAndResignView mode="resign" />;
       case 'sop-medis':
         return <SOPMedisView />;
+      case 'daftar-kematian':
+        return <CharacterKillListView />;
       case 'benefit-skwb':
         return <SKWBBenefitView />;
       case 'sks-results':
