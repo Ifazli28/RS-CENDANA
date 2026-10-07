@@ -1523,10 +1523,16 @@ export const CharacterKillListView: React.FC = () => {
                   <span className="block text-[11px] text-slate-400">Pekerjaan</span>
                   <span className="font-semibold text-slate-800">{selectedRecord.occupation}</span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100 sm:col-span-2">
                   <span className="block text-[11px] text-slate-400">Citizen ID</span>
                   <span className="font-mono font-bold text-[#D63384]">
                     {selectedRecord.citizenId}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white border border-pink-100 sm:col-span-2">
+                  <span className="block text-[11px] text-slate-400">SteamHex</span>
+                  <span className="font-mono font-semibold text-slate-800">
+                    {selectedRecord.steamHex || '-'}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-white border border-pink-100 sm:col-span-2">

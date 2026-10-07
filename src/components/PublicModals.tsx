@@ -74,6 +74,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     age: '',
     occupation: '',
     citizenId: '',
+    steamHex: '',
     phoneOrIC: '',
     causeOfDeath: '',
     chronologyCK: '',
@@ -2598,6 +2599,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         age: '',
                         occupation: '',
                         citizenId: '',
+                        steamHex: '',
                         phoneOrIC: '',
                         causeOfDeath: '',
                         chronologyCK: '',
@@ -2639,6 +2641,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     age: Number(ckForm.age) || 0,
                     occupation: ckForm.occupation.trim(),
                     citizenId: ckForm.citizenId.trim(),
+                    steamHex: ckForm.steamHex.trim(),
                     phoneOrIC: ckForm.phoneOrIC.trim(),
                     causeOfDeath: ckForm.causeOfDeath.trim(),
                     chronologyCK: ckForm.chronologyCK.trim(),
@@ -2741,7 +2744,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       />
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Citizen ID *
                       </label>
@@ -2755,7 +2758,21 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       />
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        SteamHex *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={ckForm.steamHex}
+                        onChange={(e) => setCkForm({ ...ckForm, steamHex: e.target.value })}
+                        placeholder="Contoh: steam:11000010a4b8c9d"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
                         No HP (IC) *
                       </label>

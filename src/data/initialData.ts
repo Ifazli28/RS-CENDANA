@@ -1234,6 +1234,7 @@ export const INITIAL_CHARACTER_KILL_RECORDS: CharacterKillRecord[] = [
     age: 38,
     occupation: 'Pengusaha Logistik Pelabuhan',
     citizenId: 'CID-884920',
+    steamHex: 'steam:11000010a4b8c9d',
     phoneOrIC: '0811-9988-7766',
     causeOfDeath: 'Luka Tembak di Dada & Henti Jantung Traumatik',
     chronologyCK:
@@ -1254,6 +1255,7 @@ export const INITIAL_CHARACTER_KILL_RECORDS: CharacterKillRecord[] = [
     age: 28,
     occupation: 'Pembalap Liar / Mekanik',
     citizenId: 'CID-972314',
+    steamHex: 'steam:110000112f3e4d5',
     phoneOrIC: '0813-4455-6677',
     causeOfDeath: 'Trauma Kepala Berat Akibat Kecelakaan Lalu Lintas',
     chronologyCK:

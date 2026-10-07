@@ -409,6 +409,7 @@ export interface CharacterKillRecord {
   age: number;
   occupation: string;
   citizenId: string;
+  steamHex?: string;
   phoneOrIC: string;
   causeOfDeath: string;
   chronologyCK: string;
