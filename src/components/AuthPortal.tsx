@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LogoRSCendana } from './BrandAssets';
+import { LogoRSKotaBaru, LogoKotaBaruRoleplay } from './BrandAssets';
 import {
   LogIn,
   UserPlus,
@@ -79,23 +79,26 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF5F8] flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg w-full mx-auto space-y-6">
         <button
           onClick={onBackPublic}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-[#E83E8C] transition cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-[#9E1B21] transition cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Kembali ke Halaman Publik</span>
         </button>
 
-        <div className="bg-white rounded-2xl border border-pink-100 shadow-lg overflow-hidden p-6 sm:p-10 space-y-6">
-          <div className="flex items-center gap-3">
-            <LogoRSCendana className="w-12 h-12 shrink-0" />
+        <div className="bg-white rounded-2xl border border-red-100 shadow-lg overflow-hidden p-6 sm:p-10 space-y-6">
+          <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-2 shrink-0">
+              <LogoRSKotaBaru className="w-12 h-12 shrink-0 drop-shadow-xs" />
+              <LogoKotaBaruRoleplay className="w-11 h-11 shrink-0 drop-shadow-xs" />
+            </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Portal Internal Staff Cendana</h1>
+              <h1 className="text-xl font-bold text-slate-900">Portal Internal Staff Kota Baru</h1>
               <p className="text-xs text-slate-500">
-                Sistem Otentikasi Terpadu & Manajemen Internal RS Cendana
+                Sistem Otentikasi Terpadu & Manajemen Internal RS Kota Baru
               </p>
             </div>
           </div>
@@ -132,7 +135,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@cendana.med"
+                  placeholder="nama@kotabaru.med"
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
                 />
               </div>
@@ -164,7 +167,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                 <button
                   type="button"
                   onClick={() => setMode('forgot')}
-                  className="font-semibold text-[#D63384] hover:underline cursor-pointer"
+                  className="font-semibold text-[#7F1D1D] hover:underline cursor-pointer"
                 >
                   Lupa Password?
                 </button>
@@ -172,14 +175,14 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
 
               <button
                 type="submit"
-                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white font-bold text-sm shadow-sm hover:opacity-95 transition flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white font-bold text-sm shadow-sm hover:opacity-95 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <LogIn className="w-4 h-4" />
                 <span>LOGIN</span>
               </button>
 
               {/* Panel Register (Sec 33) */}
-              <div className="pt-4 border-t border-pink-100 flex items-center justify-between">
+              <div className="pt-4 border-t border-red-100 flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-600">Belum Punya Akun?</span>
                 <button
                   type="button"
@@ -188,7 +191,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                     setAuthSuccessMsg('');
                     setMode('register');
                   }}
-                  className="px-4 py-2 rounded-xl border border-pink-200 bg-[#FFF5F8] text-[#D63384] text-xs font-bold hover:bg-pink-100 transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-red-200 bg-slate-50 text-[#7F1D1D] text-xs font-bold hover:bg-red-100 transition cursor-pointer"
                 >
                   DAFTAR SEKARANG
                 </button>
@@ -222,7 +225,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                   type="email"
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="nama@cendana.med"
+                  placeholder="nama@kotabaru.med"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
                 />
               </div>
@@ -257,7 +260,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
               </div>
 
               {/* Real-Time Password Validation Checklist (Sec 34) */}
-              <div className="p-3.5 rounded-xl bg-[#FFF5F8] border border-pink-100 space-y-1.5 text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-red-100 space-y-1.5 text-xs">
                 <p className="font-semibold text-slate-700">Validasi Keamanan Password Real-time:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                   <span className={hasUpper ? 'text-[#20C997] font-semibold' : 'text-slate-500'}>
@@ -281,18 +284,18 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
               <button
                 type="submit"
                 disabled={!isPasswordValid}
-                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white font-bold text-sm shadow-sm hover:opacity-95 disabled:opacity-40 transition flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white font-bold text-sm shadow-sm hover:opacity-95 disabled:opacity-40 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>DAFTAR AKUN STAFF (PENDING APPROVAL)</span>
               </button>
 
-              <div className="pt-3 border-t border-pink-100 flex items-center justify-between text-xs">
+              <div className="pt-3 border-t border-red-100 flex items-center justify-between text-xs">
                 <span className="text-slate-600">Sudah memiliki akun aktif?</span>
                 <button
                   type="button"
                   onClick={() => setMode('login')}
-                  className="font-bold text-[#D63384] hover:underline cursor-pointer"
+                  className="font-bold text-[#7F1D1D] hover:underline cursor-pointer"
                 >
                   Kembali ke Login
                 </button>
@@ -315,7 +318,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
               className="space-y-4"
             >
               <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                <KeyRound className="w-4 h-4 text-[#E83E8C]" />
+                <KeyRound className="w-4 h-4 text-[#9E1B21]" />
                 <span>Pemulihan Password Akun Staff</span>
               </div>
               <input
@@ -336,7 +339,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-bold cursor-pointer"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold cursor-pointer"
                 >
                   Kirim Permintaan Reset
                 </button>

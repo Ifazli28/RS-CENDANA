@@ -1,0 +1,159 @@
+<svg viewBox="0 0 400 400" width="400" height="400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Shadow & Filters -->
+    <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#450A0A" flood-opacity="0.35"/>
+    </filter>
+
+    <!-- Rich Paramedic Crimson Gradients -->
+    <radialGradient id="patchBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#9E1B21"/>
+      <stop offset="65%" stop-color="#8B1E22"/>
+      <stop offset="100%" stop-color="#671014"/>
+    </radialGradient>
+    <linearGradient id="starGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#B91C1C"/>
+      <stop offset="50%" stop-color="#991B1B"/>
+      <stop offset="100%" stop-color="#7F1D1D"/>
+    </linearGradient>
+    <linearGradient id="ribbonGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9E1B21"/>
+      <stop offset="100%" stop-color="#671014"/>
+    </linearGradient>
+
+    <!-- Carbon / Fabric Twill Pattern -->
+    <pattern id="twill" width="6" height="6" patternUnits="userSpaceOnUse">
+      <path d="M0 6L6 0M3 9L9 3M-3 3L3 -3" stroke="#450A0A" stroke-width="0.8" opacity="0.35"/>
+    </pattern>
+
+    <!-- Arc text paths -->
+    <!-- Top arc for PARAMEDIC -->
+    <path id="topParamedicPath" d="M 62,200 A 138,138 0 1,1 338,200" fill="none"/>
+    <!-- Bottom arc for KOTA BARU ROLEPLAY -->
+    <path id="bottomKotbarPath" d="M 88,292 A 140,140 0 0,0 312,292" fill="none"/>
+  </defs>
+
+  <!-- Base Circle with Patch Shadow -->
+  <g filter="url(#badgeShadow)">
+    <!-- Outer Embroidered Stitch Ring -->
+    <circle cx="200" cy="200" r="192" fill="#8B1E22" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="200" cy="200" r="192" fill="url(#twill)"/>
+    <circle cx="200" cy="200" r="188" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-dasharray="4,3"/>
+    
+    <!-- Outer Red Ring Band -->
+    <circle cx="200" cy="200" r="182" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+    <circle cx="200" cy="200" r="148" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+
+    <!-- Left & Right Divider Stripes -->
+    <g stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round">
+      <!-- Left stripes -->
+      <line x1="12" y1="174" x2="52" y2="182"/>
+      <line x1="12" y1="204" x2="50" y2="206"/>
+      <!-- Right stripes -->
+      <line x1="388" y1="174" x2="348" y2="182"/>
+      <line x1="388" y1="204" x2="350" y2="206"/>
+    </g>
+
+    <!-- Inner Medallion Background -->
+    <circle cx="200" cy="200" r="146" fill="url(#patchBg)"/>
+    <circle cx="200" cy="200" r="146" fill="url(#twill)"/>
+    <circle cx="200" cy="200" r="146" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+
+    <!-- TOP TEXT: PARAMEDIC -->
+    <text fill="#FFFFFF" font-family="'Arial Black', 'Impact', 'Montserrat', sans-serif" font-weight="900" font-size="34" letter-spacing="4.5">
+      <textPath href="#topParamedicPath" startOffset="50%" text-anchor="middle">
+        PARAMEDIC
+      </textPath>
+    </text>
+
+    <!-- CENTER STAR OF LIFE (6-pointed medical star) centered at (200, 184) -->
+    <g transform="translate(200, 182)">
+      <!-- 3 intersecting cross bars of the Star of Life -->
+      <path d="M -24,-92 L 24,-92 L 24,-32 L 68,-57 L 92,-15 L 48,10 L 92,35 L 68,77 L 24,52 L 24,92 L -24,92 L -24,52 L -68,77 L -92,35 L -48,10 L -92,-15 L -68,-57 L -24,-32 Z"
+            fill="url(#starGrad)"
+            stroke="#FFFFFF"
+            stroke-width="5"
+            stroke-linejoin="round"
+      />
+      <!-- Inner subtle stitch/twill overlay on star -->
+      <path d="M -24,-92 L 24,-92 L 24,-32 L 68,-57 L 92,-15 L 48,10 L 92,35 L 68,77 L 24,52 L 24,92 L -24,92 L -24,52 L -68,77 L -92,35 L -48,10 L -92,-15 L -68,-57 L -24,-32 Z"
+            fill="url(#twill)"
+            opacity="0.4"
+      />
+
+      <!-- Monogram 'KB' / 'KBR' inside Star of Life -->
+      <g transform="translate(0, -3)">
+        <!-- Subtle dark backdrop for monogram -->
+        <rect x="-36" y="-44" width="72" height="84" rx="8" fill="#50070A" opacity="0.6"/>
+        
+        <!-- Stylized Lettermark K and B combined -->
+        <!-- Letter K (Vertical spine & angled arms) -->
+        <path d="M -30,-38 L -14,-38 L -14,38 L -30,38 Z" fill="#9E1B21" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
+        <!-- Upper diagonal arm of K -->
+        <path d="M -14,-4 L 14,-38 L 32,-38 L 4,-4 Z" fill="#9E1B21" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
+        <!-- Lower diagonal arm of K connecting into B -->
+        <path d="M 0,-4 L 32,38 L 14,38 L -14,4 Z" fill="#9E1B21" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
+        
+        <!-- Stylized B lobes (overlapping on right) with white double outline -->
+        <path d="M -14,-38 L 14,-38 C 28,-38 34,-28 34,-18 C 34,-9 28,-3 16,-3 L -14,-3 Z"
+              fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M -14,-3 L 16,-3 C 30,-3 36,5 36,18 C 36,29 28,38 14,38 L -14,38 Z"
+              fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Inner white hatching on monogram -->
+        <line x1="-24" y1="-32" x2="-20" y2="32" stroke="#FFFFFF" stroke-width="1.8" stroke-dasharray="3,3"/>
+      </g>
+    </g>
+
+    <!-- CARING / SUPPORTING HANDS AT BOTTOM (Cupped hands holding the star) -->
+    <g transform="translate(200, 260)">
+      <!-- Left Hand -->
+      <path d="M -76,-50 C -68,-25 -82,-10 -90,12 C -96,28 -85,42 -68,44 C -50,46 -42,32 -38,15 C -34,0 -42,-22 -52,-42 C -56,-50 -70,-56 -76,-50 Z"
+            fill="#8B1E22" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M -86,0 C -78,16 -70,28 -56,30" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M -70,-26 C -62,-8 -54,8 -44,14" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- Right Hand -->
+      <path d="M 76,-50 C 68,-25 82,-10 90,12 C 96,28 85,42 68,44 C 50,46 42,32 38,15 C 34,0 42,-22 52,-42 C 56,-50 70,-56 76,-50 Z"
+            fill="#8B1E22" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M 86,0 C 78,16 70,28 56,30" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 70,-26 C 62,-8 54,8 44,14" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- BOTTOM RIBBON BANNER -->
+    <!-- Ribbon Base Shape -->
+    <path d="M 60,320 Q 200,305 340,320 L 326,382 Q 200,366 74,382 Z"
+          fill="url(#ribbonGrad)"
+          stroke="#FFFFFF"
+          stroke-width="3.5"
+    />
+    <path d="M 60,320 Q 200,305 340,320 L 326,382 Q 200,366 74,382 Z"
+          fill="url(#twill)"
+          opacity="0.35"
+    />
+    <!-- Ribbon top border stripe -->
+    <path d="M 66,324 Q 200,309 334,324" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M 78,378 Q 200,362 322,378" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+
+    <!-- Ribbon Text Line 1: KBR -->
+    <text x="200" y="345" text-anchor="middle"
+          fill="#FFFFFF"
+          font-family="'Arial Black', 'Impact', sans-serif"
+          font-weight="900"
+          font-size="25"
+          letter-spacing="2">
+      KBR
+    </text>
+
+    <!-- Ribbon Text Line 2: KOTA BARU ROLEPLAY (Arched along bottom curve) -->
+    <text fill="#FFFFFF"
+          font-family="'Arial Black', 'Impact', 'Montserrat', sans-serif"
+          font-weight="900"
+          font-size="16"
+          letter-spacing="2.8">
+      <textPath href="#bottomKotbarPath" startOffset="50%" text-anchor="middle">
+        KOTA BARU ROLEPLAY
+      </textPath>
+    </text>
+  </g>
+</svg>

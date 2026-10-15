@@ -134,9 +134,9 @@ export const DashboardLeaderboardView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="p-6 rounded-2xl bg-white border border-pink-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-white border border-red-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold text-[#E83E8C]">
+          <p className="text-xs font-semibold text-[#9E1B21]">
             PORTAL INTERNAL STAFF · LEVEL {currentUser?.level} ({currentUser?.role})
           </p>
           <h2 className="text-2xl font-bold text-slate-900 mt-0.5">
@@ -149,13 +149,13 @@ export const DashboardLeaderboardView: React.FC = () => {
 
         {/* Period Filter (Sec 38: Default Minggu berjalan Senin-Minggu, Filter Minggu / Bulan) */}
         <div className="flex flex-col items-start sm:items-end gap-1.5">
-          <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100">
+          <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-red-100">
             <button
               onClick={() => setPeriodFilter('week')}
               className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 periodFilter === 'week'
                   ? 'bg-[#E83E8C] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-[#D63384]'
+                  : 'text-slate-600 hover:text-[#7F1D1D]'
               }`}
             >
               Minggu Ini (Sen–Min)
@@ -165,7 +165,7 @@ export const DashboardLeaderboardView: React.FC = () => {
               className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 periodFilter === 'month'
                   ? 'bg-[#E83E8C] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-[#D63384]'
+                  : 'text-slate-600 hover:text-[#7F1D1D]'
               }`}
             >
               Bulan Ini ({weekBounds.monthLabel})
@@ -181,9 +181,9 @@ export const DashboardLeaderboardView: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Trophy className="w-5 h-5 text-[#E83E8C]" />
+            <Trophy className="w-5 h-5 text-[#9E1B21]" />
             <h3 className="text-lg font-bold text-slate-900">
-              Leaderboard Jam Duty Paramedic Cendana
+              Leaderboard Jam Duty Paramedic Kota Baru
             </h3>
           </div>
           <span className="text-xs text-slate-500">
@@ -201,14 +201,14 @@ export const DashboardLeaderboardView: React.FC = () => {
                 className={`p-6 rounded-2xl border transition relative overflow-hidden ${
                   isFirst
                     ? 'bg-gradient-to-br from-[#FFF5F8] via-white to-pink-50/70 border-[#E83E8C] shadow-md'
-                    : 'bg-white border-pink-100 shadow-xs'
+                    : 'bg-white border-red-100 shadow-xs'
                 }`}
               >
                 <div className="flex items-center justify-between mb-4">
                   <span
                     className={`text-2xl font-extrabold font-mono tabular-nums ${
                       isFirst
-                        ? 'text-[#E83E8C]'
+                        ? 'text-[#9E1B21]'
                         : rank === 2
                         ? 'text-[#20C997]'
                         : 'text-amber-600'
@@ -228,13 +228,13 @@ export const DashboardLeaderboardView: React.FC = () => {
                     referrerPolicy="no-referrer"
                     className={`${
                       isFirst ? 'w-16 h-16' : 'w-14 h-14'
-                    } rounded-2xl object-cover border-2 border-pink-200 shrink-0`}
+                    } rounded-2xl object-cover border-2 border-red-200 shrink-0`}
                   />
                   <div className="min-w-0">
                     <h4 className="text-base font-bold text-slate-900 truncate">{item.name}</h4>
                     <p className="text-xs text-slate-500 truncate">{item.role}</p>
                     <div className="mt-2 flex items-baseline gap-1.5">
-                      <span className="text-xl sm:text-2xl font-extrabold font-mono text-[#D63384] tabular-nums">
+                      <span className="text-xl sm:text-2xl font-extrabold font-mono text-[#7F1D1D] tabular-nums">
                         {formatHoursMinutes(item.totalMinutes)}
                       </span>
                       <span className="text-[11px] text-slate-400">total durasi</span>
@@ -247,8 +247,8 @@ export const DashboardLeaderboardView: React.FC = () => {
         </div>
 
         {/* Ranking #4+ Compact Table (Sec 39) */}
-        <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-pink-100 flex items-center justify-between">
+        <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-red-100 flex items-center justify-between">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Peringkat #4 dan Seterusnya
             </h4>
@@ -269,7 +269,7 @@ export const DashboardLeaderboardView: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-pink-50 text-sm">
                 {restRanking.map((item, idx) => (
-                  <tr key={item.staffId} className="hover:bg-pink-50/30 transition">
+                  <tr key={item.staffId} className="hover:bg-red-50/60/30 transition">
                     <td className="py-3 px-4 font-mono font-bold text-slate-500 tabular-nums">
                       #{idx + 4}
                     </td>
@@ -288,7 +288,7 @@ export const DashboardLeaderboardView: React.FC = () => {
                     <td className="py-3 px-4 text-right font-mono text-xs text-slate-600 tabular-nums">
                       {item.sessions} sesi
                     </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-[#D63384] tabular-nums">
+                    <td className="py-3 px-4 text-right font-mono font-bold text-[#7F1D1D] tabular-nums">
                       {formatHoursMinutes(item.totalMinutes)}
                     </td>
                   </tr>
@@ -343,7 +343,7 @@ export const StaffProfileView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Sec 40: Profil Staff */}
-      <div className="bg-white rounded-2xl border border-pink-100 p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-center gap-6">
+      <div className="bg-white rounded-2xl border border-red-100 p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-center gap-6">
         <img
           src={currentUser.avatarUrl}
           alt={currentUser.name}
@@ -352,14 +352,14 @@ export const StaffProfileView: React.FC = () => {
         />
         <div className="flex-1 text-center sm:text-left space-y-1.5">
           <h2 className="text-xl font-bold text-slate-900">{currentUser.name}</h2>
-          <p className="text-sm font-semibold text-[#E83E8C]">
+          <p className="text-sm font-semibold text-[#9E1B21]">
             {currentUser.role} (Level {currentUser.level})
           </p>
           <p className="text-xs text-slate-500">
             {currentUser.email} · Bergabung {currentUser.joinDate}
           </p>
           <div className="pt-2">
-            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFF5F8] border border-pink-200 text-xs font-semibold text-[#D63384] hover:bg-pink-100 cursor-pointer transition">
+            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFF5F8] border border-red-200 text-xs font-semibold text-[#7F1D1D] hover:bg-red-100 cursor-pointer transition">
               <Upload className="w-4 h-4" />
               <span>Upload Foto Profil Baru (.JPG) — Live Preview</span>
               <input type="file" accept=".jpg,.jpeg" className="hidden" onChange={handleJpgUpload} />
@@ -370,8 +370,8 @@ export const StaffProfileView: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Sec 41: Ganti Password */}
-        <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs space-y-4">
-          <h3 className="text-base font-bold text-slate-900 border-b border-pink-100 pb-3">
+        <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4">
+          <h3 className="text-base font-bold text-slate-900 border-b border-red-100 pb-3">
             Ganti Password
           </h3>
           <form
@@ -440,7 +440,7 @@ export const StaffProfileView: React.FC = () => {
             <button
               type="submit"
               disabled={!passValid}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold disabled:opacity-40 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold disabled:opacity-40 cursor-pointer"
             >
               Simpan Password Baru
             </button>
@@ -448,8 +448,8 @@ export const StaffProfileView: React.FC = () => {
         </div>
 
         {/* Sec 42: Pengaturan Email */}
-        <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs space-y-4">
-          <h3 className="text-base font-bold text-slate-900 border-b border-pink-100 pb-3">
+        <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4">
+          <h3 className="text-base font-bold text-slate-900 border-b border-red-100 pb-3">
             Pengaturan Email
           </h3>
           <form
@@ -517,7 +517,7 @@ export const StaffProfileView: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold cursor-pointer"
             >
               Perbarui Email
             </button>
@@ -545,7 +545,7 @@ export const StaffDirectoryView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Direktori Anggota Staff Aktif</h2>
           <p className="text-xs text-slate-500">
@@ -568,28 +568,28 @@ export const StaffDirectoryView: React.FC = () => {
         {activeSorted.map((st) => (
           <div
             key={st.id}
-            className="p-5 rounded-2xl bg-white border border-pink-100 shadow-xs flex flex-col justify-between gap-4"
+            className="p-5 rounded-2xl bg-white border border-red-100 shadow-xs flex flex-col justify-between gap-4"
           >
             <div className="flex items-center gap-3.5">
               <img
                 src={st.avatarUrl}
                 alt={st.name}
                 referrerPolicy="no-referrer"
-                className="w-14 h-14 rounded-2xl object-cover border border-pink-200 shrink-0"
+                className="w-14 h-14 rounded-2xl object-cover border border-red-200 shrink-0"
               />
               <div className="min-w-0">
                 <h3 className="text-sm font-bold text-slate-900 truncate">{st.name}</h3>
-                <p className="text-xs font-semibold text-[#E83E8C]">
+                <p className="text-xs font-semibold text-[#9E1B21]">
                   {st.role} · Level {st.level}
                 </p>
                 <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                  {st.specialty || 'Tenaga Medis RS Cendana'}
+                  {st.specialty || 'Tenaga Medis RS Kota Baru'}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setSelectedStaff(st)}
-              className="w-full py-2 px-3 rounded-xl bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold transition cursor-pointer"
+              className="w-full py-2 px-3 rounded-xl bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold transition cursor-pointer"
             >
               Profil Selengkapnya
             </button>
@@ -603,7 +603,7 @@ export const StaffDirectoryView: React.FC = () => {
           onClick={() => setSelectedStaff(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-4">
@@ -611,16 +611,16 @@ export const StaffDirectoryView: React.FC = () => {
                 src={selectedStaff.avatarUrl}
                 alt={selectedStaff.name}
                 referrerPolicy="no-referrer"
-                className="w-16 h-16 rounded-2xl object-cover border border-pink-200"
+                className="w-16 h-16 rounded-2xl object-cover border border-red-200"
               />
               <div>
                 <h3 className="text-lg font-bold text-slate-900">{selectedStaff.name}</h3>
-                <p className="text-xs font-semibold text-[#E83E8C]">
+                <p className="text-xs font-semibold text-[#9E1B21]">
                   {selectedStaff.role} (Level {selectedStaff.level})
                 </p>
               </div>
             </div>
-            <div className="text-xs text-slate-600 space-y-2 border-t border-pink-100 pt-3">
+            <div className="text-xs text-slate-600 space-y-2 border-t border-red-100 pt-3">
               <p>
                 <strong>Bidang / Spesialisasi:</strong> {selectedStaff.specialty || '-'}
               </p>
@@ -629,7 +629,7 @@ export const StaffDirectoryView: React.FC = () => {
               </p>
               <p>
                 <strong>Tentang Staff:</strong>{' '}
-                {selectedStaff.bio || 'Anggota resmi unit pelayanan medis Rumah Sakit Cendana.'}
+                {selectedStaff.bio || 'Anggota resmi unit pelayanan medis Rumah Sakit Kota Baru.'}
               </p>
             </div>
             <button
@@ -660,7 +660,7 @@ export const VotingView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Voting & Jajak Pendapat Internal</h2>
           <p className="text-xs text-slate-500">
@@ -670,7 +670,7 @@ export const VotingView: React.FC = () => {
         {canCreate && (
           <button
             onClick={() => setShowCreate(!showCreate)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Buat Voting Baru (Heads+)</span>
@@ -692,7 +692,7 @@ export const VotingView: React.FC = () => {
             setDesc('');
             setShowCreate(false);
           }}
-          className="bg-white p-6 rounded-2xl border border-pink-200 space-y-4"
+          className="bg-white p-6 rounded-2xl border border-red-200 space-y-4"
         >
           <h3 className="text-sm font-bold text-slate-900">Buat Voting Internal Baru</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -763,7 +763,7 @@ export const VotingView: React.FC = () => {
           const myVoteOption = poll.options.find((o) => o.votes.includes(currentUser.id));
 
           return (
-            <div key={poll.id} className="bg-white rounded-2xl border border-pink-100 p-6 space-y-4">
+            <div key={poll.id} className="bg-white rounded-2xl border border-red-100 p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h3 className="text-base font-bold text-slate-900">{poll.title}</h3>
@@ -819,7 +819,7 @@ export const VotingView: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <div className="w-full h-2 bg-pink-100 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-red-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-[#E83E8C] to-[#20C997]"
                           style={{ width: `${pct}%` }}
@@ -906,7 +906,7 @@ export const MySalaryView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-5 rounded-2xl border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Gaji Saya & Estimasi Mingguan Real-Time</h2>
           <p className="text-xs text-slate-500">
@@ -922,7 +922,7 @@ export const MySalaryView: React.FC = () => {
             <span className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 font-bold border border-amber-200">
               Per Jam: ${myRoleConfig.hourlyRate.toLocaleString()}/jam
             </span>
-            <span className="px-3 py-1.5 rounded-xl bg-pink-50 text-[#D63384] font-bold border border-pink-200">
+            <span className="px-3 py-1.5 rounded-xl bg-red-50/60 text-[#7F1D1D] font-bold border border-red-200">
               Bonus: +${myRoleConfig.bonusPerStepAmount.toLocaleString()} / {myRoleConfig.bonusStepHours} jam lebih
             </span>
           </div>
@@ -930,10 +930,10 @@ export const MySalaryView: React.FC = () => {
       </div>
 
       {/* Kartu Kalkulasi Jam Duty Minggu Berjalan */}
-      <div className="bg-white rounded-2xl border border-pink-200 p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-pink-100 pb-4">
+      <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-red-100 pb-4">
           <div>
-            <span className="text-xs font-bold text-[#E83E8C] uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#9E1B21] uppercase tracking-wider">
               KALKULASI MINGGU BERJALAN (REAL-TIME DARI LOG DUTY)
             </span>
             <h3 className="text-lg font-bold text-slate-900 mt-0.5">
@@ -974,7 +974,7 @@ export const MySalaryView: React.FC = () => {
               +${liveBonus.toLocaleString()}
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white">
+          <div className="p-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white">
             <p className="text-xs text-pink-100">Estimasi Gaji Minggu Ini</p>
             <p className="text-xl font-extrabold font-mono mt-0.5">
               ${(baseEarned + liveBonus).toLocaleString()}
@@ -984,7 +984,7 @@ export const MySalaryView: React.FC = () => {
       </div>
 
       {myPayrolls.length === 0 ? (
-        <div className="bg-white p-8 rounded-2xl border border-pink-100 text-center text-sm text-slate-500">
+        <div className="bg-white p-8 rounded-2xl border border-red-100 text-center text-sm text-slate-500">
           Belum ada catatan slip gaji resmi yang diterbitkan untuk akun Anda pada periode ini.
         </div>
       ) : (
@@ -992,11 +992,11 @@ export const MySalaryView: React.FC = () => {
           {myPayrolls.map((pay) => (
             <div
               key={pay.id}
-              className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs space-y-4"
+              className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-pink-100 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-red-100 pb-4">
                 <div>
-                  <span className="text-xs font-semibold text-[#E83E8C]">SLIP GAJI RESMI RS CENDANA</span>
+                  <span className="text-xs font-semibold text-[#9E1B21]">SLIP GAJI RESMI RS KOTA BARU</span>
                   <h3 className="text-xl font-bold text-slate-900">Periode: {pay.period}</h3>
                   <p className="text-xs text-slate-500">
                     {pay.staffName} · Jabatan: {pay.role}
@@ -1035,7 +1035,7 @@ export const MySalaryView: React.FC = () => {
                     -${pay.deduction.toLocaleString()}
                   </p>
                 </div>
-                <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white">
+                <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white">
                   <p className="text-xs text-pink-100">Take Home Pay</p>
                   <p className="text-lg font-extrabold font-mono">
                     ${pay.totalSalary.toLocaleString()}
@@ -1074,7 +1074,7 @@ export const LeaveAndResignView: React.FC<{ mode: 'leave' | 'resign' }> = ({ mod
     const myLeaves = leaveRequests.filter((l) => l.staffId === currentUser.id);
     return (
       <div className="space-y-6">
-        <div className="bg-white p-6 rounded-2xl border border-pink-100 space-y-4">
+        <div className="bg-white p-6 rounded-2xl border border-red-100 space-y-4">
           <h2 className="text-lg font-bold text-slate-900">Formulir Pengajuan Cuti Staff</h2>
           <form
             onSubmit={(e) => {
@@ -1141,9 +1141,9 @@ export const LeaveAndResignView: React.FC<{ mode: 'leave' | 'resign' }> = ({ mod
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Lampiran (Opsional)</label>
-              <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-200 bg-[#FFF5F8] text-xs cursor-pointer">
+              <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-red-200 bg-[#FFF5F8] text-xs cursor-pointer">
                 <span className="truncate">{attachmentName || 'Pilih file...'}</span>
-                <Upload className="w-4 h-4 text-[#E83E8C]" />
+                <Upload className="w-4 h-4 text-[#9E1B21]" />
                 <input
                   type="file"
                   className="hidden"
@@ -1154,7 +1154,7 @@ export const LeaveAndResignView: React.FC<{ mode: 'leave' | 'resign' }> = ({ mod
             <div className="sm:col-span-3 flex justify-end">
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold cursor-pointer"
               >
                 Ajukan Permohonan Cuti
               </button>
@@ -1162,14 +1162,14 @@ export const LeaveAndResignView: React.FC<{ mode: 'leave' | 'resign' }> = ({ mod
           </form>
         </div>
 
-        <div className="bg-white rounded-2xl border border-pink-100 p-6 space-y-4">
+        <div className="bg-white rounded-2xl border border-red-100 p-6 space-y-4">
           <h3 className="text-base font-bold text-slate-900">Riwayat Pengajuan Cuti Saya</h3>
           {myLeaves.length === 0 ? (
             <p className="text-xs text-slate-500">Belum ada riwayat pengajuan cuti.</p>
           ) : (
             <div className="space-y-3">
               {myLeaves.map((lv) => (
-                <div key={lv.id} className="p-4 rounded-xl border border-pink-100 bg-[#FFF5F8]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div key={lv.id} className="p-4 rounded-xl border border-red-100 bg-[#FFF5F8]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-bold text-slate-900">
                       {lv.leaveType} ({lv.startDate} s/d {lv.endDate} · {lv.durationDays} hari)
@@ -1205,7 +1205,7 @@ export const LeaveAndResignView: React.FC<{ mode: 'leave' | 'resign' }> = ({ mod
   const myResigns = resignRequests.filter((r) => r.staffId === currentUser.id);
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-pink-100 space-y-4">
+      <div className="bg-white p-6 rounded-2xl border border-red-100 space-y-4">
         <h2 className="text-lg font-bold text-slate-900">Formulir Pengajuan Resign (Pengunduran Diri)</h2>
         <form
           onSubmit={(e) => {
@@ -1275,7 +1275,7 @@ export const LeaveAndResignView: React.FC<{ mode: 'leave' | 'resign' }> = ({ mod
           <div className="flex justify-end">
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold cursor-pointer"
             >
               Kirim Pengajuan Resign
             </button>
@@ -1283,13 +1283,13 @@ export const LeaveAndResignView: React.FC<{ mode: 'leave' | 'resign' }> = ({ mod
         </form>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 p-6 space-y-3">
+      <div className="bg-white rounded-2xl border border-red-100 p-6 space-y-3">
         <h3 className="text-base font-bold text-slate-900">Status Pengajuan Resign Saya</h3>
         {myResigns.length === 0 ? (
           <p className="text-xs text-slate-500">Belum ada pengajuan resign.</p>
         ) : (
           myResigns.map((r) => (
-            <div key={r.id} className="p-4 rounded-xl border border-pink-100 bg-[#FFF5F8]/50 flex items-center justify-between">
+            <div key={r.id} className="p-4 rounded-xl border border-red-100 bg-[#FFF5F8]/50 flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-slate-900">
                   Efektif: {r.effectiveDate} · Diajukan: {r.submittedDate}
@@ -1329,11 +1329,11 @@ export const SOPMedisView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Standar Operasional Prosedur (SOP Medis)</h2>
           <p className="text-xs text-slate-500">
-            Pedoman kerja resmi seluruh anggota Paramedic & Dokter RS Cendana
+            Pedoman kerja resmi seluruh anggota Paramedic & Dokter RS Kota Baru
           </p>
         </div>
         {canManage && (
@@ -1346,7 +1346,7 @@ export const SOPMedisView: React.FC = () => {
               setPdfFileName('');
               setShowEditor(true);
             }}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Buat / Upload SOP PDF (Heads+)</span>
@@ -1364,7 +1364,7 @@ export const SOPMedisView: React.FC = () => {
             );
             setShowEditor(false);
           }}
-          className="bg-white p-6 rounded-2xl border border-pink-200 space-y-4"
+          className="bg-white p-6 rounded-2xl border border-red-200 space-y-4"
         >
           <h3 className="text-sm font-bold text-slate-900">
             {editingId ? 'Perbarui Dokumen SOP' : 'Tambah Dokumen SOP Medis Baru'}
@@ -1410,9 +1410,9 @@ export const SOPMedisView: React.FC = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Upload Dokumen SOP (.PDF)
               </label>
-              <label className="flex items-center justify-between px-3.5 py-2 rounded-xl border border-dashed border-pink-200 bg-[#FFF5F8] text-xs cursor-pointer">
+              <label className="flex items-center justify-between px-3.5 py-2 rounded-xl border border-dashed border-red-200 bg-[#FFF5F8] text-xs cursor-pointer">
                 <span className="truncate">{pdfFileName || 'Pilih file PDF SOP...'}</span>
-                <Upload className="w-4 h-4 text-[#E83E8C]" />
+                <Upload className="w-4 h-4 text-[#9E1B21]" />
                 <input
                   type="file"
                   accept=".pdf"
@@ -1459,12 +1459,12 @@ export const SOPMedisView: React.FC = () => {
               className={`p-4 rounded-2xl border transition cursor-pointer ${
                 selectedSop?.id === doc.id
                   ? 'bg-[#FFF5F8] border-[#E83E8C]'
-                  : 'bg-white border-pink-100 hover:border-pink-200'
+                  : 'bg-white border-red-100 hover:border-red-200'
               }`}
             >
               <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
                 <span>{doc.category}</span>
-                <span className="font-mono font-bold text-[#E83E8C]">{doc.version}</span>
+                <span className="font-mono font-bold text-[#9E1B21]">{doc.version}</span>
               </div>
               <h3 className="text-sm font-bold text-slate-900">{doc.title}</h3>
               <p className="text-[11px] text-slate-500 mt-1">
@@ -1476,10 +1476,10 @@ export const SOPMedisView: React.FC = () => {
 
         <div className="lg:col-span-7">
           {selectedSop && (
-            <div className="bg-white rounded-2xl border border-pink-100 p-6 space-y-4">
-              <div className="flex items-start justify-between gap-4 border-b border-pink-100 pb-4">
+            <div className="bg-white rounded-2xl border border-red-100 p-6 space-y-4">
+              <div className="flex items-start justify-between gap-4 border-b border-red-100 pb-4">
                 <div>
-                  <span className="text-xs font-semibold text-[#E83E8C]">
+                  <span className="text-xs font-semibold text-[#9E1B21]">
                     {selectedSop.category} · Versi {selectedSop.version}
                   </span>
                   <h3 className="text-lg font-bold text-slate-900 mt-0.5">{selectedSop.title}</h3>
@@ -1498,7 +1498,7 @@ export const SOPMedisView: React.FC = () => {
                       setPdfFileName(selectedSop.pdfFileName || '');
                       setShowEditor(true);
                     }}
-                    className="px-3 py-1.5 rounded-lg border border-pink-200 text-xs font-semibold text-[#D63384] hover:bg-pink-50 cursor-pointer shrink-0"
+                    className="px-3 py-1.5 rounded-lg border border-red-200 text-xs font-semibold text-[#7F1D1D] hover:bg-red-50/60 cursor-pointer shrink-0"
                   >
                     Edit SOP
                   </button>
@@ -1506,9 +1506,9 @@ export const SOPMedisView: React.FC = () => {
               </div>
 
               {selectedSop.pdfFileName && (
-                <div className="p-3.5 rounded-xl bg-[#FFF5F8] border border-pink-100 flex items-center justify-between">
+                <div className="p-3.5 rounded-xl bg-[#FFF5F8] border border-red-100 flex items-center justify-between">
                   <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-800">
-                    <BookOpen className="w-4 h-4 text-[#E83E8C]" />
+                    <BookOpen className="w-4 h-4 text-[#9E1B21]" />
                     <span>Lampiran Dokumen PDF: {selectedSop.pdfFileName}</span>
                   </div>
                   <span className="text-[11px] text-[#20C997] font-semibold">Terverifikasi</span>

@@ -381,7 +381,7 @@ export function evaluateFullPsychologyAssessment(
     interpretationCategory =
       'Indikasi Distres Emosional Tinggi (Disarankan Konsultasi Profesional Kesehatan Mental)';
     recommendation =
-      'PERLU KONSULTASI PROFESIONAL KESEHATAN MENTAL — Disarankan menjalani evaluasi klinis dan pendampingan psikologis lebih lanjut di Poli Psikiatri RS Cendana.';
+      'PERLU KONSULTASI PROFESIONAL KESEHATAN MENTAL — Disarankan menjalani evaluasi klinis dan pendampingan psikologis lebih lanjut di Poli Psikiatri RS Kota Baru.';
   } else if (isModerateDistress) {
     interpretationCategory = 'Terdapat Indikasi Distres Emosional Sedang';
     recommendation =

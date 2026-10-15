@@ -249,7 +249,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     complaint: '',
   });
 
-  // Recruitment Form State (Recruitment Medis Cendana Roleplay)
+  // Recruitment Form State (Recruitment Medis Kota Baru Roleplay)
   const [recForm, setRecForm] = useState({
     // INFORMASI IC - Persyaratan Umum
     age17Plus: false,
@@ -353,12 +353,12 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-white rounded-2xl border border-pink-100 shadow-xl p-5 sm:p-8">
+      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-white rounded-2xl border border-red-100 shadow-xl p-5 sm:p-8">
         {/* Top Close Bar */}
         <button
           onClick={onClose}
           aria-label="Tutup Modal"
-          className="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-100 hover:bg-pink-50 text-slate-600 hover:text-[#D63384] flex items-center justify-center transition cursor-pointer"
+          className="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-100 hover:bg-red-50/60 text-slate-600 hover:text-[#7F1D1D] flex items-center justify-center transition cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -366,14 +366,14 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 1. MODAL SURAT KETERANGAN SEHAT (Sec 18) */}
         {activeModal === 'sks' && (
           <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b border-pink-100 pb-4">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center">
+            <div className="flex items-center gap-3 border-b border-red-100 pb-4">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#9E1B21] to-[#7F1D1D] text-white flex items-center justify-center">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Formulir Surat Keterangan Sehat (SKS)</h2>
                 <p className="text-xs text-slate-500">
-                  Pengurusan resmi SKS RS Cendana · Diverifikasi oleh Paramedic ke atas
+                  Pengurusan resmi SKS RS Kota Baru · Diverifikasi oleh Paramedic ke atas
                 </p>
               </div>
             </div>
@@ -497,7 +497,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                 >
                   Kirim Pengajuan SKS
                 </button>
@@ -509,9 +509,9 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 2. MODAL TES & EVALUASI PSIKOLOGI (Dua Form Utama: 1. Isi Data Diri & 2. Tes & Evaluasi Psikologi) */}
         {activeModal === 'psychology' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#9E1B21] to-[#7F1D1D] text-white flex items-center justify-center shrink-0">
                   <Brain className="w-5 h-5" />
                 </div>
                 <div>
@@ -524,14 +524,14 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
               {/* Step Indicator: Form 1 (Isi Data Diri) & Form 2 (Tes & Evaluasi Psikologi) */}
               {psyStep !== 'selesai' && (
-                <div className="flex items-center gap-1.5 bg-[#FFF5F8] p-1.5 rounded-xl border border-pink-100 text-xs font-bold self-start sm:self-auto">
+                <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-red-100 text-xs font-bold self-start sm:self-auto">
                   <button
                     type="button"
                     onClick={() => setPsyStep('data_diri')}
                     className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
                       psyStep === 'data_diri'
                         ? 'bg-[#E83E8C] text-white shadow-2xs'
-                        : 'text-slate-600 hover:text-[#D63384]'
+                        : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
                     1. Isi Data Diri
@@ -555,7 +555,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
                       psyStep === 'tes_evaluasi'
                         ? 'bg-[#E83E8C] text-white shadow-2xs'
-                        : 'text-slate-600 hover:text-[#D63384]'
+                        : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
                     2. Tes & Evaluasi Psikologi
@@ -580,8 +580,8 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 }}
                 className="space-y-4"
               >
-                <div className="p-3.5 rounded-xl bg-[#FFF5F8] border border-pink-100 flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#D63384]">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-red-100 flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#7F1D1D]">
                     TAHAP 1 DARI 2 — FORMULIR ISI DATA DIRI PESERTA
                   </span>
                   <span className="text-[11px] text-slate-500">Wajib diisi lengkap sebelum memulai tes</span>
@@ -699,7 +699,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-3 flex justify-end gap-3 border-t border-pink-100">
+                <div className="pt-3 flex justify-end gap-3 border-t border-red-100">
                   <button
                     type="button"
                     onClick={onClose}
@@ -709,7 +709,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                   >
                     Lanjut ke Form Tes & Evaluasi Psikologi →
                   </button>
@@ -769,9 +769,9 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 }}
                 className="space-y-5"
               >
-                <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="p-4 rounded-xl bg-slate-50 border border-red-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs font-bold text-[#D63384]">
+                    <p className="text-xs font-bold text-[#7F1D1D]">
                       TAHAP 2 DARI 2 — TES & EVALUASI PSIKOLOGI (GHQ-12 & DASS-21)
                     </p>
                     <p className="text-[11px] text-slate-600 mt-0.5">
@@ -779,10 +779,10 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="px-2.5 py-1 rounded-lg bg-white border border-pink-200 text-[11px] font-mono font-bold text-[#D63384]">
+                    <span className="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-[11px] font-mono font-bold text-[#7F1D1D]">
                       GHQ-12: {Object.keys(ghqAnswers).length}/12
                     </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-white border border-pink-200 text-[11px] font-mono font-bold text-[#0D9488]">
+                    <span className="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-[11px] font-mono font-bold text-[#0D9488]">
                       DASS-21: {Object.keys(dassAnswers).length}/21
                     </span>
                   </div>
@@ -812,10 +812,10 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       return (
                         <div
                           key={`ghq-${q.number}`}
-                          className="p-4 rounded-2xl bg-white border border-pink-100 shadow-2xs space-y-3"
+                          className="p-4 rounded-2xl bg-white border border-red-100 shadow-2xs space-y-3"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[11px] font-mono font-bold text-[#E83E8C] uppercase">
+                            <span className="text-[11px] font-mono font-bold text-[#9E1B21] uppercase">
                               GHQ-12 · Soal #{q.number} ({q.itemType})
                             </span>
                             {currentAns && (
@@ -835,8 +835,8 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                                   key={opt.code}
                                   className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition ${
                                     isChecked
-                                      ? 'border-[#E83E8C] bg-[#FFF5F8] font-bold text-slate-900'
-                                      : 'border-slate-200 bg-white hover:border-pink-200 text-slate-700'
+                                      ? 'border-[#E83E8C] bg-slate-50 font-bold text-slate-900'
+                                      : 'border-slate-200 bg-white hover:border-red-200 text-slate-700'
                                   }`}
                                 >
                                   <input
@@ -888,7 +888,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       return (
                         <div
                           key={`dass-${q.number}`}
-                          className="p-4 rounded-2xl bg-white border border-pink-100 shadow-2xs space-y-3"
+                          className="p-4 rounded-2xl bg-white border border-red-100 shadow-2xs space-y-3"
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[11px] font-mono font-bold text-[#0D9488] uppercase">
@@ -944,7 +944,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-3 flex items-center justify-between gap-3 border-t border-pink-100">
+                <div className="pt-3 flex items-center justify-between gap-3 border-t border-red-100">
                   <button
                     type="button"
                     onClick={() => setPsyStep('data_diri')}
@@ -954,7 +954,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs sm:text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs sm:text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                   >
                     Selesai & Kirim Hasil Evaluasi Psikologi
                   </button>
@@ -964,19 +964,19 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
             {/* KONFIRMASI SELESAI TES PSIKOLOGI */}
             {psyStep === 'selesai' && psyLastResult && (
-              <div className="p-6 rounded-2xl bg-[#FFF5F8] border border-pink-200 text-center space-y-4">
+              <div className="p-6 rounded-2xl bg-slate-50 border border-red-200 text-center space-y-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#20C997] text-white flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-7 h-7" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-[#D63384] uppercase">
+                  <p className="text-xs font-bold text-[#7F1D1D] uppercase">
                     TES & EVALUASI PSIKOLOGI BERHASIL DIKIRIM
                   </p>
                   <h3 className="text-xl font-bold text-slate-900">{psyForm.fullName}</h3>
                 </div>
-                <div className="max-w-xl mx-auto p-4 rounded-xl bg-white border border-pink-100 text-left space-y-2.5 text-xs">
+                <div className="max-w-xl mx-auto p-4 rounded-xl bg-white border border-red-100 text-left space-y-2.5 text-xs">
                   <div className="pb-2 border-b border-slate-100">
-                    <span className="text-[11px] font-bold text-[#D63384] uppercase block">
+                    <span className="text-[11px] font-bold text-[#7F1D1D] uppercase block">
                       Bagian 1: Skrining Kesehatan Mental Umum (GHQ-12)
                     </span>
                     <div className="flex justify-between items-center mt-1">
@@ -1000,7 +1000,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         <strong className="font-mono text-sm text-slate-900">
                           {psyLastResult.dassDepressionScore}
                         </strong>
-                        <span className="block text-[10px] font-bold text-[#D63384]">
+                        <span className="block text-[10px] font-bold text-[#7F1D1D]">
                           {psyLastResult.dassDepressionCategory}
                         </span>
                       </div>
@@ -1043,7 +1043,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       setPsyLastResult(null);
                       onClose();
                     }}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold cursor-pointer"
                   >
                     Tutup Halaman
                   </button>
@@ -1056,14 +1056,14 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 3. MODAL OPERASI PLASTIK (Sec 21 — No Citizen ID, No hospital choice) */}
         {activeModal === 'plastic_surgery' && (
           <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b border-pink-100 pb-4">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center">
+            <div className="flex items-center gap-3 border-b border-red-100 pb-4">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#9E1B21] to-[#7F1D1D] text-white flex items-center justify-center">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Pengajuan Prosedur Operasi Plastik</h2>
                 <p className="text-xs text-slate-500">
-                  Bedah Rekonstruksi & Estetika oleh Tim Dokter Spesialis RS Cendana
+                  Bedah Rekonstruksi & Estetika oleh Tim Dokter Spesialis RS Kota Baru
                 </p>
               </div>
             </div>
@@ -1204,11 +1204,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Upload Foto Identitas / KTP (JPG/PNG) *
                 </label>
-                <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
+                <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-red-300 bg-slate-50 cursor-pointer hover:bg-red-50/60 transition text-xs">
                   <span className="truncate text-slate-700">
                     {plasticForm.idPhotoName || 'Pilih file foto KTP...'}
                   </span>
-                  <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
+                  <Upload className="w-4 h-4 text-[#9E1B21] shrink-0" />
                   <input
                     type="file"
                     accept=".jpg,.jpeg,.png"
@@ -1228,11 +1228,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Upload Dokumen SKB (Kepolisian) atau SKWB (PDF/JPG/PNG) *
                 </label>
-                <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
+                <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-red-300 bg-slate-50 cursor-pointer hover:bg-red-50/60 transition text-xs">
                   <span className="truncate text-slate-700">
                     {plasticForm.legalDocName || 'Pilih dokumen SKB / SKWB...'}
                   </span>
-                  <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
+                  <Upload className="w-4 h-4 text-[#9E1B21] shrink-0" />
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
@@ -1252,11 +1252,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Upload Foto Kartu Pasien (JPG/PNG) *
                 </label>
-                <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
+                <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-red-300 bg-slate-50 cursor-pointer hover:bg-red-50/60 transition text-xs">
                   <span className="truncate text-slate-700">
                     {plasticForm.patientCardPhotoName || 'Pilih file foto Kartu Pasien...'}
                   </span>
-                  <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
+                  <Upload className="w-4 h-4 text-[#9E1B21] shrink-0" />
                   <input
                     type="file"
                     accept=".jpg,.jpeg,.png"
@@ -1282,7 +1282,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                 >
                   Ajukan Operasi Plastik
                 </button>
@@ -1297,16 +1297,16 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 5. MODAL JADWAL DOKTER (Sec 19) */}
         {activeModal === 'doctor_schedule' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-pink-100 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-red-100 pb-4">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Jadwal Praktik Dokter RS Cendana</h2>
+                <h2 className="text-xl font-bold text-slate-900">Jadwal Praktik Dokter RS Kota Baru</h2>
                 <p className="text-xs text-slate-500">
                   Pilih dokter untuk membuat janji temu konsultasi langsung
                 </p>
               </div>
 
               {/* Interactive Filter Controls */}
-              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100">
+              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-50 rounded-xl border border-red-100">
                 {[
                   'Semua',
                   'Doctor',
@@ -1322,7 +1322,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                       scheduleFilter === cat
                         ? 'bg-[#E83E8C] text-white shadow-xs'
-                        : 'text-slate-600 hover:text-[#D63384]'
+                        : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
                     {cat}
@@ -1335,14 +1335,14 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
               {filteredSchedules.map((doc) => (
                 <div
                   key={doc.id}
-                  className="p-4 rounded-2xl border border-pink-100 bg-white hover:border-[#E83E8C]/40 transition flex flex-col justify-between gap-4"
+                  className="p-4 rounded-2xl border border-red-100 bg-white hover:border-[#E83E8C]/40 transition flex flex-col justify-between gap-4"
                 >
                   <div className="flex items-start gap-3.5">
                     <img
                       src={doc.doctorAvatar}
                       alt={doc.doctorName}
                       referrerPolicy="no-referrer"
-                      className="w-14 h-14 rounded-2xl object-cover border border-pink-100 shrink-0"
+                      className="w-14 h-14 rounded-2xl object-cover border border-red-100 shrink-0"
                     />
                     <div className="min-w-0 flex-1">
                       <h3 className="text-base font-bold text-slate-900 truncate">{doc.doctorName}</h3>
@@ -1351,7 +1351,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       </p>
                       <div className="mt-2 space-y-1 text-xs text-slate-600">
                         <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-[#E83E8C]" />
+                          <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
                           <span>{doc.days}</span>
                         </div>
                         <div className="flex items-center gap-1.5 tabular-nums">
@@ -1370,7 +1370,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       onSelectDoctorForAppointment(doc);
                       onOpenModal('appointment');
                     }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
                   >
                     Buat Janji Temu
                   </button>
@@ -1383,17 +1383,17 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 6. MODAL BUAT JANJI TEMU (Sec 20) */}
         {activeModal === 'appointment' && (
           <div className="space-y-6">
-            <div className="border-b border-pink-100 pb-4">
+            <div className="border-b border-red-100 pb-4">
               <h2 className="text-xl font-bold text-slate-900">Buat Janji Temu Dokter</h2>
               <p className="text-xs text-slate-500">
-                Jadwalkan pemeriksaan bersama tim dokter RS Cendana
+                Jadwalkan pemeriksaan bersama tim dokter RS Kota Baru
               </p>
             </div>
 
             {!selectedDoctorForAppointment ? (
               /* Sec 20: Jika berasal dari Quick Access tanpa memilih dokter */
-              <div className="p-8 rounded-2xl bg-[#FFF5F8] border border-pink-200/70 text-center space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#E83E8C]/15 text-[#E83E8C] flex items-center justify-center mx-auto">
+              <div className="p-8 rounded-2xl bg-slate-50 border border-red-200/70 text-center space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#E83E8C]/15 text-[#9E1B21] flex items-center justify-center mx-auto">
                   <UserCheck className="w-6 h-6" />
                 </div>
                 <p className="text-base font-semibold text-slate-800">
@@ -1401,7 +1401,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </p>
                 <button
                   onClick={() => onOpenModal('doctor_schedule')}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                 >
                   Pilih Dokter
                 </button>
@@ -1409,13 +1409,13 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
             ) : (
               /* Sec 20: Jika berasal dari Card Dokter */
               <div className="space-y-5">
-                <div className="p-4 rounded-2xl bg-[#FFF5F8] border border-pink-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-red-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3.5">
                     <img
                       src={selectedDoctorForAppointment.doctorAvatar}
                       alt={selectedDoctorForAppointment.doctorName}
                       referrerPolicy="no-referrer"
-                      className="w-14 h-14 rounded-2xl object-cover border border-pink-200"
+                      className="w-14 h-14 rounded-2xl object-cover border border-red-200"
                     />
                     <div>
                       <h3 className="text-base font-bold text-slate-900">
@@ -1430,7 +1430,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   <button
                     type="button"
                     onClick={() => onOpenModal('doctor_schedule')}
-                    className="px-3.5 py-2 rounded-xl border border-pink-200 bg-white text-xs font-semibold text-[#D63384] hover:bg-pink-50 cursor-pointer whitespace-nowrap"
+                    className="px-3.5 py-2 rounded-xl border border-red-200 bg-white text-xs font-semibold text-[#7F1D1D] hover:bg-red-50/60 cursor-pointer whitespace-nowrap"
                   >
                     Ganti Dokter
                   </button>
@@ -1521,7 +1521,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                     >
                       Konfirmasi Janji Temu
                     </button>
@@ -1535,9 +1535,9 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 7. MODAL REGULASI PENGOBATAN (Sec 25 & 82 — 100% uncropped object-contain) */}
         {activeModal === 'regulation' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-pink-100 pb-4 pr-10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-red-100 pb-4 pr-10">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Regulasi Pengobatan & Tarif Layanan RS Cendana</h2>
+                <h2 className="text-xl font-bold text-slate-900">Regulasi Pengobatan & Tarif Layanan RS Kota Baru</h2>
                 <p className="text-xs text-slate-500">
                   Seluruh infografis regulasi ditampilkan utuh 100% dengan proporsi asli
                 </p>
@@ -1545,7 +1545,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setRegZoom((z) => Math.max(75, z - 15))}
-                  className="p-2 rounded-lg border border-pink-200 text-slate-700 hover:bg-pink-50 cursor-pointer"
+                  className="p-2 rounded-lg border border-red-200 text-slate-700 hover:bg-red-50/60 cursor-pointer"
                   title="Perkecil"
                 >
                   <ZoomOut className="w-4 h-4" />
@@ -1555,14 +1555,14 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </span>
                 <button
                   onClick={() => setRegZoom((z) => Math.min(145, z + 15))}
-                  className="p-2 rounded-lg border border-pink-200 text-slate-700 hover:bg-pink-50 cursor-pointer"
+                  className="p-2 rounded-lg border border-red-200 text-slate-700 hover:bg-red-50/60 cursor-pointer"
                   title="Perbesar"
                 >
                   <ZoomIn className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setRegZoom(100)}
-                  className="p-2 rounded-lg border border-pink-200 text-slate-700 hover:bg-pink-50 cursor-pointer"
+                  className="p-2 rounded-lg border border-red-200 text-slate-700 hover:bg-red-50/60 cursor-pointer"
                   title="Reset Ukuran"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -1574,7 +1574,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
               {regulations.map((reg) => (
                 <div
                   key={reg.id}
-                  className="rounded-2xl border border-pink-100 bg-[#FFF5F8] p-4 sm:p-6 space-y-4"
+                  className="rounded-2xl border border-red-100 bg-slate-50 p-4 sm:p-6 space-y-4"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
@@ -1587,7 +1587,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   <p className="text-xs sm:text-sm text-slate-600">{reg.description}</p>
 
                   {/* CRITICAL RULE SEC 25 & 82: ALL regulation images MUST be 100% visible, uncropped, object-contain, natural aspect ratio */}
-                  <div className="w-full rounded-xl bg-white border border-pink-100 p-3 sm:p-5 flex items-center justify-center overflow-x-auto">
+                  <div className="w-full rounded-xl bg-white border border-red-100 p-3 sm:p-5 flex items-center justify-center overflow-x-auto">
                     <img
                       src={reg.imageUrl}
                       alt={reg.title}
@@ -1605,19 +1605,19 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 8. MODAL RECRUITMENT PARAMEDIC (Sec 13) */}
         {activeModal === 'recruitment' && (
           <div className="space-y-6">
-            <div className="border-b border-pink-100 pb-4 pr-10">
+            <div className="border-b border-red-100 pb-4 pr-10">
               <h2 className="text-xl font-bold text-slate-900">
-                Recruitment Medis Cendana Roleplay
+                Recruitment Medis Kota Baru Roleplay
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Formulir Pendaftaran Paramedis Cendana Medical Center · Status:{' '}
-                <strong className="text-[#E83E8C]">{recruitmentStatus}</strong>
+                Formulir Pendaftaran Paramedis Kota Baru Medical Center · Status:{' '}
+                <strong className="text-[#9E1B21]">{recruitmentStatus}</strong>
               </p>
             </div>
 
             {recSubmittedSuccess ? (
               /* POP UP SETELAH BERHASIL SUBMIT */
-              <div className="p-6 sm:p-8 rounded-2xl bg-[#FFF5F8] border-2 border-[#E83E8C]/30 text-center space-y-5 shadow-sm">
+              <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 border-2 border-[#E83E8C]/30 text-center space-y-5 shadow-sm">
                 <div className="w-16 h-16 rounded-2xl bg-[#20C997]/15 text-[#20C997] flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-9 h-9" />
                 </div>
@@ -1628,8 +1628,8 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   <p className="text-sm sm:text-base font-medium text-slate-700 leading-relaxed">
                     Pengumuman selanjutnya akan diberitahukan melalui website (discord).
                   </p>
-                  <p className="text-sm font-semibold text-[#D63384] pt-1">
-                    Terima kasih sudah berpartisipasi mengikuti proses recruitment Cendana Medical Center!
+                  <p className="text-sm font-semibold text-[#7F1D1D] pt-1">
+                    Terima kasih sudah berpartisipasi mengikuti proses recruitment Kota Baru Medical Center!
                   </p>
                 </div>
                 <div className="pt-2">
@@ -1639,24 +1639,24 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       setRecSubmittedSuccess(false);
                       onClose();
                     }}
-                    className="px-7 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                    className="px-7 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                   >
                     Tutup & Kembali ke Beranda
                   </button>
                 </div>
               </div>
             ) : recruitmentStatus === 'CLOSED' ? (
-              <div className="p-6 sm:p-8 rounded-2xl bg-[#FFF5F8] border border-pink-200 text-center space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#E83E8C]/15 text-[#E83E8C] flex items-center justify-center mx-auto">
+              <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 border border-red-200 text-center space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#E83E8C]/15 text-[#9E1B21] flex items-center justify-center mx-auto">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <p className="text-sm sm:text-base font-medium text-slate-800 leading-relaxed max-w-xl mx-auto">
                   Saat ini pendaftaran Paramedic sedang ditutup. Untuk informasi selengkapnya mengenai pembukaan rekrutmen, silakan cek di website utama pada bagian{' '}
-                  <span className="font-mono font-bold text-[#D63384]">#announcement-hospital</span>.
+                  <span className="font-mono font-bold text-[#7F1D1D]">#announcement-hospital</span>.
                 </p>
                 <button
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold cursor-pointer"
                 >
                   Mengerti & Tutup
                 </button>
@@ -1749,11 +1749,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 )}
 
                 {/* BAGIAN 1: INFORMASI IC */}
-                <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-5">
+                <div className="p-5 rounded-2xl bg-slate-50 border border-red-100 space-y-5">
                   <div>
-                    <h3 className="text-base font-bold text-[#D63384]">INFORMASI IC</h3>
+                    <h3 className="text-base font-bold text-[#7F1D1D]">INFORMASI IC</h3>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      Isilah pernyataan di bawah ini sebagai persyaratan umum untuk bisa mendaftar menjadi anggota paramedic Cendana Medical Center.
+                      Isilah pernyataan di bawah ini sebagai persyaratan umum untuk bisa mendaftar menjadi anggota paramedic Kota Baru Medical Center.
                     </p>
                   </div>
 
@@ -1763,7 +1763,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       Berikut ini adalah persyaratan umum untuk bergabung menjadi bagian dari EMS
                     </p>
                     <div className="space-y-2">
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.age17Plus}
@@ -1777,7 +1777,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.dedicatedUnderPressure}
@@ -1791,7 +1791,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.willingTraining1To3Days}
@@ -1805,7 +1805,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.willingFollowSOP}
@@ -1822,12 +1822,12 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </div>
 
                   {/* Syarat IC Sebelum Interview */}
-                  <div className="space-y-2.5 pt-2 border-t border-pink-100">
+                  <div className="space-y-2.5 pt-2 border-t border-red-100">
                     <p className="text-xs font-bold text-slate-800">
                       Berikut adaalah syarat ic yang harus dimiliki sebelum dilakukan interview
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.hasKtpIme}
@@ -1837,11 +1837,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
-                          Kartu Identitas Warga Cendana (KTP)
+                          Kartu Identitas Warga Kota Baru (KTP)
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.hasSkb}
@@ -1855,7 +1855,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.hasSim}
@@ -1869,7 +1869,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.hasSuratKesehatan}
@@ -1883,7 +1883,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-pink-100 hover:border-[#E83E8C]/40 cursor-pointer transition sm:col-span-2">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition sm:col-span-2">
                         <input
                           type="checkbox"
                           checked={recForm.hasSuratPsikolog}
@@ -1901,9 +1901,9 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </div>
 
                 {/* BAGIAN 2: CURICULUM VITAE IC */}
-                <div className="p-5 rounded-2xl bg-white border border-pink-100 space-y-4">
-                  <div className="border-b border-pink-100 pb-3">
-                    <h3 className="text-base font-bold text-[#D63384]">CURICULUM VITAE IC</h3>
+                <div className="p-5 rounded-2xl bg-white border border-red-100 space-y-4">
+                  <div className="border-b border-red-100 pb-3">
+                    <h3 className="text-base font-bold text-[#7F1D1D]">CURICULUM VITAE IC</h3>
                     <p className="text-xs text-slate-600 mt-0.5">
                       Isilah identitas dan daftar riwayat hidup anda sesuai format di bawah ini.
                     </p>
@@ -1976,14 +1976,14 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-800 mb-1">
-                      Mengapa anda ingin bergabung dengan Cendana Medical Center? *
+                      Mengapa anda ingin bergabung dengan Kota Baru Medical Center? *
                     </label>
                     <textarea
                       required
                       rows={2}
                       value={recForm.motivation}
                       onChange={(e) => setRecForm({ ...recForm, motivation: e.target.value })}
-                      placeholder="Jelaskan motivasi dan tujuan Anda bergabung bersama Cendana Medical Center..."
+                      placeholder="Jelaskan motivasi dan tujuan Anda bergabung bersama Kota Baru Medical Center..."
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
                     />
                   </div>
@@ -2014,11 +2014,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           (*jika tidak sesuai dengan nama IC, auto rejected)
                         </span>
                       </label>
-                      <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
+                      <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-red-300 bg-slate-50 cursor-pointer hover:bg-red-50/60 transition text-xs">
                         <span className="truncate text-slate-700">
                           {recForm.ktpPhotoName || 'Pilih file FOTO KTP IC...'}
                         </span>
-                        <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
+                        <Upload className="w-4 h-4 text-[#9E1B21] shrink-0" />
                         <input
                           type="file"
                           accept=".jpg,.jpeg,.png,.webp"
@@ -2040,11 +2040,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           (*jika sudah kadaluarsa dan tujuan tidak sesuai, auto rejected)
                         </span>
                       </label>
-                      <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
+                      <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-red-300 bg-slate-50 cursor-pointer hover:bg-red-50/60 transition text-xs">
                         <span className="truncate text-slate-700">
                           {recForm.skbPhotoName || 'Pilih file FOTO SKB...'}
                         </span>
-                        <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
+                        <Upload className="w-4 h-4 text-[#9E1B21] shrink-0" />
                         <input
                           type="file"
                           accept=".jpg,.jpeg,.png,.webp"
@@ -2066,11 +2066,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           (*jika sudah kadaluarsa dan tujuan tidak sesuai, auto rejected)
                         </span>
                       </label>
-                      <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
+                      <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-red-300 bg-slate-50 cursor-pointer hover:bg-red-50/60 transition text-xs">
                         <span className="truncate text-slate-700">
                           {recForm.suratKesehatanPhotoName || 'Pilih file FOTO Surat Kesehatan...'}
                         </span>
-                        <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
+                        <Upload className="w-4 h-4 text-[#9E1B21] shrink-0" />
                         <input
                           type="file"
                           accept=".jpg,.jpeg,.png,.webp"
@@ -2096,11 +2096,11 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           (*jika sudah kadaluarsa dan tujuan tidak sesuai, auto rejected)
                         </span>
                       </label>
-                      <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] cursor-pointer hover:bg-pink-50 transition text-xs">
+                      <label className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-dashed border-red-300 bg-slate-50 cursor-pointer hover:bg-red-50/60 transition text-xs">
                         <span className="truncate text-slate-700">
                           {recForm.suratPsikologPhotoName || 'Pilih file FOTO Surat Psikolog...'}
                         </span>
-                        <Upload className="w-4 h-4 text-[#E83E8C] shrink-0" />
+                        <Upload className="w-4 h-4 text-[#9E1B21] shrink-0" />
                         <input
                           type="file"
                           accept=".jpg,.jpeg,.png,.webp"
@@ -2122,9 +2122,9 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </div>
 
                 {/* BAGIAN 3: INFORMASI OOC */}
-                <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-4">
-                  <div className="border-b border-pink-100 pb-3">
-                    <h3 className="text-base font-bold text-[#D63384]">INFORMASI OOC</h3>
+                <div className="p-5 rounded-2xl bg-slate-50 border border-red-100 space-y-4">
+                  <div className="border-b border-red-100 pb-3">
+                    <h3 className="text-base font-bold text-[#7F1D1D]">INFORMASI OOC</h3>
                     <p className="text-xs text-slate-600 mt-0.5">
                       Isilah data dibawah ini dengan benar dan jujur.
                     </p>
@@ -2193,7 +2193,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                   >
                     Kirim Formulir Pendaftaran
                   </button>
@@ -2206,8 +2206,8 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 9. MODAL FORM KLAIM BENEFIT SKWB */}
         {activeModal === 'skwb_claim' && (
           <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b border-pink-100 pb-4">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-3 border-b border-red-100 pb-4">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#9E1B21] to-[#7F1D1D] text-white flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
@@ -2228,7 +2228,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     Pengajuan Klaim Benefit SKWB Berhasil Disimpan!
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto">
-                    Data SKWB Anda telah tersimpan secara terpusat di Database Paramedic Cendana. Silakan kunjungi petugas medis (Paramedic ke atas) untuk melakukan pengambilan benefit.
+                    Data SKWB Anda telah tersimpan secara terpusat di Database Paramedic Kota Baru. Silakan kunjungi petugas medis (Paramedic ke atas) untuk melakukan pengambilan benefit.
                   </p>
                 </div>
 
@@ -2247,7 +2247,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-100">
                     <span className="text-slate-500">Masa Berlaku Benefit (7 Hari):</span>
-                    <span className="font-mono font-bold text-[#D63384]">
+                    <span className="font-mono font-bold text-[#7F1D1D]">
                       {skwbSubmittedClaim.startDate} s/d {skwbSubmittedClaim.endDate}
                     </span>
                   </div>
@@ -2279,7 +2279,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         photoDataUrl: '',
                       });
                     }}
-                    className="px-5 py-2.5 rounded-xl border border-pink-200 bg-white text-[#D63384] text-xs font-semibold hover:bg-pink-50 cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl border border-red-200 bg-white text-[#7F1D1D] text-xs font-semibold hover:bg-red-50/60 cursor-pointer"
                   >
                     Ajukan SKWB Lainnya
                   </button>
@@ -2289,7 +2289,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       setSkwbSubmittedClaim(null);
                       onClose();
                     }}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-xs cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-xs cursor-pointer"
                   >
                     Selesai & Tutup
                   </button>
@@ -2340,24 +2340,24 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 className="space-y-5"
               >
                 {/* Ringkasan Benefit SKWB */}
-                <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-200/80 space-y-2">
-                  <p className="text-xs font-bold text-[#D63384]">
+                <div className="p-4 rounded-xl bg-slate-50 border border-red-200/80 space-y-2">
+                  <p className="text-xs font-bold text-[#7F1D1D]">
                     Informasi Hak & Masa Berlaku Benefit SKWB (7 Hari Sejak Tanggal Terbit SKWB):
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                    <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                    <div className="p-2.5 rounded-lg bg-white border border-red-100">
                       <p className="font-bold text-slate-900">1. Paket Sedang</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">
                         Obat & Perban · Dapat diklaim 1x setiap hari selama SKWB aktif (Oleh Co-ass+)
                       </p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                    <div className="p-2.5 rounded-lg bg-white border border-red-100">
                       <p className="font-bold text-slate-900">2. Diskon 50% Kartu Pasien</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">
                         Berlaku 1x klaim selama periode SKWB aktif (Oleh Paramedic+)
                       </p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                    <div className="p-2.5 rounded-lg bg-white border border-red-100">
                       <p className="font-bold text-slate-900">3. Free 1x Oplas</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">
                         Gratis 1x Operasi Plastik selama periode SKWB aktif (Oleh Doctor+)
@@ -2447,8 +2447,8 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </label>
 
                   {!skwbForm.photoDataUrl ? (
-                    <label className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-pink-300 bg-[#FFF5F8] hover:bg-pink-50/80 transition cursor-pointer text-center space-y-2">
-                      <div className="w-11 h-11 rounded-xl bg-white border border-pink-100 text-[#E83E8C] flex items-center justify-center shadow-2xs">
+                    <label className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-red-300 bg-slate-50 hover:bg-red-50/60/80 transition cursor-pointer text-center space-y-2">
+                      <div className="w-11 h-11 rounded-xl bg-white border border-red-100 text-[#9E1B21] flex items-center justify-center shadow-2xs">
                         <Upload className="w-5 h-5" />
                       </div>
                       <div>
@@ -2472,13 +2472,13 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       />
                     </label>
                   ) : (
-                    <div className="p-4 rounded-2xl bg-[#FFF5F8] border border-pink-200 space-y-3">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-red-200 space-y-3">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <img
                             src={skwbForm.photoDataUrl}
                             alt="Preview SKWB"
-                            className="w-20 h-20 rounded-xl object-cover border border-pink-200 bg-white shrink-0"
+                            className="w-20 h-20 rounded-xl object-cover border border-red-200 bg-white shrink-0"
                           />
                           <div className="min-w-0 space-y-1">
                             <p className="text-xs font-bold text-slate-900 truncate">
@@ -2495,7 +2495,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
                         <div className="flex items-center gap-2 self-end sm:self-center">
                           {/* Tombol Mengganti File */}
-                          <label className="px-3 py-1.5 rounded-xl bg-white border border-pink-200 text-[#D63384] hover:bg-pink-50 text-xs font-semibold cursor-pointer transition">
+                          <label className="px-3 py-1.5 rounded-xl bg-white border border-red-200 text-[#7F1D1D] hover:bg-red-50/60 text-xs font-semibold cursor-pointer transition">
                             Ganti File
                             <input
                               type="file"
@@ -2527,7 +2527,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       </div>
 
                       {/* Full Preview Image */}
-                      <div className="rounded-xl overflow-hidden border border-pink-100 bg-white max-h-64 flex items-center justify-center p-2">
+                      <div className="rounded-xl overflow-hidden border border-red-100 bg-white max-h-64 flex items-center justify-center p-2">
                         <img
                           src={skwbForm.photoDataUrl}
                           alt="Preview Surat SKWB"
@@ -2538,7 +2538,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   )}
                 </div>
 
-                <div className="pt-3 flex justify-end gap-3 border-t border-pink-100">
+                <div className="pt-3 flex justify-end gap-3 border-t border-red-100">
                   <button
                     type="button"
                     onClick={onClose}
@@ -2549,7 +2549,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   <button
                     type="submit"
                     disabled={skwbUploading}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer"
                   >
                     Simpan / Ajukan Klaim
                   </button>
@@ -2562,8 +2562,8 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
         {/* 10. MODAL FORM KARAKTER KILL */}
         {activeModal === 'character_kill' && (
           <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b border-pink-100 pb-4">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-3 border-b border-red-100 pb-4">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#9E1B21] to-[#7F1D1D] text-white flex items-center justify-center shrink-0">
                 <HeartPulse className="w-5 h-5" />
               </div>
               <div>
@@ -2607,7 +2607,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         accuracyConfirmed: false,
                       });
                     }}
-                    className="px-5 py-2.5 rounded-xl border border-pink-200 bg-white text-[#D63384] text-xs font-semibold hover:bg-pink-50 cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl border border-red-200 bg-white text-[#7F1D1D] text-xs font-semibold hover:bg-red-50/60 cursor-pointer"
                   >
                     Ajukan Data Lainnya
                   </button>
@@ -2617,7 +2617,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       setCkSubmitted(false);
                       onClose();
                     }}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-xs cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-xs cursor-pointer"
                   >
                     Selesai & Tutup
                   </button>
@@ -2659,9 +2659,9 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 )}
 
                 {/* BAGIAN 1: DATA DIRI */}
-                <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-4">
-                  <div className="border-b border-pink-100 pb-2.5">
-                    <h3 className="text-base font-bold text-[#D63384]">Data Diri</h3>
+                <div className="p-5 rounded-2xl bg-slate-50 border border-red-100 space-y-4">
+                  <div className="border-b border-red-100 pb-2.5">
+                    <h3 className="text-base font-bold text-[#7F1D1D]">Data Diri</h3>
                     <p className="text-xs text-slate-600">
                       Identitas warga yang diajukan dalam laporan Karakter Kill (CK).
                     </p>
@@ -2789,9 +2789,9 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </div>
 
                 {/* BAGIAN 2: KRONOLOGI DAN PENYEBAB KEMATIAN */}
-                <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-4">
-                  <div className="border-b border-pink-100 pb-2.5">
-                    <h3 className="text-base font-bold text-[#D63384]">
+                <div className="p-5 rounded-2xl bg-slate-50 border border-red-100 space-y-4">
+                  <div className="border-b border-red-100 pb-2.5">
+                    <h3 className="text-base font-bold text-[#7F1D1D]">
                       Kronologi dan Penyebab Kematian
                     </h3>
                     <p className="text-xs text-slate-600">
@@ -2848,7 +2848,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </div>
 
                 {/* VALIDASI CHECKBOX */}
-                <label className="flex items-start gap-3 p-4 rounded-xl bg-white border border-pink-200 hover:border-[#E83E8C] cursor-pointer transition">
+                <label className="flex items-start gap-3 p-4 rounded-xl bg-white border border-red-200 hover:border-[#E83E8C] cursor-pointer transition">
                   <input
                     required
                     type="checkbox"
@@ -2863,7 +2863,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </span>
                 </label>
 
-                <div className="pt-2 flex justify-end gap-3 border-t border-pink-100">
+                <div className="pt-2 flex justify-end gap-3 border-t border-red-100">
                   <button
                     type="button"
                     onClick={onClose}
@@ -2873,7 +2873,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
                   >
                     Kirim Pengajuan Karakter Kill
                   </button>

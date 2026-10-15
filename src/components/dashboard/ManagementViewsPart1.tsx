@@ -69,7 +69,7 @@ export const StaffManagementView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Pengelolaan Staff & Hirarki Jabatan</h2>
           <p className="text-xs text-slate-500">
@@ -88,11 +88,11 @@ export const StaffManagementView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Staff Medis</th>
                 <th className="py-3.5 px-4">Jabatan & Level</th>
                 <th className="py-3.5 px-4">Status</th>
@@ -103,14 +103,14 @@ export const StaffManagementView: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
               {filtered.map((st) => (
-                <tr key={st.id} className="hover:bg-pink-50/30 transition">
+                <tr key={st.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
                       <img
                         src={st.avatarUrl}
                         alt={st.name}
                         referrerPolicy="no-referrer"
-                        className="w-9 h-9 rounded-xl object-cover border border-pink-100"
+                        className="w-9 h-9 rounded-xl object-cover border border-red-100"
                       />
                       <div>
                         <p className="font-semibold text-slate-900">{st.name}</p>
@@ -119,7 +119,7 @@ export const StaffManagementView: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
-                    <span className="font-semibold text-[#D63384]">
+                    <span className="font-semibold text-[#7F1D1D]">
                       {st.role} (Lv.{st.level})
                     </span>
                   </td>
@@ -144,7 +144,7 @@ export const StaffManagementView: React.FC = () => {
                     <div className="inline-flex items-center gap-2">
                       <button
                         onClick={() => openEdit(st)}
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold flex items-center gap-1 cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                         <span>Edit</span>
@@ -182,12 +182,12 @@ export const StaffManagementView: React.FC = () => {
           onClick={() => setEditingStaff(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             {!confirmRoleModal ? (
               <>
-                <h3 className="text-base font-bold text-slate-900 border-b border-pink-100 pb-3">
+                <h3 className="text-base font-bold text-slate-900 border-b border-red-100 pb-3">
                   Edit Data & Jabatan Staff
                 </h3>
                 <div className="space-y-3">
@@ -246,7 +246,7 @@ export const StaffManagementView: React.FC = () => {
                     ].includes(editRole) && (
                       <div className="pt-2 space-y-1.5">
                         <p className="text-[11px] font-semibold text-slate-500">
-                          Pilih Spesialis (Otomatis menambahkan gelar <code className="text-[#D63384]">dr.</code> di depan & gelar pendidikan di belakang nama):
+                          Pilih Spesialis (Otomatis menambahkan gelar <code className="text-[#7F1D1D]">dr.</code> di depan & gelar pendidikan di belakang nama):
                         </p>
                         <div className="flex flex-wrap gap-1.5">
                           {SPECIALIST_CATEGORIES.map((sp) => (
@@ -262,7 +262,7 @@ export const StaffManagementView: React.FC = () => {
                               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
                                 editSpecialty === sp.id
                                   ? 'bg-[#E83E8C] text-white border-[#E83E8C]'
-                                  : 'bg-[#FFF5F8] text-[#D63384] border-pink-200 hover:bg-pink-100'
+                                  : 'bg-[#FFF5F8] text-[#7F1D1D] border-red-200 hover:bg-red-100'
                               }`}
                             >
                               {sp.id} ({sp.degreeSuffix})
@@ -282,7 +282,7 @@ export const StaffManagementView: React.FC = () => {
                   </button>
                   <button
                     onClick={handleSaveStaffEdit}
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold cursor-pointer"
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold cursor-pointer"
                   >
                     Simpan Perubahan
                   </button>
@@ -297,7 +297,7 @@ export const StaffManagementView: React.FC = () => {
                 <h3 className="text-base font-bold text-slate-900">
                   Ubah jabatan dari {editingStaff.role} menjadi {editRole}?
                 </h3>
-                <p className="text-xs text-slate-600 bg-[#FFF5F8] p-3 rounded-xl border border-pink-100">
+                <p className="text-xs text-slate-600 bg-[#FFF5F8] p-3 rounded-xl border border-red-100">
                   Perubahan jabatan akan mengubah hak akses staff.
                 </p>
                 <div className="flex items-center justify-center gap-3 pt-2">
@@ -309,7 +309,7 @@ export const StaffManagementView: React.FC = () => {
                   </button>
                   <button
                     onClick={handleSaveStaffEdit}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold cursor-pointer"
                   >
                     Confirm
                   </button>
@@ -327,7 +327,7 @@ export const StaffManagementView: React.FC = () => {
           onClick={() => setDeactivateTarget(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4 text-center"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4 text-center"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-bold text-slate-900">
@@ -364,7 +364,7 @@ export const StaffManagementView: React.FC = () => {
           onClick={() => setDeleteStaffTarget(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4 text-center"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4 text-center"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-bold text-slate-900">
@@ -407,23 +407,23 @@ export const AccountApprovalView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Approval Akun Staff Baru</h2>
           <p className="text-xs text-slate-500">
             Menampilkan pengajuan akun baru. Begitu diproses (Approve / Reject), data pengajuan langsung selesai dan hilang dari antrean ini.
           </p>
         </div>
-        <div className="px-3.5 py-1.5 rounded-xl bg-[#FFF5F8] border border-pink-100 text-xs font-bold text-[#D63384]">
+        <div className="px-3.5 py-1.5 rounded-xl bg-[#FFF5F8] border border-red-100 text-xs font-bold text-[#7F1D1D]">
           Antrean Pending: {pendingList.length} Akun
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Nama Lengkap</th>
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Tanggal Register</th>
@@ -440,7 +440,7 @@ export const AccountApprovalView: React.FC = () => {
                 </tr>
               ) : (
                 pendingList.map((acc) => (
-                  <tr key={acc.id} className="hover:bg-pink-50/30 transition">
+                  <tr key={acc.id} className="hover:bg-red-50/60/30 transition">
                     <td className="py-3.5 px-4 font-semibold text-slate-900">{acc.name}</td>
                     <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{acc.email}</td>
                     <td className="py-3.5 px-4 font-mono text-xs text-slate-500 tabular-nums">
@@ -490,14 +490,14 @@ export const AccountManagementView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Kelola Akun & Kredensial Staff</h2>
           <p className="text-xs text-slate-500">
             Kelola status Active, Pending, Rejected, Inactive serta fitur hapus akun staff
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-red-100">
           {(['All', 'Pending Approval', 'Active', 'Rejected', 'Inactive'] as const).map((st) => (
             <button
               key={st}
@@ -512,11 +512,11 @@ export const AccountManagementView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Nama Akun</th>
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Role</th>
@@ -526,7 +526,7 @@ export const AccountManagementView: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
               {filtered.map((acc) => (
-                <tr key={acc.id} className="hover:bg-pink-50/30 transition">
+                <tr key={acc.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4 font-semibold text-slate-900">{acc.name}</td>
                   <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{acc.email}</td>
                   <td className="py-3.5 px-4 text-slate-600">{acc.role}</td>
@@ -552,7 +552,7 @@ export const AccountManagementView: React.FC = () => {
                         onChange={(e) =>
                           updateAccountStatus(acc.id, e.target.value as AccountStatus)
                         }
-                        className="px-2.5 py-1.5 rounded-lg border border-pink-200 text-xs bg-white font-semibold"
+                        className="px-2.5 py-1.5 rounded-lg border border-red-200 text-xs bg-white font-semibold"
                       >
                         <option value="Pending Approval">Pending Approval</option>
                         <option value="Active">Active</option>
@@ -585,7 +585,7 @@ export const AccountManagementView: React.FC = () => {
           onClick={() => setDeleteConfirmTarget(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4 text-center"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4 text-center"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-bold text-slate-900">
@@ -627,18 +627,18 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
   if (mode === 'leave') {
     return (
       <div className="space-y-6">
-        <div className="bg-white p-5 rounded-2xl border border-pink-100">
+        <div className="bg-white p-5 rounded-2xl border border-red-100">
           <h2 className="text-lg font-bold text-slate-900">Approval Cuti Staff (Heads+)</h2>
           <p className="text-xs text-slate-500">
             Setujui atau tolak permohonan cuti staff beserta alasan penolakan
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+                <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                   <th className="py-3.5 px-4">Nama & Jabatan</th>
                   <th className="py-3.5 px-4">Jenis Cuti</th>
                   <th className="py-3.5 px-4">Periode & Durasi</th>
@@ -649,10 +649,10 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
               </thead>
               <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
                 {leaveRequests.map((lv) => (
-                  <tr key={lv.id} className="hover:bg-pink-50/30 transition">
+                  <tr key={lv.id} className="hover:bg-red-50/60/30 transition">
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-slate-900">{lv.staffName}</div>
-                      <div className="text-[11px] text-[#E83E8C]">{lv.staffRole}</div>
+                      <div className="text-[11px] text-[#9E1B21]">{lv.staffRole}</div>
                     </td>
                     <td className="py-3.5 px-4 text-slate-700">{lv.leaveType}</td>
                     <td className="py-3.5 px-4 font-mono text-xs tabular-nums">
@@ -714,7 +714,7 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
             onClick={() => setRejectId(null)}
           >
             <div
-              className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4"
+              className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-base font-bold text-slate-900">Alasan Penolakan Cuti</h3>
@@ -754,18 +754,18 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
   // Approval Resign Mode (Sec 56)
   return (
     <div className="space-y-6">
-      <div className="bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="bg-white p-5 rounded-2xl border border-red-100">
         <h2 className="text-lg font-bold text-slate-900">Approval Resign Staff (Heads+)</h2>
         <p className="text-xs text-slate-500">
           Jika disetujui, status staff otomatis menjadi Inactive dengan data historis tetap aman
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Nama & Jabatan</th>
                 <th className="py-3.5 px-4">Tgl Pengajuan</th>
                 <th className="py-3.5 px-4">Tgl Efektif</th>
@@ -776,10 +776,10 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
               {resignRequests.map((r) => (
-                <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                <tr key={r.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4">
                     <div className="font-semibold text-slate-900">{r.staffName}</div>
-                    <div className="text-[11px] text-[#E83E8C]">{r.staffRole}</div>
+                    <div className="text-[11px] text-[#9E1B21]">{r.staffRole}</div>
                   </td>
                   <td className="py-3.5 px-4 font-mono text-xs tabular-nums">{r.submittedDate}</td>
                   <td className="py-3.5 px-4 font-mono text-xs tabular-nums">{r.effectiveDate}</td>
@@ -838,7 +838,7 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
           onClick={() => setRejectId(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-bold text-slate-900">Alasan Penolakan Resign</h3>
@@ -885,16 +885,16 @@ function buildFallbackDocSvgDataUrl(docTitle: string, applicantName: string, fil
       </linearGradient>
     </defs>
     <rect width="900" height="580" rx="24" fill="url(#bg)" stroke="#FBCFE8" stroke-width="4"/>
-    <rect x="36" y="36" width="828" height="508" rx="16" fill="#FFFFFF" stroke="#E83E8C" stroke-width="2" stroke-dasharray="8 6"/>
+    <rect x="36" y="36" width="828" height="508" rx="16" fill="#FFFFFF" stroke="#9E1B21" stroke-width="2" stroke-dasharray="8 6"/>
     <rect x="64" y="64" width="772" height="76" rx="12" fill="#FFF5F8"/>
-    <text x="90" y="102" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#D63384">PEMERINTAH KOTA CENDANA — DOKUMEN LAMPIRAN RECRUITMENT</text>
-    <text x="90" y="126" font-family="Arial, sans-serif" font-size="14" fill="#64748B">Cendana Medical Center · Sistem Verifikasi Dokumen Pelamar Kerja</text>
+    <text x="90" y="102" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#9E1B21">PEMERINTAH KOTA KOTA BARU — DOKUMEN LAMPIRAN RECRUITMENT</text>
+    <text x="90" y="126" font-family="Arial, sans-serif" font-size="14" fill="#64748B">Kota Baru Medical Center · Sistem Verifikasi Dokumen Pelamar Kerja</text>
     <text x="90" y="200" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#0F172A">${docTitle.replace(/[<>&"']/g, '')}</text>
     <text x="90" y="255" font-family="Arial, sans-serif" font-size="18" fill="#334155">Nama Karakter (IC) : ${applicantName.replace(/[<>&"']/g, '')}</text>
-    <text x="90" y="295" font-family="monospace" font-size="16" fill="#D63384">Nama File Terlampir : ${fileName.replace(/[<>&"']/g, '')}</text>
+    <text x="90" y="295" font-family="monospace" font-size="16" fill="#9E1B21">Nama File Terlampir : ${fileName.replace(/[<>&"']/g, '')}</text>
     <rect x="90" y="340" width="280" height="46" rx="10" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
     <text x="112" y="369" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#047857">✓ LAMPIRAN DOKUMEN TERVERIFIKASI</text>
-    <text x="90" y="470" font-family="Arial, sans-serif" font-size="13" fill="#94A3B8">Pratinjau Dokumen Digital · HRD Cendana Medical Center</text>
+    <text x="90" y="470" font-family="Arial, sans-serif" font-size="13" fill="#94A3B8">Pratinjau Dokumen Digital · HRD Kota Baru Medical Center</text>
   </svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
@@ -931,7 +931,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
 
     return (
       <div className="space-y-6">
-        <div className="bg-white p-6 rounded-2xl border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white p-6 rounded-2xl border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Recruitment Management Paramedic</h2>
             <p className="text-xs text-slate-500">
@@ -963,11 +963,11 @@ export const RecruitmentAndComplaintManageView: React.FC<{
         </div>
 
         {/* Tabel Ringkas: Hanya Nama Pelamar Kerja + Button Cek Detail Lamaran Kerja + Status */}
-        <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-pink-100 text-xs font-bold text-slate-500 bg-[#FFF5F8]/60">
+                <tr className="border-b border-red-100 text-xs font-bold text-slate-500 bg-[#FFF5F8]/60">
                   <th className="py-3.5 px-5">Nama Pelamar Kerja</th>
                   <th className="py-3.5 px-5">Detail Lamaran Kerja</th>
                   <th className="py-3.5 px-5">Status</th>
@@ -983,7 +983,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                   </tr>
                 ) : (
                   recruitmentApplicants.map((app) => (
-                    <tr key={app.id} className="hover:bg-pink-50/30 transition">
+                    <tr key={app.id} className="hover:bg-red-50/60/30 transition">
                       <td className="py-4 px-5">
                         <div className="font-bold text-slate-900 text-sm">
                           {app.fullName}{' '}
@@ -998,7 +998,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                         <button
                           type="button"
                           onClick={() => setSelectedApplicant(app)}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-2xs hover:opacity-95 transition inline-flex items-center gap-2 cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-2xs hover:opacity-95 transition inline-flex items-center gap-2 cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Cek Detail Lamaran Kerja</span>
@@ -1014,7 +1014,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                               ? 'bg-rose-50 text-rose-600 border border-rose-200'
                               : app.status === 'Interview'
                               ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-pink-50 text-[#E83E8C] border border-pink-200'
+                              : 'bg-red-50/60 text-[#9E1B21] border border-red-200'
                           }`}
                         >
                           {app.status}
@@ -1030,7 +1030,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                               e.target.value as typeof app.status
                             )
                           }
-                          className="px-3 py-1.5 rounded-xl border border-pink-200 text-xs bg-white font-semibold cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl border border-red-200 text-xs bg-white font-semibold cursor-pointer"
                         >
                           <option value="Pending">Pending</option>
                           <option value="Interview">Interview</option>
@@ -1053,13 +1053,13 @@ export const RecruitmentAndComplaintManageView: React.FC<{
             onClick={() => setSelectedApplicant(null)}
           >
             <div
-              className="bg-white rounded-3xl border border-pink-100 p-6 sm:p-7 max-w-4xl w-full space-y-6 max-h-[90vh] overflow-y-auto shadow-xl"
+              className="bg-white rounded-3xl border border-red-100 p-6 sm:p-7 max-w-4xl w-full space-y-6 max-h-[90vh] overflow-y-auto shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header Modal */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-100 pb-4">
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#E83E8C]">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#9E1B21]">
                     DETAIL FORMULIR LAMARAN KERJA PARAMEDIC
                   </span>
                   <h3 className="text-xl font-bold text-slate-900 mt-0.5">
@@ -1067,7 +1067,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                   </h3>
                   <p className="text-xs text-slate-500">
                     Tanggal Pendaftaran: {activeApp.appliedAt} · Status Saat Ini:{' '}
-                    <strong className="text-[#D63384]">{activeApp.status}</strong>
+                    <strong className="text-[#7F1D1D]">{activeApp.status}</strong>
                   </p>
                 </div>
 
@@ -1080,7 +1080,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                         e.target.value as typeof activeApp.status
                       )
                     }
-                    className="px-3 py-2 rounded-xl border border-pink-200 text-xs bg-[#FFF5F8] text-[#D63384] font-bold cursor-pointer"
+                    className="px-3 py-2 rounded-xl border border-red-200 text-xs bg-[#FFF5F8] text-[#7F1D1D] font-bold cursor-pointer"
                   >
                     <option value="Pending">Status: Pending</option>
                     <option value="Interview">Status: Interview</option>
@@ -1098,13 +1098,13 @@ export const RecruitmentAndComplaintManageView: React.FC<{
               </div>
 
               {/* 1. JAWABAN BAGIAN INFORMASI IC (Persyaratan Umum & Syarat Interview) */}
-              <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-4">
-                <h4 className="text-sm font-bold text-[#D63384] uppercase tracking-wider">
+              <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-red-100 space-y-4">
+                <h4 className="text-sm font-bold text-[#7F1D1D] uppercase tracking-wider">
                   1. Informasi IC — Persyaratan Umum & Kelengkapan Sebelum Interview
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3.5 rounded-xl bg-white border border-pink-100 space-y-2">
+                  <div className="p-3.5 rounded-xl bg-white border border-red-100 space-y-2">
                     <p className="font-bold text-slate-800">
                       Persyaratan Umum Bergabung EMS:
                     </p>
@@ -1142,13 +1142,13 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                     </ul>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-white border border-pink-100 space-y-2">
+                  <div className="p-3.5 rounded-xl bg-white border border-red-100 space-y-2">
                     <p className="font-bold text-slate-800">
                       Syarat IC yang Dimiliki Sebelum Interview:
                     </p>
                     <ul className="space-y-1.5 text-slate-700">
                       <li className="flex items-center justify-between gap-2">
-                        <span>• Kartu Identitas Warga Cendana (KTP)</span>
+                        <span>• Kartu Identitas Warga Kota Baru (KTP)</span>
                         <strong
                           className={
                             activeApp.icInterviewRequirements?.hasKtpIme ?? true
@@ -1211,8 +1211,8 @@ export const RecruitmentAndComplaintManageView: React.FC<{
               </div>
 
               {/* 2. JAWABAN BAGIAN CURRICULUM VITAE IC */}
-              <div className="p-5 rounded-2xl bg-white border border-pink-100 space-y-4">
-                <h4 className="text-sm font-bold text-[#D63384] uppercase tracking-wider">
+              <div className="p-5 rounded-2xl bg-white border border-red-100 space-y-4">
+                <h4 className="text-sm font-bold text-[#7F1D1D] uppercase tracking-wider">
                   2. Curriculum Vitae IC & Jawaban Pelamar
                 </h4>
 
@@ -1243,7 +1243,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
 
                   <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
                     <span className="font-bold text-slate-700 block">
-                      Mengapa Anda Ingin Bergabung dengan Cendana Medical Center?
+                      Mengapa Anda Ingin Bergabung dengan Kota Baru Medical Center?
                     </span>
                     <p className="text-slate-900 leading-relaxed">{activeApp.motivation || '-'}</p>
                   </div>
@@ -1260,13 +1260,13 @@ export const RecruitmentAndComplaintManageView: React.FC<{
               </div>
 
               {/* 3. JAWABAN BAGIAN INFORMASI OOC */}
-              <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-100 space-y-3">
-                <h4 className="text-sm font-bold text-[#D63384] uppercase tracking-wider">
+              <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-red-100 space-y-3">
+                <h4 className="text-sm font-bold text-[#7F1D1D] uppercase tracking-wider">
                   3. Informasi OOC (Komitmen & Jam Online)
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  <div className="sm:col-span-3 p-3.5 rounded-xl bg-white border border-pink-100 space-y-1">
+                  <div className="sm:col-span-3 p-3.5 rounded-xl bg-white border border-red-100 space-y-1">
                     <span className="font-bold text-slate-700 block">
                       Apakah ada tanggung jawab di kota lain? Jika ada siap membagi waktu?
                     </span>
@@ -1274,13 +1274,13 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                       {activeApp.otherCityResponsibilityOOC || 'Tidak ada'}
                     </p>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-white border border-pink-100">
+                  <div className="p-3.5 rounded-xl bg-white border border-red-100">
                     <span className="text-slate-500 block">Jam Online / Masuk Kota:</span>
                     <strong className="text-slate-900">
                       {activeApp.onlineHoursOOC || activeApp.email}
                     </strong>
                   </div>
-                  <div className="sm:col-span-2 p-3.5 rounded-xl bg-white border border-pink-100">
+                  <div className="sm:col-span-2 p-3.5 rounded-xl bg-white border border-red-100">
                     <span className="text-slate-500 block">Hari Online / Masuk Kota:</span>
                     <strong className="text-slate-900">
                       {activeApp.onlineDaysOOC || activeApp.education}
@@ -1290,9 +1290,9 @@ export const RecruitmentAndComplaintManageView: React.FC<{
               </div>
 
               {/* 4. FOTO DOKUMEN YANG DIUPLOAD / DIKIRIM (BISA DIBUKA & DILIHAT) */}
-              <div className="p-5 rounded-2xl bg-white border border-pink-100 space-y-4">
+              <div className="p-5 rounded-2xl bg-white border border-red-100 space-y-4">
                 <div>
-                  <h4 className="text-sm font-bold text-[#D63384] uppercase tracking-wider">
+                  <h4 className="text-sm font-bold text-[#7F1D1D] uppercase tracking-wider">
                     4. Foto Dokumen yang Diupload Pelamar (Klik untuk Membuka / Melihat Ukuran Penuh)
                   </h4>
                   <p className="text-xs text-slate-500 mt-0.5">
@@ -1333,11 +1333,11 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                     return (
                       <div
                         key={docItem.label}
-                        className="p-3.5 rounded-2xl border border-pink-100 bg-[#FFF5F8]/60 flex flex-col justify-between gap-3"
+                        className="p-3.5 rounded-2xl border border-red-100 bg-[#FFF5F8]/60 flex flex-col justify-between gap-3"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <span className="text-xs font-extrabold text-[#D63384] block">
+                            <span className="text-xs font-extrabold text-[#7F1D1D] block">
                               {docItem.label}
                             </span>
                             <span className="text-[11px] font-mono text-slate-600 truncate block">
@@ -1368,7 +1368,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                               url: resolvedUrl,
                             })
                           }
-                          className="w-full h-40 rounded-xl bg-white border border-pink-100 overflow-hidden flex items-center justify-center cursor-pointer group relative"
+                          className="w-full h-40 rounded-xl bg-white border border-red-100 overflow-hidden flex items-center justify-center cursor-pointer group relative"
                         >
                           <img
                             src={resolvedUrl}
@@ -1382,7 +1382,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2 border-t border-pink-100">
+              <div className="flex justify-end pt-2 border-t border-red-100">
                 <button
                   type="button"
                   onClick={() => setSelectedApplicant(null)}
@@ -1402,10 +1402,10 @@ export const RecruitmentAndComplaintManageView: React.FC<{
             onClick={() => setPreviewPhoto(null)}
           >
             <div
-              className="bg-white rounded-3xl border border-pink-100 p-5 max-w-4xl w-full space-y-4 shadow-2xl"
+              className="bg-white rounded-3xl border border-red-100 p-5 max-w-4xl w-full space-y-4 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+              <div className="flex items-center justify-between border-b border-red-100 pb-3">
                 <div>
                   <h4 className="text-base font-bold text-slate-900">{previewPhoto.title}</h4>
                   <p className="text-xs font-mono text-slate-500">Nama File: {previewPhoto.fileName}</p>
@@ -1436,7 +1436,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
   // Complaint Management (Sec 65)
   return (
     <div className="space-y-6">
-      <div className="bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="bg-white p-5 rounded-2xl border border-red-100">
         <h2 className="text-lg font-bold text-slate-900">Manajemen Keluhan & Aspirasi Warga</h2>
         <p className="text-xs text-slate-500">
           Tinjau laporan warga, ubah status (Baru, Diproses, Selesai, Ditolak), dan berikan catatan internal
@@ -1447,11 +1447,11 @@ export const RecruitmentAndComplaintManageView: React.FC<{
         {complaints.map((c) => (
           <div
             key={c.id}
-            className="bg-white rounded-2xl border border-pink-100 p-5 space-y-3 shadow-xs"
+            className="bg-white rounded-2xl border border-red-100 p-5 space-y-3 shadow-xs"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <span className="text-xs font-bold text-[#E83E8C]">{c.type}</span>
+                <span className="text-xs font-bold text-[#9E1B21]">{c.type}</span>
                 <h3 className="text-base font-bold text-slate-900">{c.subject}</h3>
                 <p className="text-xs text-slate-500">
                   Pelapor: <strong>{c.reporterName}</strong> · Tanggal: {c.createdAt}
@@ -1463,7 +1463,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                   onChange={(e) =>
                     updateComplaintStatus(c.id, e.target.value as typeof c.status)
                   }
-                  className="px-3 py-1.5 rounded-xl border border-pink-200 text-xs font-bold bg-[#FFF5F8] text-[#D63384]"
+                  className="px-3 py-1.5 rounded-xl border border-red-200 text-xs font-bold bg-[#FFF5F8] text-[#7F1D1D]"
                 >
                   <option value="Baru">Baru</option>
                   <option value="Diproses">Diproses</option>
@@ -1499,7 +1499,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
           onClick={() => setSelectedComplaint(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-bold text-slate-900">

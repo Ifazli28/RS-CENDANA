@@ -1,0 +1,173 @@
+<svg viewBox="0 0 320 320" width="320" height="320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Bevel & 3D Shading Gradients -->
+    <linearGradient id="kbRedGloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EF4444" />
+      <stop offset="40%" stop-color="#DC2626" />
+      <stop offset="100%" stop-color="#991B1B" />
+    </linearGradient>
+
+    <linearGradient id="kbRedBevel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FCA5A5" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#DC2626" />
+      <stop offset="100%" stop-color="#7F1D1D" />
+    </linearGradient>
+
+    <linearGradient id="kbWhiteGloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+
+    <linearGradient id="kbWhiteBevel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="50%" stop-color="#CBD5E1" />
+      <stop offset="100%" stop-color="#94A3B8" />
+    </linearGradient>
+
+    <!-- Clip Path for Top (Red) Half -->
+    <clipPath id="clipTopHalf">
+      <rect x="0" y="0" width="320" height="134" />
+    </clipPath>
+
+    <!-- Clip Path for Bottom (White) Half -->
+    <clipPath id="clipBottomHalf">
+      <rect x="0" y="134" width="320" height="186" />
+    </clipPath>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="kb3dShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#450A0A" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <g filter="url(#kb3dShadow)">
+    <!-- OUTER SILHOUETTE / 3D FRAME of the KB MONOGRAM -->
+    <!-- The Monogram combines a square vertical left stem with a looped B and angled K chevron -->
+    
+    <!-- GROUP: RED TOP HALF -->
+    <g clip-path="url(#clipTopHalf)">
+      <!-- Outer Border / Shadow Base -->
+      <path
+        d="M 64,36 L 206,36 C 242,36 256,58 256,86 C 256,116 238,138 206,146 L 254,198 C 258,204 250,214 238,214 L 188,214 L 140,158 L 102,194 L 102,214 L 64,214 Z"
+        fill="url(#kbRedGloss)"
+        stroke="#7F1D1D"
+        stroke-width="5"
+        stroke-linejoin="round"
+      />
+      <!-- Top Inner Cutout (Upper D-loop of B) -->
+      <path
+        d="M 102,64 L 194,64 C 212,64 220,74 220,88 C 220,102 210,112 192,112 L 102,112 Z"
+        fill="#FFFFFF"
+        stroke="#7F1D1D"
+        stroke-width="4"
+        stroke-linejoin="round"
+      />
+      <!-- Inner K Chevron cut -->
+      <path
+        d="M 102,96 L 168,36 L 204,36 L 126,112 Z"
+        fill="url(#kbRedBevel)"
+        opacity="0.4"
+      />
+      <!-- Specular Bevel Line (Gloss Edge) -->
+      <path
+        d="M 70,42 L 202,42 C 234,42 248,60 248,86 C 248,110 234,130 204,138"
+        fill="none"
+        stroke="#FECACA"
+        stroke-width="3"
+        stroke-linecap="round"
+        opacity="0.9"
+      />
+    </g>
+
+    <!-- GROUP: WHITE BOTTOM HALF -->
+    <g clip-path="url(#clipBottomHalf)">
+      <!-- Outer Border / Shadow Base -->
+      <path
+        d="M 64,36 L 206,36 C 242,36 256,58 256,86 C 256,116 238,138 206,146 L 254,198 C 258,204 250,214 238,214 L 188,214 L 140,158 L 102,194 L 102,214 L 64,214 Z"
+        fill="url(#kbWhiteGloss)"
+        stroke="#9E1B21"
+        stroke-width="5"
+        stroke-linejoin="round"
+      />
+      <!-- Lower Inner Cutout (Lower K-leg / chevron loop) -->
+      <path
+        d="M 102,130 L 158,130 L 204,188 L 168,188 L 132,146 L 102,174 Z"
+        fill="#FFFFFF"
+        stroke="#9E1B21"
+        stroke-width="4"
+        stroke-linejoin="round"
+      />
+      <!-- Bottom Bevel Edge -->
+      <path
+        d="M 70,136 L 70,208 L 96,208 L 96,178 L 134,142 L 180,198 L 230,198"
+        fill="none"
+        stroke="#FFFFFF"
+        stroke-width="2.5"
+      />
+    </g>
+
+    <!-- CENTER K-CHEVRON 3D PRISM (Overlapping red & white angular arms) -->
+    <!-- Center Beveled Divider Chevron -->
+    <g>
+      <!-- Upper diagonal arm of the K inside the B -->
+      <polygon
+        points="102,134 196,48 226,48 132,134"
+        fill="url(#kbRedGloss)"
+        stroke="#9E1B21"
+        stroke-width="3"
+      />
+      <line x1="102" y1="134" x2="226" y2="48" stroke="#FEE2E2" stroke-width="2.5" stroke-linecap="round" />
+
+      <!-- Lower diagonal arm of the K inside the B -->
+      <polygon
+        points="114,134 198,214 168,214 102,148"
+        fill="url(#kbWhiteGloss)"
+        stroke="#9E1B21"
+        stroke-width="3"
+      />
+      <line x1="114" y1="134" x2="198" y2="214" stroke="#9E1B21" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- HORIZONTAL DIVISION SEPARATOR LINE (Red / White Transition) -->
+    <line x1="62" y1="134" x2="252" y2="134" stroke="#7F1D1D" stroke-width="2.5" opacity="0.6" />
+
+    <!-- 3D INNER CONTOUR & HIGHLIGHT STROKES -->
+    <path
+      d="M 64,36 L 206,36 C 242,36 256,58 256,86 C 256,116 238,138 206,146 L 254,198 C 258,204 250,214 238,214 L 188,214 L 140,158 L 102,194 L 102,214 L 64,214 Z"
+      fill="none"
+      stroke="#9E1B21"
+      stroke-width="4.5"
+    />
+  </g>
+
+  <!-- TYPOGRAPHY: KOTA BARU -->
+  <text
+    x="160"
+    y="252"
+    text-anchor="middle"
+    fill="#9E1B21"
+    font-family="'Arial Black', 'Impact', 'Montserrat', sans-serif"
+    font-weight="900"
+    font-size="24"
+    letter-spacing="4.5"
+  >
+    KOTA BARU
+  </text>
+
+  <!-- TYPOGRAPHY: ROLEPLAY (Clean outlined style matching KB.png) -->
+  <text
+    x="160"
+    y="280"
+    text-anchor="middle"
+    fill="#FFFFFF"
+    stroke="#9E1B21"
+    stroke-width="1.8"
+    font-family="'Arial Black', 'Impact', 'Montserrat', sans-serif"
+    font-weight="900"
+    font-size="20"
+    letter-spacing="5.5"
+  >
+    ROLEPLAY
+  </text>
+</svg>

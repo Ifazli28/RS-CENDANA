@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { PsychologyRecord, ColorBlindResult } from '../types';
-import { Download, Award, Printer } from 'lucide-react';
+import { Download, Award } from 'lucide-react';
 
 /**
- * Helper untuk menggambar Sertifikat Resmi RS Cendana pada HTML5 Canvas beresolusi tinggi (1600 x 1120)
+ * Helper untuk menggambar Sertifikat Resmi RS Kota Baru pada HTML5 Canvas beresolusi tinggi (1600 x 1120)
  * dan menyediakan fitur Download langsung dalam format JPEG (.jpeg).
  */
 function drawCertificateBase(
@@ -13,18 +13,18 @@ function drawCertificateBase(
   accentPrimary: string,
   accentSecondary: string
 ) {
-  // Background Putih Gading / Soft Rose
+  // Background Putih Bersih
   const bgGrad = ctx.createLinearGradient(0, 0, width, height);
   bgGrad.addColorStop(0, '#FFFFFF');
-  bgGrad.addColorStop(0.5, '#FFFBFD');
-  bgGrad.addColorStop(1, '#FFF5F8');
+  bgGrad.addColorStop(0.5, '#FAFAFA');
+  bgGrad.addColorStop(1, '#F8FAFC');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
   // Ornamen Sudut Geometris Halus
   ctx.save();
   ctx.fillStyle = accentPrimary;
-  ctx.globalAlpha = 0.06;
+  ctx.globalAlpha = 0.05;
   ctx.beginPath();
   ctx.arc(0, 0, 320, 0, Math.PI * 2);
   ctx.fill();
@@ -45,53 +45,49 @@ function drawCertificateBase(
   // Corner Gold / Accent Markers
   const cornerSize = 28;
   ctx.fillStyle = accentPrimary;
-  // Top-left
   ctx.fillRect(32, 32, cornerSize, 8);
   ctx.fillRect(32, 32, 8, cornerSize);
-  // Top-right
   ctx.fillRect(width - 32 - cornerSize, 32, cornerSize, 8);
   ctx.fillRect(width - 40, 32, 8, cornerSize);
-  // Bottom-left
   ctx.fillRect(32, height - 40, cornerSize, 8);
   ctx.fillRect(32, height - 32 - cornerSize, 8, cornerSize);
-  // Bottom-right
   ctx.fillRect(width - 32 - cornerSize, height - 40, cornerSize, 8);
   ctx.fillRect(width - 40, height - 32 - cornerSize, 8, cornerSize);
 
-  // Header Logo Medis & Kop Surat RS Cendana
+  // Header Logo Medis & Kop Surat RS Kota Baru
   const cx = width / 2;
 
-  // Emblem Cross Medis Cendana di tengah atas
+  // Star of Life / Cross Emblem di tengah atas
   ctx.save();
   ctx.fillStyle = accentPrimary;
   ctx.beginPath();
-  ctx.arc(cx, 118, 36, 0, Math.PI * 2);
+  ctx.arc(cx, 118, 38, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(cx - 6, 100, 12, 36);
-  ctx.fillRect(cx - 18, 112, 36, 12);
+  ctx.fillRect(cx - 7, 98, 14, 40);
+  ctx.fillRect(cx - 20, 111, 40, 14);
   ctx.restore();
 
   ctx.textAlign = 'center';
   ctx.fillStyle = '#0F172A';
   ctx.font = 'bold 26px "Poppins", Arial, sans-serif';
-  ctx.fillText('PEMERINTAH KOTA CENDANA — DINAS KESEHATAN TERPADU', cx, 184);
+  ctx.fillText('PEMERINTAH KOTA KOTA BARU — DINAS KESEHATAN TERPADU', cx, 184);
 
   ctx.fillStyle = accentPrimary;
   ctx.font = 'bold 34px "Poppins", Arial, sans-serif';
-  ctx.fillText('RUMAH SAKIT & PARAMEDIC CENDANA MEDICAL CENTER', cx, 224);
+  ctx.fillText('RUMAH SAKIT & PARAMEDIC KOTA BARU (KBR)', cx, 224);
 
   ctx.fillStyle = '#64748B';
   ctx.font = '500 17px "Poppins", Arial, sans-serif';
   ctx.fillText(
-    'Instalasi Diagnostik Klinis, Kesehatan Jiwa & Penglihatan Warna Resmi Kota Cendana',
+    'Instalasi Diagnostik Klinis, Kesehatan Jiwa & Penglihatan Warna Resmi Kota Kota Baru Roleplay',
     cx,
     254
   );
 
   // Garis Pembatas Kop
-  ctx.strokeStyle = '#FBCFE8';
+  ctx.strokeStyle = '#E2E8F0';
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(140, 276);
@@ -166,7 +162,7 @@ export const PsychologyCertificateCard: React.FC<{
     const height = 1120;
     const cx = width / 2;
 
-    drawCertificateBase(ctx, width, height, '#D63384', '#20C997');
+    drawCertificateBase(ctx, width, height, '#9E1B21', '#7F1D1D');
 
     // Judul Sertifikat
     ctx.textAlign = 'center';
@@ -177,7 +173,7 @@ export const PsychologyCertificateCard: React.FC<{
     ctx.fillStyle = '#64748B';
     ctx.font = '600 18px "JetBrains Mono", monospace';
     ctx.fillText(
-      `Nomor Registrasi: PSY/${record.id.toUpperCase()}/CMC/${record.createdAt.slice(0, 4) || '2026'}`,
+      `Nomor Registrasi: PSY/${record.id.toUpperCase()}/KBMC/${record.createdAt.slice(0, 4) || '2026'}`,
       cx,
       368
     );
@@ -186,18 +182,18 @@ export const PsychologyCertificateCard: React.FC<{
     ctx.fillStyle = '#334155';
     ctx.font = '500 20px "Poppins", Arial, sans-serif';
     ctx.fillText(
-      'Tim Penguji Kesehatan Mental & Psikiatri Rumah Sakit Cendana menerangkan bahwa:',
+      'Tim Penguji Kesehatan Mental & Psikiatri Rumah Sakit Kota Baru menerangkan bahwa:',
       cx,
       415
     );
 
     // Nama Peserta
-    ctx.fillStyle = '#D63384';
+    ctx.fillStyle = '#9E1B21';
     ctx.font = 'bold 46px "Poppins", Arial, sans-serif';
     ctx.fillText(record.fullName.toUpperCase(), cx, 474);
 
     // Garis bawah nama
-    ctx.strokeStyle = '#D63384';
+    ctx.strokeStyle = '#9E1B21';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(cx - 280, 490);
@@ -205,8 +201,8 @@ export const PsychologyCertificateCard: React.FC<{
     ctx.stroke();
 
     // Box Data Diri Peserta
-    ctx.fillStyle = '#FFF5F8';
-    ctx.strokeStyle = '#FBCFE8';
+    ctx.fillStyle = '#F8FAFC';
+    ctx.strokeStyle = '#E2E8F0';
     ctx.lineWidth = 2;
     ctx.fillRect(160, 514, width - 320, 118);
     ctx.strokeRect(160, 514, width - 320, 118);
@@ -253,22 +249,22 @@ export const PsychologyCertificateCard: React.FC<{
     ctx.textAlign = 'left';
     ctx.fillStyle = '#475569';
     ctx.font = '500 18px "Poppins", Arial, sans-serif';
-    ctx.fillText(`Diterbitkan di : Kota Cendana`, 160, 935);
+    ctx.fillText(`Diterbitkan di : Kota Kota Baru`, 160, 935);
     ctx.fillText(`Tanggal Terbit : ${record.createdAt}`, 160, 965);
     ctx.fillText(`Status Dokumen : TERVERIFIKASI RESMI (VALID)`, 160, 995);
 
     // Stempel Digital Tengah
     ctx.save();
-    ctx.strokeStyle = '#20C997';
+    ctx.strokeStyle = '#9E1B21';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(cx, 968, 56, 0, Math.PI * 2);
     ctx.stroke();
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#0D9488';
+    ctx.fillStyle = '#9E1B21';
     ctx.font = 'bold 15px "Poppins", Arial, sans-serif';
     ctx.fillText('VERIFIED', cx, 962);
-    ctx.fillText('RS CENDANA', cx, 982);
+    ctx.fillText('RS KOTA BARU', cx, 982);
     ctx.restore();
 
     // Tanda Tangan Dokter Penguji Kanan
@@ -278,9 +274,9 @@ export const PsychologyCertificateCard: React.FC<{
     ctx.font = '500 18px "Poppins", Arial, sans-serif';
     ctx.fillText('Dokter / Psikiater Pemeriksa,', rightX, 925);
 
-    ctx.fillStyle = '#D63384';
+    ctx.fillStyle = '#9E1B21';
     ctx.font = 'italic bold 26px Georgia, serif';
-    ctx.fillText('Cendana Psychiatric Seal', rightX, 972);
+    ctx.fillText('Kota Baru Psychiatric Seal', rightX, 972);
 
     ctx.fillStyle = '#0F172A';
     ctx.font = 'bold 20px "Poppins", Arial, sans-serif';
@@ -288,7 +284,7 @@ export const PsychologyCertificateCard: React.FC<{
 
     ctx.fillStyle = '#64748B';
     ctx.font = '500 16px "Poppins", Arial, sans-serif';
-    ctx.fillText('Instalasi Kesehatan Jiwa & Psikologi RS Cendana', rightX, 1040);
+    ctx.fillText('Instalasi Kesehatan Jiwa & Psikologi RS Kota Baru', rightX, 1040);
   }, [
     record,
     ghqScore,
@@ -318,22 +314,22 @@ export const PsychologyCertificateCard: React.FC<{
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-[#FFF5F8] p-3.5 rounded-xl border border-pink-200">
-        <div className="flex items-center gap-2 text-xs font-bold text-[#D63384]">
-          <Award className="w-4 h-4" />
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-red-50/70 p-3.5 rounded-xl border border-red-200">
+        <div className="flex items-center gap-2 text-xs font-bold text-red-800">
+          <Award className="w-4 h-4 text-[#9E1B21]" />
           <span>Sertifikat Resmi Hasil Tes & Evaluasi Psikologi (Format JPEG)</span>
         </div>
         <button
           type="button"
           onClick={handleDownloadJpeg}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold flex items-center gap-2 shadow-xs hover:opacity-95 cursor-pointer"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 shadow-xs hover:opacity-95 cursor-pointer"
         >
           <Download className="w-4 h-4" />
           <span>Download Sertifikat (.JPEG)</span>
         </button>
       </div>
 
-      <div className="rounded-2xl overflow-hidden border border-pink-200 bg-slate-900/5 p-2 shadow-inner">
+      <div className="rounded-2xl overflow-hidden border border-red-200 bg-slate-900/5 p-2 shadow-inner">
         <canvas
           ref={canvasRef}
           width={1600}
@@ -362,7 +358,7 @@ export const ColorBlindCertificateCard: React.FC<{
     const height = 1120;
     const cx = width / 2;
 
-    drawCertificateBase(ctx, width, height, '#0D9488', '#E83E8C');
+    drawCertificateBase(ctx, width, height, '#0D9488', '#9E1B21');
 
     // Judul Sertifikat
     ctx.textAlign = 'center';
@@ -373,7 +369,7 @@ export const ColorBlindCertificateCard: React.FC<{
     ctx.fillStyle = '#64748B';
     ctx.font = '600 18px "JetBrains Mono", monospace';
     ctx.fillText(
-      `Nomor Registrasi: CB/${result.id.toUpperCase()}/CMC/${result.testDate.slice(0, 4) || '2026'}`,
+      `Nomor Registrasi: CB/${result.id.toUpperCase()}/KBMC/${result.testDate.slice(0, 4) || '2026'}`,
       cx,
       368
     );
@@ -382,7 +378,7 @@ export const ColorBlindCertificateCard: React.FC<{
     ctx.fillStyle = '#334155';
     ctx.font = '500 20px "Poppins", Arial, sans-serif';
     ctx.fillText(
-      'Instalasi Diagnostik Visual & Oftalmologi Rumah Sakit Cendana menerangkan bahwa:',
+      'Instalasi Diagnostik Visual & Oftalmologi Rumah Sakit Kota Baru menerangkan bahwa:',
       cx,
       415
     );
@@ -455,7 +451,7 @@ export const ColorBlindCertificateCard: React.FC<{
     ctx.textAlign = 'left';
     ctx.fillStyle = '#475569';
     ctx.font = '500 18px "Poppins", Arial, sans-serif';
-    ctx.fillText(`Diterbitkan di : Kota Cendana`, 160, 935);
+    ctx.fillText(`Diterbitkan di : Kota Kota Baru`, 160, 935);
     ctx.fillText(`Tanggal Terbit : ${result.testDate}`, 160, 965);
     ctx.fillText(`Status Dokumen : TERVERIFIKASI RESMI (VALID)`, 160, 995);
 
@@ -482,7 +478,7 @@ export const ColorBlindCertificateCard: React.FC<{
 
     ctx.fillStyle = '#0D9488';
     ctx.font = 'italic bold 26px Georgia, serif';
-    ctx.fillText('Cendana Optical Seal', rightX, 972);
+    ctx.fillText('Kota Baru Optical Seal', rightX, 972);
 
     ctx.fillStyle = '#0F172A';
     ctx.font = 'bold 20px "Poppins", Arial, sans-serif';
@@ -490,7 +486,7 @@ export const ColorBlindCertificateCard: React.FC<{
 
     ctx.fillStyle = '#64748B';
     ctx.font = '500 16px "Poppins", Arial, sans-serif';
-    ctx.fillText('Instalasi Diagnostik Mata & Poli Umum RS Cendana', rightX, 1040);
+    ctx.fillText('Instalasi Diagnostik Mata & Poli Umum RS Kota Baru', rightX, 1040);
   }, [result, doctorSigner]);
 
   const handleDownloadJpeg = () => {
@@ -516,7 +512,7 @@ export const ColorBlindCertificateCard: React.FC<{
         <button
           type="button"
           onClick={handleDownloadJpeg}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#20C997] to-[#0D9488] text-white text-xs font-semibold flex items-center gap-2 shadow-xs hover:opacity-95 cursor-pointer"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#0D9488] to-[#115E59] text-white text-xs font-semibold flex items-center gap-2 shadow-xs hover:opacity-95 cursor-pointer"
         >
           <Download className="w-4 h-4" />
           <span>Download Sertifikat (.JPEG)</span>

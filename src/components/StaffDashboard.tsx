@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LogoRSCendana } from './BrandAssets';
+import { LogoRSKotaBaru, LogoKotaBaruRoleplay } from './BrandAssets';
 import {
   DashboardLeaderboardView,
   StaffProfileView,
@@ -217,7 +217,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           </p>
           <button
             onClick={() => onNavigateRoute('dashboard')}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold cursor-pointer"
           >
             Kembali ke Dashboard Utama
           </button>
@@ -288,7 +288,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex bg-[#FFF5F8] text-slate-800">
+    <div className="min-h-screen flex bg-slate-50 text-slate-800">
       {/* Mobile Sidebar Backdrop */}
       {sidebarOpen && (
         <div
@@ -299,24 +299,27 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
       {/* SIDEBAR NAVIGATION (Sec 79 — Dynamic based on role level) */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white border-r border-pink-100 flex flex-col transition-transform duration-200 no-print ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white border-r border-red-100 flex flex-col transition-transform duration-200 no-print ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Sidebar Brand Header */}
-        <div className="p-4 border-b border-pink-100 flex items-center justify-between gap-2">
+        <div className="p-4 border-b border-red-100 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <LogoRSCendana className="w-10 h-10 shrink-0" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <LogoRSKotaBaru className="w-9 h-9 shrink-0 drop-shadow-xs" />
+              <LogoKotaBaruRoleplay className="w-8 h-8 shrink-0 drop-shadow-xs" />
+            </div>
             <div className="min-w-0">
-              <h1 className="text-sm font-bold text-slate-900 truncate">Paramedic Cendana</h1>
-              <p className="text-[11px] text-[#E83E8C] font-semibold truncate">
+              <h1 className="text-sm font-bold text-slate-900 truncate">Paramedic Kota Baru</h1>
+              <p className="text-[11px] text-[#9E1B21] font-semibold truncate">
                 Lv.{currentUser.level} · {currentUser.role}
               </p>
             </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-pink-50"
+            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-red-50/70"
           >
             <X className="w-5 h-5" />
           </button>
@@ -324,8 +327,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
         {/* Approval Center Quick Summary for Heads+ (Sec 57) */}
         {currentUser.level >= 7 && (
-          <div className="mx-3 mt-3 p-3 rounded-xl bg-[#FFF5F8] border border-pink-200/70 space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-bold text-[#D63384]">
+          <div className="mx-3 mt-3 p-3 rounded-xl bg-slate-50 border border-red-200/70 space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-bold text-[#7F1D1D]">
               <span>Approval Center</span>
               <span className="font-mono tabular-nums">
                 {pendingAccountsCount + pendingLeavesCount + pendingResignsCount} Pending
@@ -334,19 +337,19 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             <div className="grid grid-cols-3 gap-1 text-[10px] text-slate-600 font-medium">
               <button
                 onClick={() => onNavigateRoute('account-approval')}
-                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-pink-100 text-center cursor-pointer"
+                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-red-100 text-center cursor-pointer"
               >
                 Akun: <strong>{pendingAccountsCount}</strong>
               </button>
               <button
                 onClick={() => onNavigateRoute('leave-approval')}
-                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-pink-100 text-center cursor-pointer"
+                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-red-100 text-center cursor-pointer"
               >
                 Cuti: <strong>{pendingLeavesCount}</strong>
               </button>
               <button
                 onClick={() => onNavigateRoute('resign-approval')}
-                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-pink-100 text-center cursor-pointer"
+                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-red-100 text-center cursor-pointer"
               >
                 Resign: <strong>{pendingResignsCount}</strong>
               </button>
@@ -375,8 +378,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                         isActive
-                          ? 'bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-pink-50/70 hover:text-[#D63384]'
+                          ? 'bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-red-50/70/70 hover:text-[#7F1D1D]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
@@ -386,7 +389,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                       {item.badgeCount !== undefined && item.badgeCount > 0 && (
                         <span
                           className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md tabular-nums ${
-                            isActive ? 'bg-white text-[#D63384]' : 'bg-pink-100 text-[#D63384]'
+                            isActive ? 'bg-white text-[#7F1D1D]' : 'bg-red-100 text-[#7F1D1D]'
                           }`}
                         >
                           {item.badgeCount}
@@ -400,10 +403,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         </div>
 
         {/* Sidebar Footer Actions */}
-        <div className="p-3 border-t border-pink-100 space-y-2">
+        <div className="p-3 border-t border-red-100 space-y-2">
           <button
             onClick={onBackPublic}
-            className="w-full py-2 px-3 rounded-xl border border-pink-200 bg-[#FFF5F8] text-[#D63384] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-pink-100 transition cursor-pointer"
+            className="w-full py-2 px-3 rounded-xl border border-red-200 bg-slate-50 text-[#7F1D1D] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-red-100 transition cursor-pointer"
           >
             <Globe className="w-4 h-4" />
             <span>Buka Halaman Publik</span>
@@ -421,11 +424,11 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
       {/* MAIN CONTENT VIEWPORT */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-pink-100 px-4 sm:px-6 h-16 flex items-center justify-between gap-4 no-print">
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-red-100 px-4 sm:px-6 h-16 flex items-center justify-between gap-4 no-print">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl border border-pink-100 text-slate-700"
+              className="lg:hidden p-2 rounded-xl border border-red-100 text-slate-700"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -441,13 +444,13 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={() => onNavigateRoute('profile')}
-              className="flex items-center gap-2.5 pl-2 pr-3 py-1 rounded-xl hover:bg-pink-50 transition cursor-pointer"
+              className="flex items-center gap-2.5 pl-2 pr-3 py-1 rounded-xl hover:bg-red-50/70 transition cursor-pointer"
             >
               <img
                 src={currentUser.avatarUrl}
                 alt={currentUser.name}
                 referrerPolicy="no-referrer"
-                className="w-8 h-8 rounded-xl object-cover border border-pink-200"
+                className="w-8 h-8 rounded-xl object-cover border border-red-200"
               />
               <div className="hidden md:block text-left">
                 <p className="text-xs font-bold text-slate-900 leading-none">{currentUser.name}</p>

@@ -1,194 +1,389 @@
 import React from 'react';
 
 /**
- * Logo RS Cendana (Paramedic Cendana) — matches the attached pink circular Paramedic Cendana emblem
+ * Official Logo RS Kota Baru / Paramedic Kota Baru (KBR - Kota Baru Roleplay)
+ * Exact vector badge matching the uploaded embroidered patch:
+ * - Circular crimson-red textured patch with twin white stitched borders
+ * - Top arch: "PARAMEDIC" in bold athletic white uppercase
+ * - Center: Deep crimson Star of Life with white border
+ * - Monogram "KB" / "KBR" in white double outline with textured fill inside the Star
+ * - Open supporting hands gently cupping the Star of Life from below
+ * - Bottom ribbon banner: "KBR" and arched "KOTA BARU ROLEPLAY"
  */
-export const LogoRSCendana: React.FC<{ className?: string }> = ({ className = 'w-11 h-11' }) => (
-  <svg viewBox="0 0 200 200" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="100" cy="100" r="95" fill="#FFF5F8" stroke="#E83E8C" strokeWidth="5" />
-    <circle cx="100" cy="100" r="87" fill="#FFFFFF" stroke="#F4A5C8" strokeWidth="2.5" />
-    <circle cx="100" cy="100" r="65" fill="#FFF0F5" />
+export const LogoRSKotaBaru: React.FC<{ className?: string }> = ({ className = 'w-11 h-11' }) => (
+  <svg viewBox="0 0 400 400" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="patchBg" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#A82329" />
+        <stop offset="65%" stopColor="#8B1E22" />
+        <stop offset="100%" stopColor="#671014" />
+      </radialGradient>
+      <linearGradient id="starGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#B91C1C" />
+        <stop offset="50%" stopColor="#991B1B" />
+        <stop offset="100%" stopColor="#7F1D1D" />
+      </linearGradient>
+      <linearGradient id="ribbonGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#9E1B21" />
+        <stop offset="100%" stopColor="#671014" />
+      </linearGradient>
 
-    {/* Hospital skyline silhouette in soft pink */}
-    <rect x="52" y="84" width="16" height="46" rx="2" fill="#F9B4D2" />
-    <rect x="68" y="66" width="20" height="64" rx="2" fill="#F59CC4" />
-    <rect x="86" y="54" width="28" height="76" rx="3" fill="#F9B4D2" />
-    <rect x="112" y="68" width="20" height="62" rx="2" fill="#F59CC4" />
-    <rect x="132" y="88" width="16" height="42" rx="2" fill="#F9B4D2" />
+      {/* Fabric Twill Pattern */}
+      <pattern id="twill" width="6" height="6" patternUnits="userSpaceOnUse">
+        <path d="M0 6L6 0M3 9L9 3M-3 3L3 -3" stroke="#450A0A" strokeWidth="0.8" opacity="0.35" />
+      </pattern>
 
-    {/* Heart on top of central building */}
-    <path
-      d="M100 66C100 66 91 59.5 91 54.5C91 51.8 93.2 49.8 95.8 49.8C97.6 49.8 99.1 50.8 100 52.2C100.9 50.8 102.4 49.8 104.2 49.8C106.8 49.8 109 51.8 109 54.5C109 59.5 100 66 100 66Z"
-      fill="#E83E8C"
-    />
+      {/* Arc text paths */}
+      <path id="topParamedicPath" d="M 62,200 A 138,138 0 1,1 338,200" fill="none" />
+      <path id="bottomKotbarPath" d="M 88,292 A 140,140 0 0,0 312,292" fill="none" />
+    </defs>
 
-    {/* Medical Cross with ECG pulse */}
-    <rect x="86" y="69" width="28" height="68" rx="7" fill="#E83E8C" stroke="#FFFFFF" strokeWidth="3.5" />
-    <rect x="66" y="89" width="68" height="28" rx="7" fill="#E83E8C" stroke="#FFFFFF" strokeWidth="3.5" />
-    <rect x="88" y="71" width="24" height="64" rx="5" fill="#E83E8C" />
-    <rect x="68" y="91" width="64" height="24" rx="5" fill="#E83E8C" />
+    {/* Outer Embroidered Stitch Ring */}
+    <circle cx="200" cy="200" r="192" fill="#8B1E22" stroke="#FFFFFF" strokeWidth="2" />
+    <circle cx="200" cy="200" r="192" fill="url(#twill)" />
+    <circle cx="200" cy="200" r="188" fill="none" stroke="#FFFFFF" strokeWidth="1.8" strokeDasharray="4,3" />
 
-    {/* ECG Pulse Line */}
-    <path
-      d="M69 103H87L91 96L96 112L101 87L106 115L110 100L113 103H131"
-      stroke="#FFFFFF"
-      strokeWidth="3.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    {/* Outer Red Ring Band */}
+    <circle cx="200" cy="200" r="182" fill="none" stroke="#FFFFFF" strokeWidth="3" />
+    <circle cx="200" cy="200" r="148" fill="none" stroke="#FFFFFF" strokeWidth="3" />
 
-    {/* Lotus leaves at bottom of cross */}
-    <path d="M98 156C85 154 74 144 72 134C82 135 93 142 98 156Z" fill="#F06595" />
-    <path d="M102 156C115 154 126 144 128 134C118 135 107 142 102 156Z" fill="#F06595" />
+    {/* Left & Right Divider Stripes */}
+    <g stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round">
+      <line x1="12" y1="174" x2="52" y2="182" />
+      <line x1="12" y1="204" x2="50" y2="206" />
+      <line x1="388" y1="174" x2="348" y2="182" />
+      <line x1="388" y1="204" x2="350" y2="206" />
+    </g>
 
-    {/* Side small crosses */}
-    <path d="M26 96V104M22 100H30" stroke="#E83E8C" strokeWidth="3.5" strokeLinecap="round" />
-    <path d="M174 96V104M170 100H178" stroke="#E83E8C" strokeWidth="3.5" strokeLinecap="round" />
+    {/* Inner Medallion Background */}
+    <circle cx="200" cy="200" r="146" fill="url(#patchBg)" />
+    <circle cx="200" cy="200" r="146" fill="url(#twill)" />
+    <circle cx="200" cy="200" r="146" fill="none" stroke="#FFFFFF" strokeWidth="2.5" />
 
-    {/* Top & Bottom Arcs Text */}
-    <path id="topArc" d="M 38,100 A 62,62 0 1,1 162,100" fill="none" />
-    <text fill="#E83E8C" fontSize="15.5" fontWeight="800" letterSpacing="3.5" fontFamily="Poppins, sans-serif">
-      <textPath href="#topArc" startOffset="50%" textAnchor="middle">
+    {/* TOP TEXT: PARAMEDIC */}
+    <text fill="#FFFFFF" fontFamily="'Arial Black', 'Impact', sans-serif" fontWeight="900" fontSize="34" letterSpacing="4.5">
+      <textPath href="#topParamedicPath" startOffset="50%" textAnchor="middle">
         PARAMEDIC
       </textPath>
     </text>
 
-    <path id="bottomArc" d="M 166,106 A 66,66 0 0,1 34,106" fill="none" />
-    <text fill="#E83E8C" fontSize="14.5" fontWeight="800" letterSpacing="3" fontFamily="Poppins, sans-serif">
-      <textPath href="#bottomArc" startOffset="50%" textAnchor="middle">
-        CENDANA
+    {/* CENTER STAR OF LIFE (6-pointed medical star) */}
+    <g transform="translate(200, 182)">
+      <path
+        d="M -24,-92 L 24,-92 L 24,-32 L 68,-57 L 92,-15 L 48,10 L 92,35 L 68,77 L 24,52 L 24,92 L -24,92 L -24,52 L -68,77 L -92,35 L -48,10 L -92,-15 L -68,-57 L -24,-32 Z"
+        fill="url(#starGrad)"
+        stroke="#FFFFFF"
+        strokeWidth="5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M -24,-92 L 24,-92 L 24,-32 L 68,-57 L 92,-15 L 48,10 L 92,35 L 68,77 L 24,52 L 24,92 L -24,92 L -24,52 L -68,77 L -92,35 L -48,10 L -92,-15 L -68,-57 L -24,-32 Z"
+        fill="url(#twill)"
+        opacity="0.4"
+      />
+
+      {/* Monogram KB / KBR inside Star of Life */}
+      <g transform="translate(0, -3)">
+        <rect x="-36" y="-44" width="72" height="84" rx="8" fill="#50070A" opacity="0.6" />
+        <path d="M -30,-38 L -14,-38 L -14,38 L -30,38 Z" fill="#9E1B21" stroke="#FFFFFF" strokeWidth="3" strokeLinejoin="round" />
+        <path d="M -14,-4 L 14,-38 L 32,-38 L 4,-4 Z" fill="#9E1B21" stroke="#FFFFFF" strokeWidth="3" strokeLinejoin="round" />
+        <path d="M 0,-4 L 32,38 L 14,38 L -14,4 Z" fill="#9E1B21" stroke="#FFFFFF" strokeWidth="3" strokeLinejoin="round" />
+        <path
+          d="M -14,-38 L 14,-38 C 28,-38 34,-28 34,-18 C 34,-9 28,-3 16,-3 L -14,-3 Z"
+          fill="none"
+          stroke="#FFFFFF"
+          strokeWidth="4.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M -14,-3 L 16,-3 C 30,-3 36,5 36,18 C 36,29 28,38 14,38 L -14,38 Z"
+          fill="none"
+          stroke="#FFFFFF"
+          strokeWidth="4.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <line x1="-24" y1="-32" x2="-20" y2="32" stroke="#FFFFFF" strokeWidth="1.8" strokeDasharray="3,3" />
+      </g>
+    </g>
+
+    {/* CARING / SUPPORTING HANDS AT BOTTOM */}
+    <g transform="translate(200, 260)">
+      <path
+        d="M -76,-50 C -68,-25 -82,-10 -90,12 C -96,28 -85,42 -68,44 C -50,46 -42,32 -38,15 C -34,0 -42,-22 -52,-42 C -56,-50 -70,-56 -76,-50 Z"
+        fill="#8B1E22"
+        stroke="#FFFFFF"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+      <path d="M -86,0 C -78,16 -70,28 -56,30" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M -70,-26 C -62,-8 -54,8 -44,14" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+
+      <path
+        d="M 76,-50 C 68,-25 82,-10 90,12 C 96,28 85,42 68,44 C 50,46 42,32 38,15 C 34,0 42,-22 52,-42 C 56,-50 70,-56 76,-50 Z"
+        fill="#8B1E22"
+        stroke="#FFFFFF"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+      <path d="M 86,0 C 78,16 70,28 56,30" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M 70,-26 C 62,-8 54,8 44,14" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+    </g>
+
+    {/* BOTTOM RIBBON BANNER */}
+    <path
+      d="M 60,320 Q 200,305 340,320 L 326,382 Q 200,366 74,382 Z"
+      fill="url(#ribbonGrad)"
+      stroke="#FFFFFF"
+      strokeWidth="3.5"
+    />
+    <path
+      d="M 60,320 Q 200,305 340,320 L 326,382 Q 200,366 74,382 Z"
+      fill="url(#twill)"
+      opacity="0.35"
+    />
+    <path d="M 66,324 Q 200,309 334,324" fill="none" stroke="#FFFFFF" strokeWidth="2" />
+    <path d="M 78,378 Q 200,362 322,378" fill="none" stroke="#FFFFFF" strokeWidth="2" />
+
+    {/* Ribbon Text Line 1: KBR */}
+    <text x="200" y="345" textAnchor="middle" fill="#FFFFFF" fontFamily="'Arial Black', 'Impact', sans-serif" fontWeight="900" fontSize="25" letterSpacing="2">
+      KBR
+    </text>
+
+    {/* Ribbon Text Line 2: KOTA BARU ROLEPLAY */}
+    <text fill="#FFFFFF" fontFamily="'Arial Black', 'Impact', sans-serif" fontWeight="900" fontSize="16" letterSpacing="2.8">
+      <textPath href="#bottomKotbarPath" startOffset="50%" textAnchor="middle">
+        KOTA BARU ROLEPLAY
       </textPath>
     </text>
   </svg>
 );
 
 /**
- * Logo Kota Cendana (Cendana Roleplay Monument & Pink Skyline)
+ * Official Logo Kota Baru Roleplay (KBR)
+ * Exact vector badge matching the uploaded KB.png:
+ * - Stylized 3D monogram combining letters K, B, and R
+ * - Glossy red top half with bevel highlights
+ * - Crisp white bottom half with red contours
+ * - Center angled 3D chevron
+ * - Typography: "KOTA BARU" (bold solid red) & "ROLEPLAY" (clean outlined style)
  */
-export const LogoKotaCendana: React.FC<{ className?: string }> = ({ className = 'w-11 h-11' }) => (
-  <svg viewBox="0 0 200 200" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="100" cy="96" r="76" fill="#FFE8F0" />
-    {/* Pink & Emerald City Buildings */}
-    <rect x="36" y="78" width="22" height="62" rx="2" fill="#F06595" />
-    <rect x="40" y="84" width="14" height="50" fill="#20C997" fillOpacity="0.45" />
-    <rect x="64" y="54" width="24" height="86" rx="2" fill="#E83E8C" />
-    <rect x="114" y="58" width="24" height="82" rx="2" fill="#E83E8C" />
-    <rect x="118" y="66" width="16" height="66" fill="#20C997" fillOpacity="0.55" />
-    <rect x="142" y="82" width="20" height="58" rx="2" fill="#F06595" />
+export const LogoKotaBaruRoleplay: React.FC<{ className?: string }> = ({ className = 'w-11 h-11' }) => (
+  <svg viewBox="0 0 320 320" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="kbRedGloss" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#EF4444" />
+        <stop offset="40%" stopColor="#DC2626" />
+        <stop offset="100%" stopColor="#991B1B" />
+      </linearGradient>
 
-    {/* Green Trees Base */}
-    <circle cx="52" cy="132" r="16" fill="#2ED573" />
-    <circle cx="76" cy="128" r="18" fill="#20C997" />
-    <circle cx="124" cy="128" r="18" fill="#20C997" />
-    <circle cx="148" cy="132" r="16" fill="#2ED573" />
+      <linearGradient id="kbWhiteGloss" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#FFFFFF" />
+        <stop offset="60%" stopColor="#F8FAFC" />
+        <stop offset="100%" stopColor="#E2E8F0" />
+      </linearGradient>
 
-    {/* Central Monument Tower */}
-    <path d="M92 48H108L112 126H88L92 48Z" fill="#FFFFFF" stroke="#D63384" strokeWidth="2.5" />
-    <rect x="80" y="126" width="40" height="10" rx="2" fill="#FFF5F8" stroke="#D63384" strokeWidth="2" />
-    {/* Crown Leaf on Monument */}
-    <path d="M100 22C94 30 94 38 100 44C106 38 106 30 100 22Z" fill="#2ED573" stroke="#15803D" strokeWidth="1.5" />
-    <rect x="90" y="42" width="20" height="7" rx="2" fill="#F06595" />
+      <clipPath id="kbClipTopHalf">
+        <rect x="0" y="0" width="320" height="134" />
+      </clipPath>
 
-    {/* Ribbon Banner */}
-    <rect x="24" y="140" width="152" height="28" rx="8" fill="#E83E8C" stroke="#FFFFFF" strokeWidth="2.5" />
+      <clipPath id="kbClipBottomHalf">
+        <rect x="0" y="134" width="320" height="186" />
+      </clipPath>
+
+      <filter id="kb3dShadow" x="-10%" y="-10%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#450A0A" floodOpacity="0.25" />
+      </filter>
+    </defs>
+
+    <g filter="url(#kb3dShadow)">
+      {/* RED TOP HALF */}
+      <g clipPath="url(#kbClipTopHalf)">
+        <path
+          d="M 64,36 L 206,36 C 242,36 256,58 256,86 C 256,116 238,138 206,146 L 254,198 C 258,204 250,214 238,214 L 188,214 L 140,158 L 102,194 L 102,214 L 64,214 Z"
+          fill="url(#kbRedGloss)"
+          stroke="#7F1D1D"
+          strokeWidth="5"
+          strokeLinejoin="round"
+        />
+        {/* Top Inner Cutout (Upper loop of B) */}
+        <path
+          d="M 102,64 L 194,64 C 212,64 220,74 220,88 C 220,102 210,112 192,112 L 102,112 Z"
+          fill="#FFFFFF"
+          stroke="#7F1D1D"
+          strokeWidth="4"
+          strokeLinejoin="round"
+        />
+        {/* Specular Bevel Line */}
+        <path
+          d="M 70,42 L 202,42 C 234,42 248,60 248,86 C 248,110 234,130 204,138"
+          fill="none"
+          stroke="#FECACA"
+          strokeWidth="3"
+          strokeLinecap="round"
+          opacity="0.9"
+        />
+      </g>
+
+      {/* WHITE BOTTOM HALF */}
+      <g clipPath="url(#kbClipBottomHalf)">
+        <path
+          d="M 64,36 L 206,36 C 242,36 256,58 256,86 C 256,116 238,138 206,146 L 254,198 C 258,204 250,214 238,214 L 188,214 L 140,158 L 102,194 L 102,214 L 64,214 Z"
+          fill="url(#kbWhiteGloss)"
+          stroke="#9E1B21"
+          strokeWidth="5"
+          strokeLinejoin="round"
+        />
+        {/* Lower Inner Cutout */}
+        <path
+          d="M 102,130 L 158,130 L 204,188 L 168,188 L 132,146 L 102,174 Z"
+          fill="#FFFFFF"
+          stroke="#9E1B21"
+          strokeWidth="4"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M 70,136 L 70,208 L 96,208 L 96,178 L 134,142 L 180,198 L 230,198"
+          fill="none"
+          stroke="#FFFFFF"
+          strokeWidth="2.5"
+        />
+      </g>
+
+      {/* CENTER K-CHEVRON 3D PRISM */}
+      <polygon
+        points="102,134 196,48 226,48 132,134"
+        fill="url(#kbRedGloss)"
+        stroke="#9E1B21"
+        strokeWidth="3"
+      />
+      <line x1="102" y1="134" x2="226" y2="48" stroke="#FEE2E2" strokeWidth="2.5" strokeLinecap="round" />
+
+      <polygon
+        points="114,134 198,214 168,214 102,148"
+        fill="url(#kbWhiteGloss)"
+        stroke="#9E1B21"
+        strokeWidth="3"
+      />
+      <line x1="114" y1="134" x2="198" y2="214" stroke="#9E1B21" strokeWidth="2.5" strokeLinecap="round" />
+
+      {/* Red / White Mid-line separator */}
+      <line x1="62" y1="134" x2="252" y2="134" stroke="#7F1D1D" strokeWidth="2.5" opacity="0.6" />
+
+      {/* Outer contour stroke */}
+      <path
+        d="M 64,36 L 206,36 C 242,36 256,58 256,86 C 256,116 238,138 206,146 L 254,198 C 258,204 250,214 238,214 L 188,214 L 140,158 L 102,194 L 102,214 L 64,214 Z"
+        fill="none"
+        stroke="#9E1B21"
+        strokeWidth="4.5"
+      />
+    </g>
+
+    {/* TYPOGRAPHY: KOTA BARU */}
     <text
-      x="100"
-      y="159"
+      x="160"
+      y="252"
       textAnchor="middle"
-      fill="#FFFFFF"
-      fontSize="19"
+      fill="#9E1B21"
+      fontFamily="'Arial Black', 'Impact', 'Montserrat', sans-serif"
       fontWeight="900"
-      letterSpacing="2"
-      fontFamily="Poppins, sans-serif"
+      fontSize="24"
+      letterSpacing="4.5"
     >
-      CENDANA
+      KOTA BARU
     </text>
-    <rect x="46" y="166" width="108" height="18" rx="6" fill="#F06595" stroke="#FFFFFF" strokeWidth="1.5" />
+
+    {/* TYPOGRAPHY: ROLEPLAY */}
     <text
-      x="100"
-      y="178"
+      x="160"
+      y="280"
       textAnchor="middle"
       fill="#FFFFFF"
-      fontSize="9.5"
-      fontWeight="700"
-      letterSpacing="2"
-      fontFamily="Poppins, sans-serif"
+      stroke="#9E1B21"
+      strokeWidth="1.8"
+      fontFamily="'Arial Black', 'Impact', 'Montserrat', sans-serif"
+      fontWeight="900"
+      fontSize="20"
+      letterSpacing="5.5"
     >
-      ♥ ROLEPLAY ♥
+      ROLEPLAY
     </text>
   </svg>
 );
 
+// Aliases for clean compatibility across existing imports
+export const LogoParamedicKotaBaru = LogoRSKotaBaru;
+
 /**
- * Generates an official, full-resolution SVG data URL matching the exact uploaded
- * "RUMAH SAKIT CENDANA — REGULATION & MEDICAL SERVICES" poster so it renders at 100% crisp resolution
- * with natural aspect ratio (3:4 vertical poster) and can never break or crop.
+ * Generates an official, full-resolution SVG data URL for
+ * "RUMAH SAKIT KOTA BARU — REGULATION & MEDICAL SERVICES" poster
  */
 export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1260" width="900" height="1260">
   <defs>
     <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFF7FA"/>
-      <stop offset="50%" stop-color="#FCE4EE"/>
-      <stop offset="100%" stop-color="#F9D5E5"/>
+      <stop offset="0%" stop-color="#FFF5F5"/>
+      <stop offset="50%" stop-color="#FEE2E2"/>
+      <stop offset="100%" stop-color="#FECDD3"/>
     </linearGradient>
     <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#FDE68A"/>
       <stop offset="50%" stop-color="#D97706"/>
       <stop offset="100%" stop-color="#B45309"/>
     </linearGradient>
-    <linearGradient id="pinkTitle" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F06595"/>
-      <stop offset="100%" stop-color="#C2255C"/>
+    <linearGradient id="redTitle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#991B1B"/>
     </linearGradient>
     <linearGradient id="crimGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#881337"/>
       <stop offset="100%" stop-color="#9F1239"/>
     </linearGradient>
     <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#881337" flood-opacity="0.12"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#450A0A" flood-opacity="0.2"/>
     </filter>
   </defs>
 
   <!-- Background -->
   <rect width="900" height="1260" fill="url(#bgGrad)"/>
 
-  <!-- Subtle Monument Watermark Silhouette -->
-  <g opacity="0.12" transform="translate(250, 280)">
-    <rect x="60" y="180" width="60" height="280" fill="#E83E8C"/>
-    <rect x="130" y="120" width="65" height="340" fill="#D63384"/>
-    <rect x="215" y="130" width="65" height="330" fill="#D63384"/>
-    <rect x="290" y="190" width="55" height="270" fill="#E83E8C"/>
-    <polygon points="185,40 215,40 225,460 175,460" fill="#FFFFFF" stroke="#E83E8C" stroke-width="4"/>
+  <!-- Subtle Watermark Silhouette -->
+  <g opacity="0.10" transform="translate(250, 280)">
+    <rect x="60" y="180" width="60" height="280" fill="#9E1B21"/>
+    <rect x="130" y="120" width="65" height="340" fill="#8B1E22"/>
+    <rect x="215" y="130" width="65" height="330" fill="#8B1E22"/>
+    <rect x="290" y="190" width="55" height="270" fill="#9E1B21"/>
+    <polygon points="185,40 215,40 225,460 175,460" fill="#FFFFFF" stroke="#9E1B21" stroke-width="4"/>
   </g>
 
-  <!-- Top Header Emblem Left (Paramedic Cendana) -->
+  <!-- Top Header Emblem Left (Paramedic Kota Baru) -->
   <g transform="translate(42, 42)">
-    <circle cx="72" cy="72" r="70" fill="#FFF5F8" stroke="#E83E8C" stroke-width="4" filter="url(#softShadow)"/>
-    <circle cx="72" cy="72" r="62" fill="#FFFFFF" stroke="#F4A5C8" stroke-width="2"/>
-    <rect x="61" y="42" width="22" height="60" rx="5" fill="#E83E8C"/>
-    <rect x="42" y="61" width="60" height="22" rx="5" fill="#E83E8C"/>
+    <circle cx="72" cy="72" r="70" fill="#8B1E22" stroke="#FFFFFF" stroke-width="3" filter="url(#softShadow)"/>
+    <circle cx="72" cy="72" r="62" fill="#671014" stroke="#DC2626" stroke-width="2"/>
+    <rect x="61" y="42" width="22" height="60" rx="5" fill="#DC2626" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="42" y="61" width="60" height="22" rx="5" fill="#DC2626" stroke="#FFFFFF" stroke-width="2"/>
     <path d="M45 72 H62 L66 64 L72 82 L77 60 L82 78 L86 72 H99" stroke="#FFFFFF" stroke-width="2.5" fill="none"/>
-    <text x="72" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#E83E8C" letter-spacing="2">PARAMEDIC</text>
-    <text x="72" y="127" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#E83E8C" letter-spacing="2">CENDANA</text>
+    <text x="72" y="27" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="11" fill="#FFFFFF" letter-spacing="1.5">PARAMEDIC</text>
+    <text x="72" y="127" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="11" fill="#FFFFFF" letter-spacing="1.5">KOTA BARU</text>
   </g>
 
-  <!-- Top Header Emblem Right (Kota Cendana) -->
+  <!-- Top Header Emblem Right (Kota Baru Roleplay Official KB) -->
   <g transform="translate(715, 42)">
-    <circle cx="72" cy="72" r="66" fill="#FFE3EE" stroke="#E83E8C" stroke-width="3" filter="url(#softShadow)"/>
-    <rect x="35" y="48" width="18" height="48" fill="#F06595"/>
-    <rect x="56" y="34" width="18" height="62" fill="#E83E8C"/>
-    <rect x="92" y="38" width="18" height="58" fill="#20C997"/>
-    <rect x="67" y="20" width="12" height="76" fill="#FFFFFF" stroke="#D63384" stroke-width="2"/>
-    <rect x="18" y="94" width="108" height="24" rx="6" fill="#E83E8C"/>
-    <text x="72" y="111" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="15" fill="#FFFFFF" letter-spacing="1.5">CENDANA</text>
-    <rect x="32" y="118" width="80" height="15" rx="4" fill="#F06595"/>
-    <text x="72" y="129" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="8" fill="#FFFFFF" letter-spacing="1">ROLEPLAY</text>
+    <circle cx="72" cy="72" r="66" fill="#8B1E22" stroke="#FFFFFF" stroke-width="3" filter="url(#softShadow)"/>
+    <circle cx="72" cy="72" r="58" fill="#671014" stroke="#DC2626" stroke-width="1.5"/>
+    <!-- Stylized KB Monogram (Merah Putih 3D) -->
+    <path d="M 46,38 L 86,38 C 96,38 102,44 102,52 C 102,60 96,66 88,68 L 102,86 C 104,89 101,92 97,92 L 82,92 L 68,74 L 56,86 L 56,92 L 46,92 Z" fill="#DC2626" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M 46,65 L 102,65 L 102,92 L 46,92 Z" fill="#FFFFFF" clip-path="polygon(46,65 102,65 102,92 46,92)"/>
+    <path d="M 56,46 L 82,46 C 88,46 92,49 92,54 C 92,59 88,62 82,62 L 56,62 Z" fill="#671014"/>
+    <text x="72" y="112" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="12.5" fill="#FFFFFF" letter-spacing="1.5">KOTA BARU</text>
+    <rect x="28" y="118" width="88" height="15" rx="4" fill="#7F1D1D" stroke="#FFFFFF" stroke-width="1"/>
+    <text x="72" y="129" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="8.5" fill="#FFFFFF" letter-spacing="1">ROLEPLAY</text>
   </g>
 
   <!-- Main Header Titles -->
   <text x="450" y="96" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="56" fill="url(#goldGrad)" stroke="#78350F" stroke-width="2" filter="url(#softShadow)">RUMAH SAKIT</text>
-  <text x="450" y="168" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="72" fill="url(#pinkTitle)" stroke="#78350F" stroke-width="2.5" filter="url(#softShadow)">CENDANA</text>
+  <text x="450" y="168" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="70" fill="url(#redTitle)" stroke="#78350F" stroke-width="2.5" filter="url(#softShadow)">KOTA BARU</text>
   <text x="450" y="210" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="25" fill="#1E293B" letter-spacing="1">REGULATION &amp; MEDICAL SERVICES</text>
 
   <!-- LEFT COLUMN -->
@@ -198,11 +393,11 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
     <text x="197" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="16.5" fill="#1E293B">BIAYA TREATMENT &amp; PERTOLONGAN PERTAMA</text>
 
     <g transform="translate(12, 68)" font-family="Arial, sans-serif" font-weight="bold" font-size="18.5" fill="#1E293B">
-      <rect x="0" y="-16" width="22" height="20" rx="4" fill="#9F1239"/>
+      <rect x="0" y="-16" width="22" height="20" rx="4" fill="#991B1B"/>
       <text x="11" y="-1" text-anchor="middle" fill="#FFFFFF" font-size="15">+</text>
       <text x="32" y="0">Treatment ($100 CASH)</text>
 
-      <circle cx="11" cy="28" r="11" fill="#9F1239"/>
+      <circle cx="11" cy="28" r="11" fill="#991B1B"/>
       <text x="11" y="33" text-anchor="middle" fill="#FFFFFF" font-size="12">♥</text>
       <text x="32" y="34">Revive Areas :</text>
 
@@ -212,11 +407,11 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
         <text x="32" y="120">Paleto $140</text>
         <text x="32" y="148">Kota $160</text>
 
-        <text x="200" y="64" fill="#9F1239">▲</text>
+        <text x="200" y="64" fill="#991B1B">▲</text>
         <text x="218" y="64" font-size="16">Laut/Gunung/Perburuan $180</text>
-        <text x="200" y="92" fill="#9F1239">📍</text>
+        <text x="200" y="92" fill="#991B1B">📍</text>
         <text x="218" y="92" font-size="16">Cayo Perico/Pulau $200</text>
-        <text x="200" y="124" fill="#9F1239">🧾</text>
+        <text x="200" y="124" fill="#991B1B">🧾</text>
         <text x="218" y="124" font-size="16.5">INVOICE</text>
       </g>
     </g>
@@ -229,15 +424,15 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
     <text x="197" y="46" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="13.5" fill="#FDE68A">(ZONA KHUSUS PULAU CAYO &amp; MAGIC LAND)</text>
 
     <g transform="translate(12, 84)" font-family="Arial, sans-serif" font-weight="bold" font-size="18" fill="#1E293B">
-      <text x="0" y="0" fill="#9F1239">⚔</text>
+      <text x="0" y="0" fill="#991B1B">⚔</text>
       <text x="30" y="0">Peperangan for conflict/crime</text>
-      <text x="0" y="30" fill="#9F1239">👮</text>
+      <text x="0" y="30" fill="#991B1B">👮</text>
       <text x="30" y="30">Perampokan, $150 /orang</text>
-      <text x="0" y="60" fill="#9F1239">🔫</text>
+      <text x="0" y="60" fill="#991B1B">🔫</text>
       <text x="30" y="60">Perang Jalanan $150 /orang</text>
-      <text x="0" y="90" fill="#9F1239">💥</text>
+      <text x="0" y="90" fill="#991B1B">💥</text>
       <text x="30" y="90">Perang Besar, $150 /orang</text>
-      <text x="0" y="120" fill="#9F1239">🛡</text>
+      <text x="0" y="120" fill="#991B1B">🛡</text>
       <text x="30" y="120">Penyanderaan, $150 /orang</text>
     </g>
   </g>
@@ -248,19 +443,19 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
     <text x="197" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="18" fill="#1E293B">BIAYA OPERASI &amp; KONSULTASI</text>
 
     <g transform="translate(12, 74)" font-family="Arial, sans-serif" font-weight="bold" font-size="18" fill="#1E293B">
-      <text x="0" y="0" fill="#9F1239">✂</text>
+      <text x="0" y="0" fill="#991B1B">✂</text>
       <text x="30" y="0">Minor Op $800</text>
-      <text x="0" y="28" fill="#9F1239">✂</text>
+      <text x="0" y="28" fill="#991B1B">✂</text>
       <text x="30" y="28">Mayor Op $1.000</text>
-      <text x="0" y="56" fill="#9F1239">✨</text>
+      <text x="0" y="56" fill="#991B1B">✨</text>
       <text x="30" y="56">Plastik $2.500</text>
       <text x="215" y="56" font-size="16.5">(Biaya Per 1 Anak $300)</text>
-      <text x="0" y="84" fill="#9F1239">🤱</text>
+      <text x="0" y="84" fill="#991B1B">🤱</text>
       <text x="30" y="84">Melahirkan Normal $800</text>
       <text x="30" y="112">Melahirkan Caesar $1,000</text>
-      <text x="0" y="140" fill="#9F1239">🩺</text>
+      <text x="0" y="140" fill="#991B1B">🩺</text>
       <text x="30" y="140">Dr Umum $150 CASH</text>
-      <text x="0" y="168" fill="#9F1239">👨‍⚕️</text>
+      <text x="0" y="168" fill="#991B1B">👨‍⚕️</text>
       <text x="30" y="168">Dr Spesialis $300 CASH</text>
     </g>
   </g>
@@ -272,18 +467,18 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
     <text x="197" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="18" fill="#1E293B">BIAYA RAWAT INAP &amp; SURAT MEDIS</text>
 
     <g transform="translate(12, 74)" font-family="Arial, sans-serif" font-weight="bold" font-size="18" fill="#1E293B">
-      <text x="0" y="0" fill="#9F1239">🛏</text>
+      <text x="0" y="0" fill="#991B1B">🛏</text>
       <text x="32" y="0">Kamar Reguler $60/hari</text>
-      <text x="0" y="34" fill="#9F1239">🛏</text>
+      <text x="0" y="34" fill="#991B1B">🛏</text>
       <text x="32" y="34">VIP $80/hari</text>
-      <text x="0" y="68" fill="#9F1239">🛏</text>
+      <text x="0" y="68" fill="#991B1B">🛏</text>
       <text x="32" y="68">VVIP $100/hari</text>
 
-      <text x="225" y="0" fill="#9F1239">🧪</text>
+      <text x="225" y="0" fill="#991B1B">🧪</text>
       <text x="252" y="0">Uji Lab $3.000</text>
-      <text x="225" y="34" fill="#9F1239">📋</text>
+      <text x="225" y="34" fill="#991B1B">📋</text>
       <text x="252" y="34">SK Sehat $500</text>
-      <text x="225" y="68" fill="#9F1239">🧠</text>
+      <text x="225" y="68" fill="#991B1B">🧠</text>
       <text x="252" y="68">SK Psikologi $750</text>
     </g>
   </g>
@@ -295,22 +490,22 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
     <text x="197" y="47" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="17.5" fill="#1E293B">&amp; PEMAKAMAN</text>
 
     <g transform="translate(12, 86)" font-family="Arial, sans-serif" font-weight="bold" font-size="17.5" fill="#1E293B">
-      <text x="0" y="0" fill="#9F1239">🪪</text>
+      <text x="0" y="0" fill="#991B1B">🪪</text>
       <text x="30" y="0">Kartu Pasien $1,500</text>
       <text x="30" y="22" font-size="15">(Masa berlaku 1 bulan)</text>
-      <text x="0" y="50" fill="#9F1239">🔄</text>
+      <text x="0" y="50" fill="#991B1B">🔄</text>
       <text x="30" y="50">Perpanjang $1,000</text>
-      <text x="0" y="80" fill="#9F1239">🔍</text>
+      <text x="0" y="80" fill="#991B1B">🔍</text>
       <text x="30" y="80">Autopsi $2.500</text>
-      <text x="0" y="110" fill="#9F1239">👁</text>
+      <text x="0" y="110" fill="#991B1B">👁</text>
       <text x="30" y="110">Visum $1.500</text>
 
-      <text x="215" y="0" fill="#9F1239">📄</text>
+      <text x="215" y="0" fill="#991B1B">📄</text>
       <text x="242" y="0">Visum $1.500</text>
-      <text x="215" y="34" fill="#9F1239">🪦</text>
+      <text x="215" y="34" fill="#991B1B">🪦</text>
       <text x="242" y="34">Pemakaman Umum</text>
       <text x="242" y="56">$2.000</text>
-      <text x="215" y="86" fill="#9F1239">💉</text>
+      <text x="215" y="86" fill="#991B1B">💉</text>
       <text x="242" y="86">Imunisasi anak $750</text>
     </g>
   </g>
@@ -321,11 +516,11 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
     <text x="197" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="16.5" fill="#1E293B">REGULASI PERBAN &amp; OBAT-OBATAN (CASH)</text>
 
     <g transform="translate(12, 72)" font-family="Arial, sans-serif" font-weight="bold" font-size="18" fill="#1E293B">
-      <text x="0" y="0" fill="#9F1239">💊</text>
+      <text x="0" y="0" fill="#991B1B">💊</text>
       <text x="30" y="0">Paket Kecil $150</text>
-      <text x="0" y="30" fill="#9F1239">🧰</text>
+      <text x="0" y="30" fill="#991B1B">🧰</text>
       <text x="30" y="30">Paket Sedang $200</text>
-      <text x="215" y="0" fill="#9F1239">🧰</text>
+      <text x="215" y="0" fill="#991B1B">🧰</text>
       <text x="245" y="0">Paket Besar $250</text>
     </g>
 
@@ -372,27 +567,25 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
 
 /**
  * Generates a Secondary Regulation Image (Wide Landscape 16:9 Infographic)
- * so we can demonstrate and verify that ALL regulation images (vertical AND landscape)
- * render 100% intact with object-contain and never get cropped.
  */
 export const SECONDARY_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
   <defs>
     <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FFF0F6"/>
-      <stop offset="100%" stop-color="#FFE3EC"/>
+      <stop offset="0%" stop-color="#FFF5F5"/>
+      <stop offset="100%" stop-color="#FEE2E2"/>
     </linearGradient>
   </defs>
-  <rect width="1200" height="675" fill="url(#bg2)" stroke="#E83E8C" stroke-width="8"/>
-  <rect x="24" y="24" width="1152" height="627" rx="20" fill="none" stroke="#F06595" stroke-width="2"/>
+  <rect width="1200" height="675" fill="url(#bg2)" stroke="#9E1B21" stroke-width="8"/>
+  <rect x="24" y="24" width="1152" height="627" rx="20" fill="none" stroke="#DC2626" stroke-width="2"/>
 
-  <text x="600" y="90" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="38" fill="#D63384">STANDAR PROSEDUR &amp; ETIKA PASIEN RS CENDANA</text>
+  <text x="600" y="90" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="38" fill="#9E1B21">STANDAR PROSEDUR &amp; ETIKA PASIEN RS KOTA BARU</text>
   <text x="600" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#475569">PANDUAN RESMI PELAYANAN INSTALASI GAWAT DARURAT &amp; POLIKLINIK SPESIALIS</text>
 
   <!-- 3 Columns -->
   <g transform="translate(60, 175)">
-    <rect x="0" y="0" width="330" height="420" rx="18" fill="#FFFFFF" stroke="#F4A5C8" stroke-width="3"/>
-    <rect x="0" y="0" width="330" height="56" rx="18" fill="#E83E8C"/>
+    <rect x="0" y="0" width="330" height="420" rx="18" fill="#FFFFFF" stroke="#FECDD3" stroke-width="3"/>
+    <rect x="0" y="0" width="330" height="56" rx="18" fill="#9E1B21"/>
     <text x="165" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#FFFFFF">01. ZONA AMAN MEDIS</text>
     <g font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#334155" transform="translate(24, 95)">
       <text x="0" y="0">• Area Rumah Sakit adalah Zona Netral</text>
@@ -405,8 +598,8 @@ export const SECONDARY_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${e
   </g>
 
   <g transform="translate(435, 175)">
-    <rect x="0" y="0" width="330" height="420" rx="18" fill="#FFFFFF" stroke="#F4A5C8" stroke-width="3"/>
-    <rect x="0" y="0" width="330" height="56" rx="18" fill="#D63384"/>
+    <rect x="0" y="0" width="330" height="420" rx="18" fill="#FFFFFF" stroke="#FECDD3" stroke-width="3"/>
+    <rect x="0" y="0" width="330" height="56" rx="18" fill="#7F1D1D"/>
     <text x="165" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#FFFFFF">02. ADMINISTRASI &amp; KLAIM</text>
     <g font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#334155" transform="translate(24, 95)">
       <text x="0" y="0">• Tunjukkan Kartu Pasien / SKWB aktif</text>
@@ -419,8 +612,8 @@ export const SECONDARY_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${e
   </g>
 
   <g transform="translate(810, 175)">
-    <rect x="0" y="0" width="330" height="420" rx="18" fill="#FFFFFF" stroke="#20C997" stroke-width="3"/>
-    <rect x="0" y="0" width="330" height="56" rx="18" fill="#20C997"/>
+    <rect x="0" y="0" width="330" height="420" rx="18" fill="#FFFFFF" stroke="#0D9488" stroke-width="3"/>
+    <rect x="0" y="0" width="330" height="56" rx="18" fill="#0D9488"/>
     <text x="165" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#FFFFFF">03. JAM LAYANAN KHUSUS</text>
     <g font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#334155" transform="translate(24, 95)">
       <text x="0" y="0">• IGD &amp; Farmasi: Siaga 24 Jam Penuh</text>
@@ -437,12 +630,12 @@ export const SECONDARY_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${e
 /**
  * Generates clean SVG Avatar Data URL for Staff & Doctors (Zero external URL dependency)
  */
-export function createStaffAvatarSvg(initials: string, bgHex: string = '#E83E8C'): string {
+export function createStaffAvatarSvg(initials: string, bgHex: string = '#9E1B21'): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="${bgHex}"/>
-        <stop offset="100%" stop-color="#9F1239"/>
+        <stop offset="100%" stop-color="#671014"/>
       </linearGradient>
     </defs>
     <rect width="120" height="120" rx="60" fill="url(#g)"/>

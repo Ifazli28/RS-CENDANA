@@ -233,8 +233,8 @@ export const DutyManagementView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-pink-100 pb-4">
+      <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-red-100 pb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Discord Duty Parser — Input Log Absensi</h2>
             <p className="text-xs text-slate-500">
@@ -244,7 +244,7 @@ export const DutyManagementView: React.FC = () => {
           <button
             type="button"
             onClick={() => setRawLogText(SAMPLE_DISCORD_DUTY_LOG)}
-            className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] border border-pink-200 text-xs font-semibold text-[#D63384] cursor-pointer self-start"
+            className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] border border-red-200 text-xs font-semibold text-[#7F1D1D] cursor-pointer self-start"
           >
             Muat Contoh Log Discord
           </button>
@@ -267,7 +267,7 @@ export const DutyManagementView: React.FC = () => {
           <button
             type="button"
             onClick={handleParseDiscordLogs}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
           >
             <Play className="w-4 h-4" />
             <span>Proses & Tampilkan Preview Validasi</span>
@@ -275,7 +275,7 @@ export const DutyManagementView: React.FC = () => {
         </div>
 
         {parsedPreview && (
-          <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-200 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-red-200 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900">
                 Hasil Preview & Pencocokan Database Staff (Wajib Konfirmasi Sebelum Simpan)
@@ -286,10 +286,10 @@ export const DutyManagementView: React.FC = () => {
               </span>
             </div>
 
-            <div className="overflow-x-auto bg-white rounded-xl border border-pink-100">
+            <div className="overflow-x-auto bg-white rounded-xl border border-red-100">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-pink-100 bg-slate-50 text-slate-500">
+                  <tr className="border-b border-red-100 bg-slate-50 text-slate-500">
                     <th className="py-2.5 px-3">Nama di Log</th>
                     <th className="py-2.5 px-3">Pekerjaan</th>
                     <th className="py-2.5 px-3">Durasi</th>
@@ -302,7 +302,7 @@ export const DutyManagementView: React.FC = () => {
                     <tr key={idx}>
                       <td className="py-2.5 px-3 font-semibold text-slate-900">{item.rawName}</td>
                       <td className="py-2.5 px-3 text-slate-600">{item.jobTitle}</td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#D63384]">
+                      <td className="py-2.5 px-3 font-mono font-bold text-[#7F1D1D]">
                         {item.durationText} ({item.durationMinutes} mnt)
                       </td>
                       <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500">
@@ -346,7 +346,7 @@ export const DutyManagementView: React.FC = () => {
       </div>
 
       {/* Riwayat Sesi Log Duty Terbaru */}
-      <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs space-y-4">
+      <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900">Riwayat Sesi Log Duty Terbaru</h3>
@@ -509,7 +509,7 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Control Header */}
-      <div className="bg-white rounded-2xl border border-pink-100 p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
+      <div className="bg-white rounded-2xl border border-red-100 p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
             Rekap Absensi Mingguan Tenaga Medis
@@ -520,13 +520,13 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1.5 bg-[#FFF5F8] px-3 py-1.5 rounded-xl border border-pink-100">
+          <div className="flex items-center gap-1.5 bg-[#FFF5F8] px-3 py-1.5 rounded-xl border border-red-100">
             <span className="text-[11px] font-bold text-slate-600">Mulai Senin:</span>
             <input
               type="date"
               value={weekStartStr}
               onChange={(e) => setWeekStartStr(e.target.value)}
-              className="text-xs font-mono font-bold text-[#D63384] bg-transparent focus:outline-none cursor-pointer"
+              className="text-xs font-mono font-bold text-[#7F1D1D] bg-transparent focus:outline-none cursor-pointer"
             />
           </div>
 
@@ -772,7 +772,7 @@ export const MonthlyAttendanceRecapView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-pink-100 p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
+      <div className="bg-white rounded-2xl border border-red-100 p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
             Rekap Absensi Bulanan Tenaga Medis
@@ -783,13 +783,13 @@ export const MonthlyAttendanceRecapView: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1.5 bg-[#FFF5F8] px-3 py-1.5 rounded-xl border border-pink-100">
+          <div className="flex items-center gap-1.5 bg-[#FFF5F8] px-3 py-1.5 rounded-xl border border-red-100">
             <span className="text-[11px] font-bold text-slate-600">Bulan:</span>
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="text-xs font-mono font-bold text-[#D63384] bg-transparent focus:outline-none cursor-pointer"
+              className="text-xs font-mono font-bold text-[#7F1D1D] bg-transparent focus:outline-none cursor-pointer"
             />
           </div>
 
@@ -1003,7 +1003,7 @@ export const PayrollManagementView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header & Tab Switcher */}
-      <div className="bg-white p-5 rounded-2xl border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
             Sistem Gaji Berdasarkan Jabatan & Kalkulasi Target Duty Mingguan
@@ -1015,13 +1015,13 @@ export const PayrollManagementView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100 self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-red-100 self-start sm:self-auto">
           <button
             onClick={() => setActiveTab('role-config')}
             className={`px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'role-config'
                 ? 'bg-[#E83E8C] text-white shadow-xs'
-                : 'text-slate-600 hover:text-[#D63384]'
+                : 'text-slate-600 hover:text-[#7F1D1D]'
             }`}
           >
             <Settings className="w-3.5 h-3.5" />
@@ -1032,7 +1032,7 @@ export const PayrollManagementView: React.FC = () => {
             className={`px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'weekly-payroll'
                 ? 'bg-[#E83E8C] text-white shadow-xs'
-                : 'text-slate-600 hover:text-[#D63384]'
+                : 'text-slate-600 hover:text-[#7F1D1D]'
             }`}
           >
             <DollarSign className="w-3.5 h-3.5" />
@@ -1044,7 +1044,7 @@ export const PayrollManagementView: React.FC = () => {
       {/* TAB 1: PENGATURAN SKEMA GAJI PER JABATAN */}
       {activeTab === 'role-config' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#FFF5F8]/50">
+          <div className="p-5 border-b border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#FFF5F8]/50">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
                 Tabel Pengaturan Gaji Utuh, Gaji Per Jam, Target Duty Mingguan & Bonus Kelipatan Jam
@@ -1073,7 +1073,7 @@ export const PayrollManagementView: React.FC = () => {
                 {[...roleSalaryConfigs]
                   .sort((a, b) => b.level - a.level)
                   .map((cfg) => (
-                    <tr key={cfg.role} className="hover:bg-pink-50/30 transition">
+                    <tr key={cfg.role} className="hover:bg-red-50/60/30 transition">
                       <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
                         {cfg.level}
                       </td>
@@ -1092,13 +1092,13 @@ export const PayrollManagementView: React.FC = () => {
                       <td className="py-3.5 px-4 text-center font-mono text-slate-700">
                         Setiap +{cfg.bonusStepHours} Jam
                       </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-[#D63384]">
+                      <td className="py-3.5 px-4 text-right font-mono font-bold text-[#7F1D1D]">
                         +${cfg.bonusPerStepAmount.toLocaleString()}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <button
                           onClick={() => setEditingRoleConfig({ ...cfg })}
-                          className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] border border-pink-200 text-xs font-bold cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] border border-red-200 text-xs font-bold cursor-pointer"
                         >
                           Atur Skema
                         </button>
@@ -1114,7 +1114,7 @@ export const PayrollManagementView: React.FC = () => {
       {/* TAB 2: KALKULASI GAJI STAFF BERDASARKAN JAM DUTY MINGGUAN */}
       {activeTab === 'weekly-payroll' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FFF5F8]/50">
+          <div className="p-5 border-b border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FFF5F8]/50">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
                 Kalkulasi Otomatis Gaji & Bonus Mingguan Seluruh Staff Aktif
@@ -1125,7 +1125,7 @@ export const PayrollManagementView: React.FC = () => {
             </div>
             <button
               onClick={handleSyncAllCalculatedToPayroll}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer self-start sm:self-auto"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer self-start sm:self-auto"
             >
               Terbitkan / Update Semua Slip Gaji ke Database
             </button>
@@ -1148,10 +1148,10 @@ export const PayrollManagementView: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs sm:text-sm tabular-nums">
                 {calculatedStaffPayrollRows.map((row) => (
-                  <tr key={row.staff.id} className="hover:bg-pink-50/30 transition">
+                  <tr key={row.staff.id} className="hover:bg-red-50/60/30 transition">
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-slate-900">{row.staff.name}</div>
-                      <div className="text-[11px] text-[#E83E8C] font-semibold">
+                      <div className="text-[11px] text-[#9E1B21] font-semibold">
                         {row.staff.role}
                       </div>
                     </td>
@@ -1218,7 +1218,7 @@ export const PayrollManagementView: React.FC = () => {
                             paymentStatus: row.paymentStatus,
                           })
                         }
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
                       >
                         Detail / Bayar
                       </button>
@@ -1238,11 +1238,11 @@ export const PayrollManagementView: React.FC = () => {
           onClick={() => setEditingRoleConfig(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-lg w-full space-y-4 shadow-xl"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-lg w-full space-y-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-pink-100 pb-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#E83E8C]">
+            <div className="border-b border-red-100 pb-3">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#9E1B21]">
                 LEVEL {editingRoleConfig.level} · PENGATURAN SKEMA GAJI JABATAN
               </span>
               <h3 className="text-lg font-bold text-slate-900">{editingRoleConfig.role}</h3>
@@ -1363,7 +1363,7 @@ export const PayrollManagementView: React.FC = () => {
                   updateRoleSalaryConfig(editingRoleConfig);
                   setEditingRoleConfig(null);
                 }}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-bold cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold cursor-pointer"
               >
                 Simpan Skema Jabatan
               </button>
@@ -1379,7 +1379,7 @@ export const PayrollManagementView: React.FC = () => {
           onClick={() => setEditingStaffPay(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4 shadow-xl"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-bold text-slate-900">
@@ -1535,7 +1535,7 @@ export const RegulationManagementView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Regulation Management (Heads+)</h2>
           <p className="text-xs text-slate-500">
@@ -1558,7 +1558,7 @@ export const RegulationManagementView: React.FC = () => {
             setDescription('');
             setImageUrl(regulations[0]?.imageUrl || '');
           }}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Upload Regulasi Baru</span>
@@ -1575,7 +1575,7 @@ export const RegulationManagementView: React.FC = () => {
             );
             setEditingReg(null);
           }}
-          className="bg-white rounded-2xl border border-pink-200 p-6 space-y-4"
+          className="bg-white rounded-2xl border border-red-200 p-6 space-y-4"
         >
           <h3 className="text-base font-bold text-slate-900">
             {editingReg.id ? 'Ganti Gambar / Perbarui Regulasi' : 'Upload Regulasi Pengobatan Baru'}
@@ -1616,9 +1616,9 @@ export const RegulationManagementView: React.FC = () => {
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               Upload / Ganti Gambar Poster Regulasi (JPG / PNG / WebP)
             </label>
-            <label className="flex items-center justify-between px-4 py-3 rounded-xl border border-dashed border-pink-300 bg-[#FFF5F8] text-xs cursor-pointer">
+            <label className="flex items-center justify-between px-4 py-3 rounded-xl border border-dashed border-red-300 bg-[#FFF5F8] text-xs cursor-pointer">
               <span>Klik untuk memilih file gambar regulasi baru...</span>
-              <Upload className="w-4 h-4 text-[#E83E8C]" />
+              <Upload className="w-4 h-4 text-[#9E1B21]" />
               <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
             </label>
           </div>
@@ -1642,7 +1642,7 @@ export const RegulationManagementView: React.FC = () => {
 
       <div className="space-y-6">
         {regulations.map((reg) => (
-          <div key={reg.id} className="bg-white rounded-2xl border border-pink-100 p-6 space-y-4">
+          <div key={reg.id} className="bg-white rounded-2xl border border-red-100 p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="text-base font-bold text-slate-900">{reg.title}</h3>
@@ -1658,14 +1658,14 @@ export const RegulationManagementView: React.FC = () => {
                   setDescription(reg.description);
                   setImageUrl(reg.imageUrl);
                 }}
-                className="px-3.5 py-2 rounded-xl bg-[#FFF5F8] border border-pink-200 text-xs font-semibold text-[#D63384] hover:bg-pink-100 cursor-pointer self-start"
+                className="px-3.5 py-2 rounded-xl bg-[#FFF5F8] border border-red-200 text-xs font-semibold text-[#7F1D1D] hover:bg-red-100 cursor-pointer self-start"
               >
                 Ganti Gambar / Edit Regulasi
               </button>
             </div>
             <p className="text-xs sm:text-sm text-slate-600">{reg.description}</p>
 
-            <div className="w-full rounded-xl bg-[#FFF5F8] border border-pink-100 p-4 flex items-center justify-center">
+            <div className="w-full rounded-xl bg-[#FFF5F8] border border-red-100 p-4 flex items-center justify-center">
               <img
                 src={reg.imageUrl}
                 alt={reg.title}

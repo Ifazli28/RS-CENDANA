@@ -467,7 +467,7 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
               </div>
             </div>
             <p className="text-xs text-slate-500 pt-1">
-              Data hasil pemeriksaan beserta Sertifikat Resmi telah otomatis tersimpan ke rekam medis RS Cendana dan dapat diunduh dalam format JPEG di Portal Staff.
+              Data hasil pemeriksaan beserta Sertifikat Resmi telah otomatis tersimpan ke rekam medis RS Kota Baru dan dapat diunduh dalam format JPEG di Portal Staff.
             </p>
           </div>
 

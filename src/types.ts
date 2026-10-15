@@ -209,7 +209,7 @@ export interface RecruitmentApplicant {
   education: string;
   experience: string;
   motivation: string;
-  // Detailed Recruitment Medis Cendana Roleplay (IC & OOC)
+  // Detailed Recruitment Medis Kota Baru Roleplay (IC & OOC)
   icGeneralRequirements?: {
     age17Plus: boolean;
     dedicatedUnderPressure: boolean;

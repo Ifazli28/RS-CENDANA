@@ -42,7 +42,7 @@ export const SKSResultsView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Data Surat Keterangan Sehat (SKS)</h2>
           <p className="text-xs text-slate-500">
@@ -74,11 +74,11 @@ export const SKSResultsView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Nama Lengkap</th>
                 <th className="py-3.5 px-4">Tanggal</th>
                 <th className="py-3.5 px-4">Gender</th>
@@ -98,7 +98,7 @@ export const SKSResultsView: React.FC = () => {
                 </tr>
               ) : (
                 filtered.map((r) => (
-                  <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                  <tr key={r.id} className="hover:bg-red-50/60/30 transition">
                     <td className="py-3.5 px-4 font-semibold text-slate-900">{r.fullName}</td>
                     <td className="py-3.5 px-4 font-mono text-xs text-slate-500 tabular-nums">
                       {r.createdAt}
@@ -121,7 +121,7 @@ export const SKSResultsView: React.FC = () => {
                     <td className="py-3.5 px-4 text-right">
                       <button
                         onClick={() => setSelectedRecord(r)}
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
                       >
                         Detail
                       </button>
@@ -140,10 +140,10 @@ export const SKSResultsView: React.FC = () => {
           onClick={() => setSelectedRecord(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-md w-full space-y-4"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+            <div className="flex items-center justify-between border-b border-red-100 pb-3">
               <h3 className="text-base font-bold text-slate-900">Detail Surat Keterangan Sehat</h3>
               <button onClick={() => setSelectedRecord(null)} className="text-slate-400 hover:text-slate-700">
                 <X className="w-4 h-4" />
@@ -201,7 +201,7 @@ export const PsychologyResultsView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
             Data Hasil & Penilaian Tes & Evaluasi Psikologi
@@ -222,11 +222,11 @@ export const PsychologyResultsView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Nama Peserta</th>
                 <th className="py-3.5 px-4">Tanggal</th>
                 <th className="py-3.5 px-4">Tujuan Evaluasi</th>
@@ -253,7 +253,7 @@ export const PsychologyResultsView: React.FC = () => {
                 const strScore = r.dassStressScore ?? 8;
                 const strCat = r.dassStressCategory || 'Normal';
                 return (
-                  <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                  <tr key={r.id} className="hover:bg-red-50/60/30 transition">
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-slate-900">{r.fullName}</div>
                       <div className="text-[11px] text-slate-500">
@@ -296,7 +296,7 @@ export const PsychologyResultsView: React.FC = () => {
                             setSelectedPsy(r);
                             setActiveTab('evaluasi');
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
                         >
                           Hasil & Penilaian
                         </button>
@@ -305,7 +305,7 @@ export const PsychologyResultsView: React.FC = () => {
                             setSelectedPsy(r);
                             setActiveTab('sertifikat');
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold flex items-center gap-1 cursor-pointer shadow-2xs"
+                          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-1 cursor-pointer shadow-2xs"
                         >
                           <Award className="w-3.5 h-3.5" />
                           <span>Sertifikat JPEG</span>
@@ -326,10 +326,10 @@ export const PsychologyResultsView: React.FC = () => {
           onClick={() => setSelectedPsy(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-4xl w-full space-y-5 max-h-[90vh] overflow-y-auto shadow-xl"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-4xl w-full space-y-5 max-h-[90vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-100 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
                   Hasil & Evaluasi Psikologi — {selectedPsy.fullName}
@@ -340,14 +340,14 @@ export const PsychologyResultsView: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 bg-[#FFF5F8] p-1 rounded-xl border border-pink-100 text-xs font-bold">
+                <div className="flex items-center gap-1 bg-[#FFF5F8] p-1 rounded-xl border border-red-100 text-xs font-bold">
                   <button
                     type="button"
                     onClick={() => setActiveTab('evaluasi')}
                     className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
                       activeTab === 'evaluasi'
                         ? 'bg-[#E83E8C] text-white'
-                        : 'text-slate-600 hover:text-[#D63384]'
+                        : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
                     Detail Skoring & Jawaban
@@ -358,7 +358,7 @@ export const PsychologyResultsView: React.FC = () => {
                     className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer ${
                       activeTab === 'sertifikat'
                         ? 'bg-[#E83E8C] text-white'
-                        : 'text-slate-600 hover:text-[#D63384]'
+                        : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
                     <Award className="w-3.5 h-3.5" />
@@ -404,16 +404,16 @@ export const PsychologyResultsView: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-200 space-y-2.5 text-xs">
-                    <p className="font-bold text-[#D63384] uppercase tracking-wider text-[11px]">
+                  <div className="p-4 rounded-xl bg-[#FFF5F8] border border-red-200 space-y-2.5 text-xs">
+                    <p className="font-bold text-[#7F1D1D] uppercase tracking-wider text-[11px]">
                       2. Hasil Skoring & Interpretasi (GHQ-12 & DASS-21)
                     </p>
-                    <div className="p-2.5 rounded-lg bg-white border border-pink-100 space-y-1">
+                    <div className="p-2.5 rounded-lg bg-white border border-red-100 space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-slate-700">
                           Bagian 1 — Skor Total GHQ-12 (Likert 0–3):
                         </span>
-                        <span className="font-mono text-sm font-extrabold text-[#D63384]">
+                        <span className="font-mono text-sm font-extrabold text-[#7F1D1D]">
                           {selectedPsy.ghqScore ?? selectedPsy.totalScore ?? 6} / 36
                         </span>
                       </div>
@@ -427,7 +427,7 @@ export const PsychologyResultsView: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="p-2.5 rounded-lg bg-white border border-pink-100 space-y-1.5">
+                    <div className="p-2.5 rounded-lg bg-white border border-red-100 space-y-1.5">
                       <span className="font-semibold text-slate-700 block">
                         Bagian 2 — Skor Akhir DASS-21 (Subskala × 2):
                       </span>
@@ -437,7 +437,7 @@ export const PsychologyResultsView: React.FC = () => {
                           <strong className="font-mono text-xs text-slate-900">
                             {selectedPsy.dassDepressionScore ?? 4}
                           </strong>
-                          <span className="block text-[10px] font-bold text-[#D63384]">
+                          <span className="block text-[10px] font-bold text-[#7F1D1D]">
                             {selectedPsy.dassDepressionCategory || 'Normal'}
                           </span>
                         </div>
@@ -493,7 +493,7 @@ export const PsychologyResultsView: React.FC = () => {
                               Jawaban: <strong>{ans.selectedOptionLabel}</strong>
                             </p>
                           </div>
-                          <span className="px-2.5 py-1 rounded-lg bg-pink-100 text-[#D63384] font-mono font-bold shrink-0 self-start sm:self-center">
+                          <span className="px-2.5 py-1 rounded-lg bg-red-100 text-[#7F1D1D] font-mono font-bold shrink-0 self-start sm:self-center">
                             Skor: {ans.score}/3
                           </span>
                         </div>
@@ -502,11 +502,11 @@ export const PsychologyResultsView: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-pink-100">
+                <div className="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-red-100">
                   <button
                     type="button"
                     onClick={() => setActiveTab('sertifikat')}
-                    className="px-4 py-2.5 rounded-xl bg-[#FFF5F8] border border-pink-200 text-[#D63384] text-xs font-bold flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-[#FFF5F8] border border-red-200 text-[#7F1D1D] text-xs font-bold flex items-center gap-2 cursor-pointer"
                   >
                     <Award className="w-4 h-4" />
                     <span>Buka & Download Sertifikat (.JPEG)</span>
@@ -558,7 +558,7 @@ export const ColorBlindResultsView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
             Hasil Tes Buta Warna (20 Lempeng Ishihara) & Sertifikat
@@ -579,11 +579,11 @@ export const ColorBlindResultsView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Nama Peserta</th>
                 <th className="py-3.5 px-4">Tanggal Tes</th>
                 <th className="py-3.5 px-4 text-right">Hasil Skor</th>
@@ -595,7 +595,7 @@ export const ColorBlindResultsView: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
               {filtered.map((r) => (
-                <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                <tr key={r.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4 font-semibold text-slate-900">{r.fullName}</td>
                   <td className="py-3.5 px-4 font-mono text-xs text-slate-500 tabular-nums">
                     {r.testDate}
@@ -612,7 +612,7 @@ export const ColorBlindResultsView: React.FC = () => {
                   <td className="py-3.5 px-4">
                     <span
                       className={`text-xs font-bold ${
-                        r.category === 'Normal' ? 'text-[#20C997]' : 'text-[#E83E8C]'
+                        r.category === 'Normal' ? 'text-[#20C997]' : 'text-[#9E1B21]'
                       }`}
                     >
                       {r.category}
@@ -625,7 +625,7 @@ export const ColorBlindResultsView: React.FC = () => {
                           setSelectedCB(r);
                           setCbTab('detail');
                         }}
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
                       >
                         Detail Jawaban
                       </button>
@@ -654,10 +654,10 @@ export const ColorBlindResultsView: React.FC = () => {
           onClick={() => setSelectedCB(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-4xl w-full space-y-4 max-h-[90vh] overflow-y-auto shadow-xl"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-4xl w-full space-y-4 max-h-[90vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-100 pb-3">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
                   Hasil & Sertifikat Tes Ishihara — {selectedCB.fullName}
@@ -702,7 +702,7 @@ export const ColorBlindResultsView: React.FC = () => {
 
             {cbTab === 'detail' ? (
               <>
-                <div className="text-xs text-slate-700 space-y-1 bg-[#FFF5F8] p-4 rounded-xl border border-pink-100">
+                <div className="text-xs text-slate-700 space-y-1 bg-[#FFF5F8] p-4 rounded-xl border border-red-100">
                   <p>
                     <strong>Tanggal Tes:</strong> {selectedCB.testDate}
                   </p>
@@ -715,7 +715,7 @@ export const ColorBlindResultsView: React.FC = () => {
                     {selectedCB.wrongCount} Salah
                   </p>
                 </div>
-                <div className="border-t border-pink-100 pt-3 space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                <div className="border-t border-red-100 pt-3 space-y-1.5 max-h-64 overflow-y-auto pr-1">
                   <p className="text-xs font-bold text-slate-700">Rincian Lempeng:</p>
                   {selectedCB.answersDetail.map((ans) => (
                     <div
@@ -769,7 +769,7 @@ export const AppointmentsDataView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Data Janji Temu Pasien</h2>
           <p className="text-xs text-slate-500">
@@ -801,11 +801,11 @@ export const AppointmentsDataView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Pasien</th>
                 <th className="py-3.5 px-4">Dokter Tujuan</th>
                 <th className="py-3.5 px-4">Spesialisasi</th>
@@ -817,7 +817,7 @@ export const AppointmentsDataView: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
               {filtered.map((a) => (
-                <tr key={a.id} className="hover:bg-pink-50/30 transition">
+                <tr key={a.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4">
                     <div className="font-semibold text-slate-900">{a.patientName}</div>
                     <div className="text-[11px] text-slate-500 font-mono">{a.patientPhone}</div>
@@ -849,7 +849,7 @@ export const AppointmentsDataView: React.FC = () => {
                       onChange={(e) =>
                         updateAppointmentStatus(a.id, e.target.value as typeof a.status)
                       }
-                      className="px-2.5 py-1.5 rounded-lg border border-pink-200 text-xs bg-white font-semibold text-slate-700"
+                      className="px-2.5 py-1.5 rounded-lg border border-red-200 text-xs bg-white font-semibold text-slate-700"
                     >
                       <option value="Pending">Pending</option>
                       <option value="Confirmed">Confirmed</option>
@@ -882,7 +882,7 @@ export const DoctorScheduleManageView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-pink-100 space-y-4">
+      <div className="bg-white p-6 rounded-2xl border border-red-100 space-y-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Buat Jadwal Praktik Dokter</h2>
           <p className="text-xs text-slate-500">
@@ -997,7 +997,7 @@ export const DoctorScheduleManageView: React.FC = () => {
           <div className="sm:col-span-3 flex justify-end">
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Simpan & Tampilkan di Halaman Publik</span>
@@ -1010,18 +1010,18 @@ export const DoctorScheduleManageView: React.FC = () => {
         {doctorSchedules.map((sch) => (
           <div
             key={sch.id}
-            className="p-5 rounded-2xl bg-white border border-pink-100 flex items-center justify-between gap-4"
+            className="p-5 rounded-2xl bg-white border border-red-100 flex items-center justify-between gap-4"
           >
             <div className="flex items-center gap-3.5">
               <img
                 src={sch.doctorAvatar}
                 alt={sch.doctorName}
                 referrerPolicy="no-referrer"
-                className="w-12 h-12 rounded-2xl object-cover border border-pink-200"
+                className="w-12 h-12 rounded-2xl object-cover border border-red-200"
               />
               <div>
                 <h3 className="text-sm font-bold text-slate-900">{sch.doctorName}</h3>
-                <p className="text-xs text-[#E83E8C] font-semibold">
+                <p className="text-xs text-[#9E1B21] font-semibold">
                   {sch.specialty} · {sch.days} ({sch.startTime}–{sch.endTime})
                 </p>
                 <p className="text-[11px] text-[#20C997] font-semibold">Status: {sch.status}</p>
@@ -1067,7 +1067,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
             Data Pengajuan Prosedur Operasi Plastik
@@ -1102,11 +1102,11 @@ export const PlasticSurgeryDataView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-4">Nama Pasien</th>
                 <th className="py-3.5 px-4">Tanggal Pengajuan</th>
                 <th className="py-3.5 px-4">Prosedur Operasi Plastik</th>
@@ -1125,7 +1125,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
                 </tr>
               ) : (
                 filtered.map((r) => (
-                  <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                  <tr key={r.id} className="hover:bg-red-50/60/30 transition">
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-slate-900">{r.fullName}</div>
                       <div className="text-[11px] text-slate-500">
@@ -1145,7 +1145,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
                         {r.patientCardPhotoName || '-'}
                       </div>
                       <div className="truncate max-w-[190px]" title={r.legalDocName}>
-                        <span className="font-semibold text-[#D63384]">SKB/SKWB:</span> {r.legalDocName}
+                        <span className="font-semibold text-[#7F1D1D]">SKB/SKWB:</span> {r.legalDocName}
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
@@ -1176,7 +1176,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
                     <td className="py-3.5 px-4 text-right">
                       <button
                         onClick={() => openModal(r)}
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-pink-100 text-[#D63384] text-xs font-semibold cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
                       >
                         Proses / Setujui
                       </button>
@@ -1195,12 +1195,12 @@ export const PlasticSurgeryDataView: React.FC = () => {
           onClick={() => setSelectedRecord(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-lg w-full space-y-4 shadow-xl"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-lg w-full space-y-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+            <div className="flex items-center justify-between border-b border-red-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E83E8C] flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-red-50/60 text-[#9E1B21] flex items-center justify-center">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
@@ -1218,7 +1218,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 text-xs text-slate-700 bg-[#FFF5F8]/60 p-4 rounded-xl border border-pink-100">
+            <div className="grid grid-cols-2 gap-2.5 text-xs text-slate-700 bg-[#FFF5F8]/60 p-4 rounded-xl border border-red-100">
               <p>
                 <strong>Nama Pasien:</strong> {selectedRecord.fullName}
               </p>
@@ -1274,7 +1274,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
                         handlingDoctor === doc.name
                           ? 'bg-[#E83E8C] text-white border-[#E83E8C]'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-pink-300'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-red-300'
                       }`}
                     >
                       {doc.name}
@@ -1284,7 +1284,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
               )}
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-pink-100">
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-red-100">
               <button
                 type="button"
                 onClick={() => {
@@ -1348,7 +1348,7 @@ export const CharacterKillListView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Daftar Kematian (Karakter Kill)</h2>
           <p className="text-xs text-slate-500">
@@ -1383,11 +1383,11 @@ export const CharacterKillListView: React.FC = () => {
       </div>
 
       {/* Tabel Daftar Kematian: hanya Nama orang yang mengajukan kematian & button Cek Detail Pengajuan */}
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-pink-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
                 <th className="py-3.5 px-5">Nama Pengaju Kematian</th>
                 <th className="py-3.5 px-5 text-right">Detail Pengajuan</th>
               </tr>
@@ -1401,7 +1401,7 @@ export const CharacterKillListView: React.FC = () => {
                 </tr>
               ) : (
                 filtered.map((r) => (
-                  <tr key={r.id} className="hover:bg-pink-50/30 transition">
+                  <tr key={r.id} className="hover:bg-red-50/60/30 transition">
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-slate-900">{r.fullName}</span>
@@ -1422,7 +1422,7 @@ export const CharacterKillListView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedId(r.id)}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] hover:opacity-95 text-white text-xs font-semibold shadow-2xs cursor-pointer transition"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] hover:opacity-95 text-white text-xs font-semibold shadow-2xs cursor-pointer transition"
                       >
                         Cek Detail Pengajuan
                       </button>
@@ -1442,12 +1442,12 @@ export const CharacterKillListView: React.FC = () => {
           onClick={() => setSelectedId(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-pink-100 p-6 max-w-2xl w-full space-y-5 shadow-xl my-8 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-2xl w-full space-y-5 shadow-xl my-8 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+            <div className="flex items-center justify-between border-b border-red-100 pb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E83E8C] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-red-50/60 text-[#9E1B21] flex items-center justify-center">
                   <HeartPulse className="w-5 h-5" />
                 </div>
                 <div>
@@ -1494,48 +1494,48 @@ export const CharacterKillListView: React.FC = () => {
             </div>
 
             {/* Bagian 1: Data Diri */}
-            <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-100 space-y-3">
-              <p className="text-xs font-bold text-[#D63384] uppercase tracking-wider">
+            <div className="p-4 rounded-xl bg-[#FFF5F8] border border-red-100 space-y-3">
+              <p className="text-xs font-bold text-[#7F1D1D] uppercase tracking-wider">
                 1. Data Diri Warga
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                <div className="p-2.5 rounded-lg bg-white border border-red-100">
                   <span className="block text-[11px] text-slate-400">Nama Lengkap</span>
                   <span className="font-bold text-slate-900 text-sm">{selectedRecord.fullName}</span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                <div className="p-2.5 rounded-lg bg-white border border-red-100">
                   <span className="block text-[11px] text-slate-400">Tanggal Lahir</span>
                   <span className="font-mono font-semibold text-slate-800">
                     {selectedRecord.birthDate}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                <div className="p-2.5 rounded-lg bg-white border border-red-100">
                   <span className="block text-[11px] text-slate-400">Jenis Kelamin</span>
                   <span className="font-semibold text-slate-800">{selectedRecord.gender}</span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                <div className="p-2.5 rounded-lg bg-white border border-red-100">
                   <span className="block text-[11px] text-slate-400">Umur</span>
                   <span className="font-mono font-semibold text-slate-800">
                     {selectedRecord.age} Tahun
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100">
+                <div className="p-2.5 rounded-lg bg-white border border-red-100">
                   <span className="block text-[11px] text-slate-400">Pekerjaan</span>
                   <span className="font-semibold text-slate-800">{selectedRecord.occupation}</span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100 sm:col-span-2">
+                <div className="p-2.5 rounded-lg bg-white border border-red-100 sm:col-span-2">
                   <span className="block text-[11px] text-slate-400">Citizen ID</span>
-                  <span className="font-mono font-bold text-[#D63384]">
+                  <span className="font-mono font-bold text-[#7F1D1D]">
                     {selectedRecord.citizenId}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100 sm:col-span-2">
+                <div className="p-2.5 rounded-lg bg-white border border-red-100 sm:col-span-2">
                   <span className="block text-[11px] text-slate-400">SteamHex</span>
                   <span className="font-mono font-semibold text-slate-800">
                     {selectedRecord.steamHex || '-'}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white border border-pink-100 sm:col-span-2">
+                <div className="p-2.5 rounded-lg bg-white border border-red-100 sm:col-span-2">
                   <span className="block text-[11px] text-slate-400">No HP (IC)</span>
                   <span className="font-mono font-semibold text-slate-800">
                     {selectedRecord.phoneOrIC}
@@ -1545,24 +1545,24 @@ export const CharacterKillListView: React.FC = () => {
             </div>
 
             {/* Bagian 2: Kronologi dan Penyebab Kematian */}
-            <div className="p-4 rounded-xl bg-[#FFF5F8] border border-pink-100 space-y-3">
-              <p className="text-xs font-bold text-[#D63384] uppercase tracking-wider">
+            <div className="p-4 rounded-xl bg-[#FFF5F8] border border-red-100 space-y-3">
+              <p className="text-xs font-bold text-[#7F1D1D] uppercase tracking-wider">
                 2. Kronologi dan Penyebab Kematian
               </p>
               <div className="space-y-2.5 text-xs">
-                <div className="p-3 rounded-lg bg-white border border-pink-100">
+                <div className="p-3 rounded-lg bg-white border border-red-100">
                   <span className="block text-[11px] text-slate-400 mb-0.5">Penyebab Kematian</span>
                   <p className="font-bold text-slate-900">{selectedRecord.causeOfDeath}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-white border border-pink-100">
+                <div className="p-3 rounded-lg bg-white border border-red-100">
                   <span className="block text-[11px] text-slate-400 mb-0.5">Kronologi CK</span>
                   <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
                     {selectedRecord.chronologyCK}
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-white border border-pink-100 flex items-center justify-between">
+                <div className="p-3 rounded-lg bg-white border border-red-100 flex items-center justify-between">
                   <span className="text-slate-500">Jenis Pemakaman</span>
-                  <span className="px-3 py-1 rounded-lg bg-pink-50 text-[#D63384] font-bold">
+                  <span className="px-3 py-1 rounded-lg bg-red-50/60 text-[#7F1D1D] font-bold">
                     {selectedRecord.burialType}
                   </span>
                 </div>
@@ -1578,7 +1578,7 @@ export const CharacterKillListView: React.FC = () => {
             </div>
 
             {/* Action Penentuan Diterima / Ditolak (Khusus Doctor ke atas Level 5+) */}
-            <div className="pt-3 border-t border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="pt-3 border-t border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               {canDecide ? (
                 <>
                   <p className="text-xs text-slate-500">

@@ -105,7 +105,7 @@ export interface CloudPortalRecord {
 }
 
 /**
- * Helper to persist any Portal Layanan Paramedic Cendana record to Cloud Firestore
+ * Helper to persist any Portal Layanan Paramedic Kota Baru record to Cloud Firestore
  * while adhering strictly to the schema in firebase-blueprint.json & firestore.rules.
  */
 export async function syncRecordToFirestore(

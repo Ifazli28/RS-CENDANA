@@ -144,7 +144,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 function loadLocal<T>(key: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(`kotabaru_${key}`) || localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
@@ -153,61 +153,61 @@ function loadLocal<T>(key: string, fallback: T): T {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [staffAccounts, setStaffAccounts] = useState<StaffAccount[]>(() =>
-    loadLocal('cendana_staff_v1', INITIAL_STAFF_ACCOUNTS)
+    loadLocal('staff_v1', INITIAL_STAFF_ACCOUNTS)
   );
   const [currentUserId, setCurrentUserId] = useState<string | null>(() =>
-    localStorage.getItem('cendana_current_user_id_v1')
+    localStorage.getItem('kotabaru_current_user_id_v1')
   );
   const [doctorSchedules, setDoctorSchedules] = useState<DoctorSchedule[]>(() =>
-    loadLocal('cendana_schedules_v1', INITIAL_DOCTOR_SCHEDULES)
+    loadLocal('schedules_v1', INITIAL_DOCTOR_SCHEDULES)
   );
   const [sksRecords, setSksRecords] = useState<SKSRecord[]>(() =>
-    loadLocal('cendana_sks_v1', INITIAL_SKS_RECORDS)
+    loadLocal('sks_v1', INITIAL_SKS_RECORDS)
   );
   const [psychologyRecords, setPsychologyRecords] = useState<PsychologyRecord[]>(() =>
-    loadLocal('cendana_psy_v1', INITIAL_PSYCHOLOGY_RECORDS)
+    loadLocal('psy_v1', INITIAL_PSYCHOLOGY_RECORDS)
   );
   const [plasticSurgeryRecords, setPlasticSurgeryRecords] = useState<PlasticSurgeryRecord[]>(() =>
-    loadLocal('cendana_pls_v1', INITIAL_PLASTIC_SURGERY_RECORDS)
+    loadLocal('pls_v1', INITIAL_PLASTIC_SURGERY_RECORDS)
   );
   const [colorBlindResults, setColorBlindResults] = useState<ColorBlindResult[]>(() =>
-    loadLocal('cendana_cb_v1', INITIAL_COLOR_BLIND_RESULTS)
+    loadLocal('cb_v1', INITIAL_COLOR_BLIND_RESULTS)
   );
   const [appointments, setAppointments] = useState<AppointmentRecord[]>(() =>
-    loadLocal('cendana_apt_v1', INITIAL_APPOINTMENTS)
+    loadLocal('apt_v1', INITIAL_APPOINTMENTS)
   );
   const [complaints, setComplaints] = useState<ComplaintRecord[]>(() =>
-    loadLocal('cendana_cmp_v1', INITIAL_COMPLAINTS)
+    loadLocal('cmp_v1', INITIAL_COMPLAINTS)
   );
   const [recruitmentStatus, setRecruitmentStatus] = useState<'OPEN' | 'CLOSED'>(() =>
-    loadLocal('cendana_rec_status_v1', 'OPEN')
+    loadLocal('rec_status_v1', 'OPEN')
   );
   const [recruitmentApplicants, setRecruitmentApplicants] = useState<RecruitmentApplicant[]>(() =>
-    loadLocal('cendana_rec_app_v1', INITIAL_RECRUITMENT_APPLICANTS)
+    loadLocal('rec_app_v1', INITIAL_RECRUITMENT_APPLICANTS)
   );
   const [votingPolls, setVotingPolls] = useState<VotingPoll[]>(() =>
-    loadLocal('cendana_votes_v1', INITIAL_VOTING_POLLS)
+    loadLocal('votes_v1', INITIAL_VOTING_POLLS)
   );
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() =>
-    loadLocal('cendana_leaves_v1', INITIAL_LEAVE_REQUESTS)
+    loadLocal('leaves_v1', INITIAL_LEAVE_REQUESTS)
   );
   const [resignRequests, setResignRequests] = useState<ResignRequest[]>(() =>
-    loadLocal('cendana_resigns_v1', INITIAL_RESIGN_REQUESTS)
+    loadLocal('resigns_v1', INITIAL_RESIGN_REQUESTS)
   );
   const [sopDocuments, setSopDocuments] = useState<SOPDocument[]>(() =>
-    loadLocal('cendana_sops_v1', INITIAL_SOP_DOCUMENTS)
+    loadLocal('sops_v1', INITIAL_SOP_DOCUMENTS)
   );
   const [regulations, setRegulations] = useState<RegulationItem[]>(() =>
-    loadLocal('cendana_regs_v1', INITIAL_REGULATIONS)
+    loadLocal('regs_v1', INITIAL_REGULATIONS)
   );
   const [dutyLogs, setDutyLogs] = useState<DutyLog[]>(() =>
-    loadLocal('cendana_duties_v1', INITIAL_DUTY_LOGS)
+    loadLocal('duties_v1', INITIAL_DUTY_LOGS)
   );
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>(() =>
-    loadLocal('cendana_payrolls_v1', INITIAL_PAYROLL_RECORDS)
+    loadLocal('payrolls_v1', INITIAL_PAYROLL_RECORDS)
   );
   const [roleSalaryConfigs, setRoleSalaryConfigs] = useState<RoleSalaryConfig[]>(() =>
-    loadLocal('cendana_role_salaries_v1', INITIAL_ROLE_SALARY_CONFIGS)
+    loadLocal('role_salaries_v1', INITIAL_ROLE_SALARY_CONFIGS)
   );
   // SKWB Benefit records — 100% centralized in Cloud Firestore (no localStorage or mock arrays)
   const [skwbClaims, setSkwbClaims] = useState<SKWBClaim[]>([]);
@@ -215,72 +215,72 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [skwbPatientCardClaims, setSkwbPatientCardClaims] = useState<SKWBPatientCardClaim[]>([]);
   const [skwbOplasClaims, setSkwbOplasClaims] = useState<SKWBOplasClaim[]>([]);
   const [characterKillRecords, setCharacterKillRecords] = useState<CharacterKillRecord[]>(() =>
-    loadLocal('cendana_ck_v1', INITIAL_CHARACTER_KILL_RECORDS)
+    loadLocal('ck_v1', INITIAL_CHARACTER_KILL_RECORDS)
   );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // LocalStorage persistence for all modules
   useEffect(() => {
-    localStorage.setItem('cendana_staff_v1', JSON.stringify(staffAccounts));
+    localStorage.setItem('kotabaru_staff_v1', JSON.stringify(staffAccounts));
   }, [staffAccounts]);
   useEffect(() => {
-    localStorage.setItem('cendana_schedules_v1', JSON.stringify(doctorSchedules));
+    localStorage.setItem('kotabaru_schedules_v1', JSON.stringify(doctorSchedules));
   }, [doctorSchedules]);
   useEffect(() => {
-    localStorage.setItem('cendana_sks_v1', JSON.stringify(sksRecords));
+    localStorage.setItem('kotabaru_sks_v1', JSON.stringify(sksRecords));
   }, [sksRecords]);
   useEffect(() => {
-    localStorage.setItem('cendana_psy_v1', JSON.stringify(psychologyRecords));
+    localStorage.setItem('kotabaru_psy_v1', JSON.stringify(psychologyRecords));
   }, [psychologyRecords]);
   useEffect(() => {
-    localStorage.setItem('cendana_pls_v1', JSON.stringify(plasticSurgeryRecords));
+    localStorage.setItem('kotabaru_pls_v1', JSON.stringify(plasticSurgeryRecords));
   }, [plasticSurgeryRecords]);
   useEffect(() => {
-    localStorage.setItem('cendana_cb_v1', JSON.stringify(colorBlindResults));
+    localStorage.setItem('kotabaru_cb_v1', JSON.stringify(colorBlindResults));
   }, [colorBlindResults]);
   useEffect(() => {
-    localStorage.setItem('cendana_apt_v1', JSON.stringify(appointments));
+    localStorage.setItem('kotabaru_apt_v1', JSON.stringify(appointments));
   }, [appointments]);
   useEffect(() => {
-    localStorage.setItem('cendana_cmp_v1', JSON.stringify(complaints));
+    localStorage.setItem('kotabaru_cmp_v1', JSON.stringify(complaints));
   }, [complaints]);
   useEffect(() => {
-    localStorage.setItem('cendana_rec_status_v1', JSON.stringify(recruitmentStatus));
+    localStorage.setItem('kotabaru_rec_status_v1', JSON.stringify(recruitmentStatus));
   }, [recruitmentStatus]);
   useEffect(() => {
-    localStorage.setItem('cendana_rec_app_v1', JSON.stringify(recruitmentApplicants));
+    localStorage.setItem('kotabaru_rec_app_v1', JSON.stringify(recruitmentApplicants));
   }, [recruitmentApplicants]);
   useEffect(() => {
-    localStorage.setItem('cendana_votes_v1', JSON.stringify(votingPolls));
+    localStorage.setItem('kotabaru_votes_v1', JSON.stringify(votingPolls));
   }, [votingPolls]);
   useEffect(() => {
-    localStorage.setItem('cendana_leaves_v1', JSON.stringify(leaveRequests));
+    localStorage.setItem('kotabaru_leaves_v1', JSON.stringify(leaveRequests));
   }, [leaveRequests]);
   useEffect(() => {
-    localStorage.setItem('cendana_resigns_v1', JSON.stringify(resignRequests));
+    localStorage.setItem('kotabaru_resigns_v1', JSON.stringify(resignRequests));
   }, [resignRequests]);
   useEffect(() => {
-    localStorage.setItem('cendana_sops_v1', JSON.stringify(sopDocuments));
+    localStorage.setItem('kotabaru_sops_v1', JSON.stringify(sopDocuments));
   }, [sopDocuments]);
   useEffect(() => {
-    localStorage.setItem('cendana_regs_v1', JSON.stringify(regulations));
+    localStorage.setItem('kotabaru_regs_v1', JSON.stringify(regulations));
   }, [regulations]);
   useEffect(() => {
-    localStorage.setItem('cendana_duties_v1', JSON.stringify(dutyLogs));
+    localStorage.setItem('kotabaru_duties_v1', JSON.stringify(dutyLogs));
   }, [dutyLogs]);
   useEffect(() => {
-    localStorage.setItem('cendana_payrolls_v1', JSON.stringify(payrollRecords));
+    localStorage.setItem('kotabaru_payrolls_v1', JSON.stringify(payrollRecords));
   }, [payrollRecords]);
   useEffect(() => {
-    localStorage.setItem('cendana_role_salaries_v1', JSON.stringify(roleSalaryConfigs));
+    localStorage.setItem('kotabaru_role_salaries_v1', JSON.stringify(roleSalaryConfigs));
   }, [roleSalaryConfigs]);
   useEffect(() => {
-    localStorage.setItem('cendana_ck_v1', JSON.stringify(characterKillRecords));
+    localStorage.setItem('kotabaru_ck_v1', JSON.stringify(characterKillRecords));
   }, [characterKillRecords]);
 
   useEffect(() => {
-    if (currentUserId) localStorage.setItem('cendana_current_user_id_v1', currentUserId);
-    else localStorage.removeItem('cendana_current_user_id_v1');
+    if (currentUserId) localStorage.setItem('kotabaru_current_user_id_v1', currentUserId);
+    else localStorage.removeItem('kotabaru_current_user_id_v1');
   }, [currentUserId]);
 
   // Real-time synchronization from Cloud Firestore across all public & internal staff modules
@@ -693,8 +693,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       role: 'Medical Support',
       level: ROLE_LEVELS['Medical Support'],
       status: 'Pending Approval',
-      avatarUrl: createStaffAvatarSvg(initials || 'ST', '#E83E8C'),
-      specialty: 'Anggota Baru Paramedic Cendana',
+      avatarUrl: createStaffAvatarSvg(initials || 'ST', '#9E1B21'),
+      specialty: 'Anggota Baru Paramedic Kota Baru',
       joinDate: new Date().toISOString().slice(0, 10),
       registeredAt: new Date().toISOString().slice(0, 10),
     };
@@ -761,7 +761,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const rec: ComplaintRecord = { ...data, id, createdAt: nowFormatted(), status: 'Baru' };
     setComplaints((prev) => [rec, ...prev]);
     void syncRecordToFirestore(id, 'complaint', data.subject, 'Baru', { ...rec });
-    addToast('success', 'Laporan Pengaduan Terkirim', 'Aspirasi/keluhan Anda telah diterima manajemen RS Cendana.');
+    addToast('success', 'Laporan Pengaduan Terkirim', 'Aspirasi/keluhan Anda telah diterima manajemen RS Kota Baru.');
   };
 
   const submitRecruitment = (data: Omit<RecruitmentApplicant, 'id' | 'appliedAt' | 'status'>) => {

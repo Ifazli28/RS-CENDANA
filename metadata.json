@@ -1,6 +1,6 @@
 {
-  "name": "Portal Layanan Paramedic Cendana",
-  "description": "Portal layanan medis terpadu untuk warga Kota Cendana dan sistem manajemen internal staff Paramedic Cendana.",
+  "name": "Portal Layanan Paramedic Kota Baru",
+  "description": "Portal layanan medis terpadu untuk warga Kota Kota Baru Roleplay dan sistem manajemen internal staff Paramedic Kota Baru.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
