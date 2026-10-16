@@ -65,7 +65,7 @@ service cloud.firestore {
           isBootstrappedAdmin()
         );
 
-      allow delete: if isValidId(recordId) && isBootstrappedAdmin();
+      allow delete: if isValidId(recordId);
     }
   }
 }

@@ -27,7 +27,7 @@ import {
 
 // 1. DATA SURAT KETERANGAN SEHAT (Sec 59 — Paramedic+ Level 3+)
 export const SKSResultsView: React.FC = () => {
-  const { sksRecords, updateSKSStatus } = useApp();
+  const { sksRecords, updateSKSStatus, deleteSKSRecord, requestDelete } = useApp();
   const [search, setSearch] = useState('');
   const [purposeFilter, setPurposeFilter] = useState('Semua');
   const [selectedRecord, setSelectedRecord] = useState<typeof sksRecords[0] | null>(null);
@@ -58,7 +58,7 @@ export const SKSResultsView: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari nama / pekerjaan..."
-              className="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#E83E8C] focus:outline-none"
+              className="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#9E1B21] focus:outline-none"
             />
           </div>
           <select
@@ -78,7 +78,7 @@ export const SKSResultsView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Nama Lengkap</th>
                 <th className="py-3.5 px-4">Tanggal</th>
                 <th className="py-3.5 px-4">Gender</th>
@@ -89,7 +89,7 @@ export const SKSResultsView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Detail / Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-slate-400">
@@ -119,12 +119,27 @@ export const SKSResultsView: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => setSelectedRecord(r)}
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
-                      >
-                        Detail
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setSelectedRecord(r)}
+                          className="px-3 py-1.5 rounded-lg bg-red-50/40 hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
+                        >
+                          Detail
+                        </button>
+                        <button
+                          onClick={() => {
+                            requestDelete(
+                              'Hapus Data SKS',
+                              `Apakah Anda yakin ingin menghapus data Surat Keterangan Sehat milik ${r.fullName}? Tindakan ini tidak dapat dibatalkan.`,
+                              () => deleteSKSRecord(r.id)
+                            );
+                          }}
+                          title="Hapus Data SKS"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -173,7 +188,7 @@ export const SKSResultsView: React.FC = () => {
                   updateSKSStatus(selectedRecord.id, 'Issued');
                   setSelectedRecord(null);
                 }}
-                className="flex-1 py-2 rounded-xl bg-[#E83E8C] text-white text-xs font-semibold cursor-pointer"
+                className="flex-1 py-2 rounded-xl bg-[#9E1B21] text-white text-xs font-semibold cursor-pointer"
               >
                 Terbitkan (Issued)
               </button>
@@ -187,7 +202,7 @@ export const SKSResultsView: React.FC = () => {
 
 // 2. DATA TES PSIKOLOGI (Sec 60 — Co-ass+ Level 4+ — Lengkap dengan Hasil Skoring, Interpretasi & Sertifikat JPEG)
 export const PsychologyResultsView: React.FC = () => {
-  const { psychologyRecords, updatePsychologyStatus, currentUser } = useApp();
+  const { psychologyRecords, updatePsychologyStatus, deletePsychologyRecord, requestDelete, currentUser } = useApp();
   const [search, setSearch] = useState('');
   const [selectedPsy, setSelectedPsy] = useState<typeof psychologyRecords[0] | null>(null);
   const [activeTab, setActiveTab] = useState<'evaluasi' | 'sertifikat'>('evaluasi');
@@ -217,7 +232,7 @@ export const PsychologyResultsView: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari nama / tujuan / hasil..."
-            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#E83E8C] focus:outline-none"
+            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#9E1B21] focus:outline-none"
           />
         </div>
       </div>
@@ -226,7 +241,7 @@ export const PsychologyResultsView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Nama Peserta</th>
                 <th className="py-3.5 px-4">Tanggal</th>
                 <th className="py-3.5 px-4">Tujuan Evaluasi</th>
@@ -236,7 +251,7 @@ export const PsychologyResultsView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Detail & Sertifikat</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {filtered.map((r) => {
                 const ghqScore = r.ghqScore ?? r.totalScore ?? 6;
                 const ghqInterp =
@@ -296,7 +311,7 @@ export const PsychologyResultsView: React.FC = () => {
                             setSelectedPsy(r);
                             setActiveTab('evaluasi');
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-red-50/40 hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
                         >
                           Hasil & Penilaian
                         </button>
@@ -309,6 +324,19 @@ export const PsychologyResultsView: React.FC = () => {
                         >
                           <Award className="w-3.5 h-3.5" />
                           <span>Sertifikat JPEG</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            requestDelete(
+                              'Hapus Hasil Tes Psikologi',
+                              `Apakah Anda yakin ingin menghapus hasil evaluasi psikologi milik ${r.fullName}?`,
+                              () => deletePsychologyRecord(r.id)
+                            );
+                          }}
+                          title="Hapus Data Psikologi"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -340,13 +368,13 @@ export const PsychologyResultsView: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 bg-[#FFF5F8] p-1 rounded-xl border border-red-100 text-xs font-bold">
+                <div className="flex items-center gap-1 bg-red-50/40 p-1 rounded-xl border border-red-100 text-xs font-bold">
                   <button
                     type="button"
                     onClick={() => setActiveTab('evaluasi')}
                     className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
                       activeTab === 'evaluasi'
-                        ? 'bg-[#E83E8C] text-white'
+                        ? 'bg-[#9E1B21] text-white'
                         : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
@@ -357,7 +385,7 @@ export const PsychologyResultsView: React.FC = () => {
                     onClick={() => setActiveTab('sertifikat')}
                     className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer ${
                       activeTab === 'sertifikat'
-                        ? 'bg-[#E83E8C] text-white'
+                        ? 'bg-[#9E1B21] text-white'
                         : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
@@ -404,7 +432,7 @@ export const PsychologyResultsView: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-[#FFF5F8] border border-red-200 space-y-2.5 text-xs">
+                  <div className="p-4 rounded-xl bg-red-50/40 border border-red-200 space-y-2.5 text-xs">
                     <p className="font-bold text-[#7F1D1D] uppercase tracking-wider text-[11px]">
                       2. Hasil Skoring & Interpretasi (GHQ-12 & DASS-21)
                     </p>
@@ -506,7 +534,7 @@ export const PsychologyResultsView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('sertifikat')}
-                    className="px-4 py-2.5 rounded-xl bg-[#FFF5F8] border border-red-200 text-[#7F1D1D] text-xs font-bold flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-red-50/40 border border-red-200 text-[#7F1D1D] text-xs font-bold flex items-center gap-2 cursor-pointer"
                   >
                     <Award className="w-4 h-4" />
                     <span>Buka & Download Sertifikat (.JPEG)</span>
@@ -545,7 +573,7 @@ export const PsychologyResultsView: React.FC = () => {
 
 // 3. HASIL TES BUTA WARNA (Sec 24 & 61 — Doctor+ Level 5+ — Dilengkapi Sertifikat JPEG)
 export const ColorBlindResultsView: React.FC = () => {
-  const { colorBlindResults, currentUser } = useApp();
+  const { colorBlindResults, currentUser, deleteColorBlindResult, requestDelete } = useApp();
   const [search, setSearch] = useState('');
   const [selectedCB, setSelectedCB] = useState<typeof colorBlindResults[0] | null>(null);
   const [cbTab, setCbTab] = useState<'detail' | 'sertifikat'>('detail');
@@ -574,7 +602,7 @@ export const ColorBlindResultsView: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari nama / kategori..."
-            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#E83E8C] focus:outline-none"
+            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#9E1B21] focus:outline-none"
           />
         </div>
       </div>
@@ -583,7 +611,7 @@ export const ColorBlindResultsView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Nama Peserta</th>
                 <th className="py-3.5 px-4">Tanggal Tes</th>
                 <th className="py-3.5 px-4 text-right">Hasil Skor</th>
@@ -593,7 +621,7 @@ export const ColorBlindResultsView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Detail & Sertifikat</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {filtered.map((r) => (
                 <tr key={r.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4 font-semibold text-slate-900">{r.fullName}</td>
@@ -625,7 +653,7 @@ export const ColorBlindResultsView: React.FC = () => {
                           setSelectedCB(r);
                           setCbTab('detail');
                         }}
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-red-50/40 hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
                       >
                         Detail Jawaban
                       </button>
@@ -638,6 +666,19 @@ export const ColorBlindResultsView: React.FC = () => {
                       >
                         <Award className="w-3.5 h-3.5" />
                         <span>Sertifikat JPEG</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          requestDelete(
+                            'Hapus Hasil Tes Buta Warna',
+                            `Apakah Anda yakin ingin menghapus rekam tes buta warna milik ${r.fullName}?`,
+                            () => deleteColorBlindResult(r.id)
+                          );
+                        }}
+                        title="Hapus Hasil Tes"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -702,7 +743,7 @@ export const ColorBlindResultsView: React.FC = () => {
 
             {cbTab === 'detail' ? (
               <>
-                <div className="text-xs text-slate-700 space-y-1 bg-[#FFF5F8] p-4 rounded-xl border border-red-100">
+                <div className="text-xs text-slate-700 space-y-1 bg-red-50/40 p-4 rounded-xl border border-red-100">
                   <p>
                     <strong>Tanggal Tes:</strong> {selectedCB.testDate}
                   </p>
@@ -755,7 +796,7 @@ export const ColorBlindResultsView: React.FC = () => {
 
 // 4. DATA JANJI TEMU (Sec 62 — Doctor+ Level 5+)
 export const AppointmentsDataView: React.FC = () => {
-  const { appointments, updateAppointmentStatus } = useApp();
+  const { appointments, updateAppointmentStatus, deleteAppointment, requestDelete } = useApp();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
 
@@ -805,7 +846,7 @@ export const AppointmentsDataView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Pasien</th>
                 <th className="py-3.5 px-4">Dokter Tujuan</th>
                 <th className="py-3.5 px-4">Spesialisasi</th>
@@ -815,7 +856,7 @@ export const AppointmentsDataView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Ubah Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {filtered.map((a) => (
                 <tr key={a.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4">
@@ -844,18 +885,33 @@ export const AppointmentsDataView: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-right">
-                    <select
-                      value={a.status}
-                      onChange={(e) =>
-                        updateAppointmentStatus(a.id, e.target.value as typeof a.status)
-                      }
-                      className="px-2.5 py-1.5 rounded-lg border border-red-200 text-xs bg-white font-semibold text-slate-700"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Confirmed">Confirmed</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
+                    <div className="inline-flex items-center justify-end gap-1.5">
+                      <select
+                        value={a.status}
+                        onChange={(e) =>
+                          updateAppointmentStatus(a.id, e.target.value as typeof a.status)
+                        }
+                        className="px-2.5 py-1.5 rounded-lg border border-red-200 text-xs bg-white font-semibold text-slate-700"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                      <button
+                        onClick={() => {
+                          requestDelete(
+                            'Hapus Janji Temu Pasien',
+                            `Apakah Anda yakin ingin menghapus janji temu pasien ${a.patientName} dengan dr. ${a.doctorName}?`,
+                            () => deleteAppointment(a.id)
+                          );
+                        }}
+                        title="Hapus Janji Temu"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -1028,7 +1084,13 @@ export const DoctorScheduleManageView: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => deleteDoctorSchedule(sch.id)}
+              onClick={() => {
+                requestDelete(
+                  'Hapus Jadwal Dokter',
+                  `Apakah Anda yakin ingin menghapus jadwal praktik dr. ${sch.doctorName} (${sch.days})?`,
+                  () => deleteDoctorSchedule(sch.id)
+                );
+              }}
               className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
               title="Hapus Jadwal"
             >
@@ -1043,7 +1105,7 @@ export const DoctorScheduleManageView: React.FC = () => {
 
 // 6. DATA PENGAJUAN OPERASI PLASTIK (Doctor+ Level 5+ — Dapat menyetujui & mencantumkan nama dokter yang menangani)
 export const PlasticSurgeryDataView: React.FC = () => {
-  const { plasticSurgeryRecords, staffAccounts, currentUser, updatePlasticSurgeryStatus } = useApp();
+  const { plasticSurgeryRecords, staffAccounts, currentUser, updatePlasticSurgeryStatus, deletePlasticSurgeryRecord, requestDelete } = useApp();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [selectedRecord, setSelectedRecord] = useState<typeof plasticSurgeryRecords[0] | null>(null);
@@ -1085,7 +1147,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari pasien / prosedur / dokter..."
-              className="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#E83E8C] focus:outline-none"
+              className="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#9E1B21] focus:outline-none"
             />
           </div>
           <select
@@ -1106,7 +1168,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Nama Pasien</th>
                 <th className="py-3.5 px-4">Tanggal Pengajuan</th>
                 <th className="py-3.5 px-4">Prosedur Operasi Plastik</th>
@@ -1116,7 +1178,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-400">
@@ -1174,12 +1236,27 @@ export const PlasticSurgeryDataView: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => openModal(r)}
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
-                      >
-                        Proses / Setujui
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openModal(r)}
+                          className="px-3 py-1.5 rounded-lg bg-red-50/40 hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
+                        >
+                          Proses / Setujui
+                        </button>
+                        <button
+                          onClick={() => {
+                            requestDelete(
+                              'Hapus Pengajuan Operasi Plastik',
+                              `Apakah Anda yakin ingin menghapus pengajuan operasi plastik milik ${r.fullName}?`,
+                              () => deletePlasticSurgeryRecord(r.id)
+                            );
+                          }}
+                          title="Hapus Pengajuan"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -1218,7 +1295,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 text-xs text-slate-700 bg-[#FFF5F8]/60 p-4 rounded-xl border border-red-100">
+            <div className="grid grid-cols-2 gap-2.5 text-xs text-slate-700 bg-red-50/40/60 p-4 rounded-xl border border-red-100">
               <p>
                 <strong>Nama Pasien:</strong> {selectedRecord.fullName}
               </p>
@@ -1261,7 +1338,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
                 value={handlingDoctor}
                 onChange={(e) => setHandlingDoctor(e.target.value)}
                 placeholder="Masukkan atau pilih nama dokter yang menangani..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#E83E8C] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#9E1B21] focus:outline-none"
               />
               {activeDoctors.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
@@ -1273,7 +1350,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
                       onClick={() => setHandlingDoctor(doc.name)}
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
                         handlingDoctor === doc.name
-                          ? 'bg-[#E83E8C] text-white border-[#E83E8C]'
+                          ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
                           : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-red-300'
                       }`}
                     >
@@ -1331,7 +1408,7 @@ export const PlasticSurgeryDataView: React.FC = () => {
 
 // 7. DAFTAR KEMATIAN / KARAKTER KILL (Semua Role bisa melihat, keputusan Diterima/Ditolak hanya Doctor ke atas Level 5+)
 export const CharacterKillListView: React.FC = () => {
-  const { characterKillRecords, reviewCharacterKill, currentUser } = useApp();
+  const { characterKillRecords, reviewCharacterKill, deleteCharacterKillRecord, requestDelete, currentUser } = useApp();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Semua' | 'Menunggu' | 'Diterima' | 'Ditolak'>('Semua');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -1364,7 +1441,7 @@ export const CharacterKillListView: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari nama pengaju..."
-              className="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#E83E8C] focus:outline-none"
+              className="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#9E1B21] focus:outline-none"
             />
           </div>
           <select
@@ -1387,12 +1464,12 @@ export const CharacterKillListView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-5">Nama Pengaju Kematian</th>
                 <th className="py-3.5 px-5 text-right">Detail Pengajuan</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={2} className="py-8 text-center text-slate-400">
@@ -1419,13 +1496,29 @@ export const CharacterKillListView: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-4 px-5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedId(r.id)}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] hover:opacity-95 text-white text-xs font-semibold shadow-2xs cursor-pointer transition"
-                      >
-                        Cek Detail Pengajuan
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedId(r.id)}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] hover:opacity-95 text-white text-xs font-semibold shadow-2xs cursor-pointer transition"
+                        >
+                          Cek Detail Pengajuan
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            requestDelete(
+                              'Hapus Data Kematian',
+                              `Apakah Anda yakin ingin menghapus rekam Character Kill milik ${r.fullName}?`,
+                              () => deleteCharacterKillRecord(r.id)
+                            );
+                          }}
+                          title="Hapus Data Kematian"
+                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -1494,7 +1587,7 @@ export const CharacterKillListView: React.FC = () => {
             </div>
 
             {/* Bagian 1: Data Diri */}
-            <div className="p-4 rounded-xl bg-[#FFF5F8] border border-red-100 space-y-3">
+            <div className="p-4 rounded-xl bg-red-50/40 border border-red-100 space-y-3">
               <p className="text-xs font-bold text-[#7F1D1D] uppercase tracking-wider">
                 1. Data Diri Warga
               </p>
@@ -1545,7 +1638,7 @@ export const CharacterKillListView: React.FC = () => {
             </div>
 
             {/* Bagian 2: Kronologi dan Penyebab Kematian */}
-            <div className="p-4 rounded-xl bg-[#FFF5F8] border border-red-100 space-y-3">
+            <div className="p-4 rounded-xl bg-red-50/40 border border-red-100 space-y-3">
               <p className="text-xs font-bold text-[#7F1D1D] uppercase tracking-wider">
                 2. Kronologi dan Penyebab Kematian
               </p>

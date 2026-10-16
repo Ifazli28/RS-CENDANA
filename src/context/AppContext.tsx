@@ -48,10 +48,21 @@ import {
   INITIAL_CHARACTER_KILL_RECORDS,
 } from '../data/initialData';
 import { createStaffAvatarSvg } from '../components/BrandAssets';
-import { syncRecordToFirestore, subscribeToPortalRecords } from '../firebase';
+import { syncRecordToFirestore, deleteRecordFromFirestore, subscribeToPortalRecords } from '../firebase';
 import { formatDoctorNameWithTitleAndDegree } from '../utils/doctorFormatting';
 
+export interface ConfirmModalState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  onConfirm: () => void;
+}
+
 interface AppContextType {
+  confirmModal: ConfirmModalState | null;
+  requestDelete: (title: string, message: string, onConfirm: () => void, confirmLabel?: string) => void;
+  closeConfirmModal: () => void;
   currentUser: StaffAccount | null;
   login: (email: string, password: string) => { success: boolean; message: string };
   logout: () => void;
@@ -138,6 +149,24 @@ interface AppContextType {
   claimSKWBPaketSedang: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
   claimSKWBPatientCard: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
   claimSKWBOplas: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
+  deleteSKSRecord: (id: string) => void;
+  deletePsychologyRecord: (id: string) => void;
+  deleteColorBlindResult: (id: string) => void;
+  deletePlasticSurgeryRecord: (id: string) => void;
+  deleteAppointment: (id: string) => void;
+  deleteCharacterKillRecord: (id: string) => void;
+  deleteSKWBClaim: (id: string) => void;
+  deleteSKWBPaketSedangClaim: (id: string) => void;
+  deleteSKWBPatientCardClaim: (id: string) => void;
+  deleteSKWBOplasClaim: (id: string) => void;
+  deleteLeaveRequest: (id: string) => void;
+  deleteResignRequest: (id: string) => void;
+  deleteRecruitmentApplicant: (id: string) => void;
+  deleteComplaint: (id: string) => void;
+  deleteDutyLog: (id: string) => void;
+  deletePayrollRecord: (id: string) => void;
+  deleteSOPDocument: (id: string) => void;
+  deleteRegulation: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -218,6 +247,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadLocal('ck_v1', INITIAL_CHARACTER_KILL_RECORDS)
   );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState | null>(null);
+
+  const requestDelete = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmLabel?: string
+  ) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      confirmLabel: confirmLabel || 'Ya, Hapus Data',
+      onConfirm: () => {
+        onConfirm();
+        setConfirmModal(null);
+      },
+    });
+  };
+
+  const closeConfirmModal = () => setConfirmModal(null);
 
   // LocalStorage persistence for all modules
   useEffect(() => {
@@ -1231,10 +1281,117 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteDoctorSchedule = (id: string) => {
-    if (!currentUser || currentUser.level < 5) return;
     setDoctorSchedules((prev) => prev.filter((s) => s.id !== id));
-    void syncRecordToFirestore(id, 'doctor_schedule', id, 'DELETED', { id });
+    void deleteRecordFromFirestore(id);
     addToast('info', 'Jadwal Dihapus', 'Jadwal praktik dokter dihapus dari Database.');
+  };
+
+  const deleteSKSRecord = (id: string) => {
+    setSksRecords((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Data SKS Dihapus', 'Rekam Surat Keterangan Sehat berhasil dihapus.');
+  };
+
+  const deletePsychologyRecord = (id: string) => {
+    setPsychologyRecords((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Data Psikologi Dihapus', 'Hasil tes psikologi berhasil dihapus.');
+  };
+
+  const deleteColorBlindResult = (id: string) => {
+    setColorBlindResults((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Data Tes Buta Warna Dihapus', 'Hasil tes buta warna berhasil dihapus.');
+  };
+
+  const deletePlasticSurgeryRecord = (id: string) => {
+    setPlasticSurgeryRecords((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Data Operasi Plastik Dihapus', 'Pengajuan operasi plastik berhasil dihapus.');
+  };
+
+  const deleteAppointment = (id: string) => {
+    setAppointments((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Janji Temu Dihapus', 'Janji temu pasien berhasil dihapus.');
+  };
+
+  const deleteCharacterKillRecord = (id: string) => {
+    setCharacterKillRecords((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Data Kematian Dihapus', 'Data Character Kill berhasil dihapus.');
+  };
+
+  const deleteSKWBClaim = (id: string) => {
+    setSkwbClaims((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Data Klaim SKWB Dihapus', 'Data klaim SKWB warga berhasil dihapus.');
+  };
+
+  const deleteSKWBPaketSedangClaim = (id: string) => {
+    setSkwbPaketSedangClaims((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Klaim Paket Sedang Dihapus', 'Data klaim Paket Sedang berhasil dihapus.');
+  };
+
+  const deleteSKWBPatientCardClaim = (id: string) => {
+    setSkwbPatientCardClaims((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Klaim Kartu Pasien Dihapus', 'Data klaim Kartu Pasien berhasil dihapus.');
+  };
+
+  const deleteSKWBOplasClaim = (id: string) => {
+    setSkwbOplasClaims((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Klaim Oplas SKWB Dihapus', 'Data klaim Operasi Plastik SKWB berhasil dihapus.');
+  };
+
+  const deleteLeaveRequest = (id: string) => {
+    setLeaveRequests((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Pengajuan Cuti Dihapus', 'Data permohonan cuti berhasil dihapus.');
+  };
+
+  const deleteResignRequest = (id: string) => {
+    setResignRequests((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Pengajuan Resign Dihapus', 'Data permohonan resign berhasil dihapus.');
+  };
+
+  const deleteRecruitmentApplicant = (id: string) => {
+    setRecruitmentApplicants((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Pelamar Dihapus', 'Data pelamar rekrutmen berhasil dihapus.');
+  };
+
+  const deleteComplaint = (id: string) => {
+    setComplaints((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Pengaduan Dihapus', 'Laporan keluhan warga berhasil dihapus.');
+  };
+
+  const deleteDutyLog = (id: string) => {
+    setDutyLogs((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Log Jaga/Duty Dihapus', 'Data sesi duty berhasil dihapus.');
+  };
+
+  const deletePayrollRecord = (id: string) => {
+    setPayrollRecords((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Slip Gaji Dihapus', 'Data penggajian berhasil dihapus.');
+  };
+
+  const deleteSOPDocument = (id: string) => {
+    setSopDocuments((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Dokumen SOP Dihapus', 'Standar operasional prosedur berhasil dihapus.');
+  };
+
+  const deleteRegulation = (id: string) => {
+    setRegulations((prev) => prev.filter((r) => r.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Regulasi Dihapus', 'Item regulasi tarif & pengobatan berhasil dihapus.');
   };
 
   const addOrUpdateSOP = (sop: Omit<SOPDocument, 'id' | 'updatedAt' | 'author'>, existingId?: string) => {
@@ -1734,10 +1891,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addOrUpdatePayroll,
         updateRoleSalaryConfig,
         addOrUpdateRegulation,
+        confirmModal,
+        requestDelete,
+        closeConfirmModal,
         submitSKWBClaim,
         claimSKWBPaketSedang,
         claimSKWBPatientCard,
         claimSKWBOplas,
+        deleteSKSRecord,
+        deletePsychologyRecord,
+        deleteColorBlindResult,
+        deletePlasticSurgeryRecord,
+        deleteAppointment,
+        deleteCharacterKillRecord,
+        deleteSKWBClaim,
+        deleteSKWBPaketSedangClaim,
+        deleteSKWBPatientCardClaim,
+        deleteSKWBOplasClaim,
+        deleteLeaveRequest,
+        deleteResignRequest,
+        deleteRecruitmentApplicant,
+        deleteComplaint,
+        deleteDutyLog,
+        deletePayrollRecord,
+        deleteSOPDocument,
+        deleteRegulation,
       }}
     >
       {children}

@@ -402,7 +402,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   value={sksForm.fullName}
                   onChange={(e) => setSksForm({ ...sksForm, fullName: e.target.value })}
                   placeholder="Masukkan nama lengkap sesuai identitas"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                 />
               </div>
 
@@ -413,7 +413,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   type="date"
                   value={sksForm.birthDate}
                   onChange={(e) => setSksForm({ ...sksForm, birthDate: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                 />
               </div>
 
@@ -424,7 +424,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   onChange={(e) =>
                     setSksForm({ ...sksForm, gender: e.target.value as 'Laki-laki' | 'Perempuan' })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm bg-white"
                 >
                   <option value="Laki-laki">Laki-laki</option>
                   <option value="Perempuan">Perempuan</option>
@@ -441,7 +441,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   value={sksForm.age}
                   onChange={(e) => setSksForm({ ...sksForm, age: e.target.value })}
                   placeholder="Contoh: 25"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
                 />
               </div>
 
@@ -453,7 +453,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   value={sksForm.occupation}
                   onChange={(e) => setSksForm({ ...sksForm, occupation: e.target.value })}
                   placeholder="Contoh: Wiraswasta / Mekanik"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                 />
               </div>
 
@@ -465,7 +465,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   value={sksForm.phoneOrIC}
                   onChange={(e) => setSksForm({ ...sksForm, phoneOrIC: e.target.value })}
                   placeholder="Contoh: 0812-xxxx-xxxx"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
                 />
               </div>
 
@@ -479,7 +479,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       purpose: e.target.value as SKSRecord['purpose'],
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm bg-white"
                 >
                   <option value="Pemeriksaan Rutin">Pemeriksaan Rutin</option>
                   <option value="Lampiran Pembuatan Lisensi">Lampiran Pembuatan Lisensi</option>
@@ -530,7 +530,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     onClick={() => setPsyStep('data_diri')}
                     className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
                       psyStep === 'data_diri'
-                        ? 'bg-[#E83E8C] text-white shadow-2xs'
+                        ? 'bg-[#9E1B21] text-white shadow-2xs'
                         : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
@@ -554,7 +554,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     }}
                     className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
                       psyStep === 'tes_evaluasi'
-                        ? 'bg-[#E83E8C] text-white shadow-2xs'
+                        ? 'bg-[#9E1B21] text-white shadow-2xs'
                         : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
@@ -596,7 +596,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={psyForm.fullName}
                       onChange={(e) => setPsyForm({ ...psyForm, fullName: e.target.value })}
                       placeholder="Nama lengkap peserta sesuai identitas IC"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -607,7 +607,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       type="date"
                       value={psyForm.birthDate}
                       onChange={(e) => setPsyForm({ ...psyForm, birthDate: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -621,7 +621,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={psyForm.age}
                       onChange={(e) => setPsyForm({ ...psyForm, age: e.target.value })}
                       placeholder="Contoh: 24"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
                     />
                   </div>
 
@@ -632,7 +632,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       onChange={(e) =>
                         setPsyForm({ ...psyForm, gender: e.target.value as 'Laki-laki' | 'Perempuan' })
                       }
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm bg-white"
                     >
                       <option value="Laki-laki">Laki-laki</option>
                       <option value="Perempuan">Perempuan</option>
@@ -647,7 +647,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={psyForm.occupation}
                       onChange={(e) => setPsyForm({ ...psyForm, occupation: e.target.value })}
                       placeholder="Pekerjaan saat ini"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -659,7 +659,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={psyForm.phoneOrIC}
                       onChange={(e) => setPsyForm({ ...psyForm, phoneOrIC: e.target.value })}
                       placeholder="Nomor kontak aktif"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
                     />
                   </div>
 
@@ -670,7 +670,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       onChange={(e) =>
                         setPsyForm({ ...psyForm, purpose: e.target.value as typeof psyForm.purpose })
                       }
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm bg-white"
                     >
                       <option value="Evaluasi Kesehatan Mental Mandiri">Evaluasi Kesehatan Mental Mandiri</option>
                       <option value="Syarat Kelayakan Kerja / Rekrutmen">Syarat Kelayakan Kerja / Rekrutmen</option>
@@ -694,7 +694,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={psyForm.historyNotes}
                       onChange={(e) => setPsyForm({ ...psyForm, historyNotes: e.target.value })}
                       placeholder="Jelaskan secara singkat keluhan, kendala emosional, atau latar belakang pengajuan tes psikologi Anda."
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
                 </div>
@@ -793,7 +793,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   {/* BAGIAN 1: SKRINING KESEHATAN MENTAL UMUM (GHQ-12) */}
                   <div className="space-y-4">
                     <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2">
-                      <h3 className="text-sm sm:text-base font-extrabold text-pink-300">
+                      <h3 className="text-sm sm:text-base font-extrabold text-red-300">
                         Bagian 1: Skrining Kesehatan Mental Umum (GHQ-12)
                       </h3>
                       <p className="text-xs text-slate-200">
@@ -835,7 +835,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                                   key={opt.code}
                                   className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition ${
                                     isChecked
-                                      ? 'border-[#E83E8C] bg-slate-50 font-bold text-slate-900'
+                                      ? 'border-[#9E1B21] bg-slate-50 font-bold text-slate-900'
                                       : 'border-slate-200 bg-white hover:border-red-200 text-slate-700'
                                   }`}
                                 >
@@ -854,7 +854,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                                         },
                                       }));
                                     }}
-                                    className="accent-[#E83E8C]"
+                                    className="accent-red-600"
                                   />
                                   <span>{opt.label}</span>
                                 </label>
@@ -1111,7 +1111,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   value={plasticForm.fullName}
                   onChange={(e) => setPlasticForm({ ...plasticForm, fullName: e.target.value })}
                   placeholder="Nama lengkap pasien"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                 />
               </div>
 
@@ -1122,7 +1122,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   type="date"
                   value={plasticForm.birthDate}
                   onChange={(e) => setPlasticForm({ ...plasticForm, birthDate: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                 />
               </div>
 
@@ -1136,7 +1136,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       gender: e.target.value as 'Laki-laki' | 'Perempuan',
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm bg-white"
                 >
                   <option value="Laki-laki">Laki-laki</option>
                   <option value="Perempuan">Perempuan</option>
@@ -1153,7 +1153,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   value={plasticForm.age}
                   onChange={(e) => setPlasticForm({ ...plasticForm, age: e.target.value })}
                   placeholder="Minimal 18 tahun"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
                 />
               </div>
 
@@ -1165,7 +1165,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   value={plasticForm.occupation}
                   onChange={(e) => setPlasticForm({ ...plasticForm, occupation: e.target.value })}
                   placeholder="Pekerjaan pasien"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                 />
               </div>
 
@@ -1177,7 +1177,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   value={plasticForm.phoneOrIC}
                   onChange={(e) => setPlasticForm({ ...plasticForm, phoneOrIC: e.target.value })}
                   placeholder="Nomor HP / IC"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
                 />
               </div>
 
@@ -1186,7 +1186,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 <select
                   value={plasticForm.surgeryType}
                   onChange={(e) => setPlasticForm({ ...plasticForm, surgeryType: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm bg-white"
                 >
                   <option value="Rhinoplasty & Facial Contouring/Oplas ($2,500)">
                     Rhinoplasty & Facial Contouring/Oplas ($2,500)
@@ -1321,7 +1321,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     onClick={() => setScheduleFilter(cat)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                       scheduleFilter === cat
-                        ? 'bg-[#E83E8C] text-white shadow-xs'
+                        ? 'bg-[#9E1B21] text-white shadow-xs'
                         : 'text-slate-600 hover:text-[#7F1D1D]'
                     }`}
                   >
@@ -1335,7 +1335,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
               {filteredSchedules.map((doc) => (
                 <div
                   key={doc.id}
-                  className="p-4 rounded-2xl border border-red-100 bg-white hover:border-[#E83E8C]/40 transition flex flex-col justify-between gap-4"
+                  className="p-4 rounded-2xl border border-red-100 bg-white hover:border-red-600/40 transition flex flex-col justify-between gap-4"
                 >
                   <div className="flex items-start gap-3.5">
                     <img
@@ -1393,7 +1393,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
             {!selectedDoctorForAppointment ? (
               /* Sec 20: Jika berasal dari Quick Access tanpa memilih dokter */
               <div className="p-8 rounded-2xl bg-slate-50 border border-red-200/70 text-center space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#E83E8C]/15 text-[#9E1B21] flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-2xl bg-[#9E1B21]/15 text-[#9E1B21] flex items-center justify-center mx-auto">
                   <UserCheck className="w-6 h-6" />
                 </div>
                 <p className="text-base font-semibold text-slate-800">
@@ -1464,7 +1464,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={aptForm.patientName}
                       onChange={(e) => setAptForm({ ...aptForm, patientName: e.target.value })}
                       placeholder="Nama lengkap pasien"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
                   <div>
@@ -1475,7 +1475,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={aptForm.patientPhone}
                       onChange={(e) => setAptForm({ ...aptForm, patientPhone: e.target.value })}
                       placeholder="Nomor telepon / IC"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
                     />
                   </div>
                   <div>
@@ -1485,7 +1485,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       type="date"
                       value={aptForm.date}
                       onChange={(e) => setAptForm({ ...aptForm, date: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
                   <div>
@@ -1495,7 +1495,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       type="time"
                       value={aptForm.time}
                       onChange={(e) => setAptForm({ ...aptForm, time: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm tabular-nums"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -1508,7 +1508,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={aptForm.complaint}
                       onChange={(e) => setAptForm({ ...aptForm, complaint: e.target.value })}
                       placeholder="Tuliskan keluhan kesehatan atau tujuan konsultasi Anda..."
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
                   <div className="sm:col-span-2 flex justify-end gap-3 pt-2">
@@ -1617,7 +1617,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
             {recSubmittedSuccess ? (
               /* POP UP SETELAH BERHASIL SUBMIT */
-              <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 border-2 border-[#E83E8C]/30 text-center space-y-5 shadow-sm">
+              <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 border-2 border-[#9E1B21]/30 text-center space-y-5 shadow-sm">
                 <div className="w-16 h-16 rounded-2xl bg-[#20C997]/15 text-[#20C997] flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-9 h-9" />
                 </div>
@@ -1647,7 +1647,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
               </div>
             ) : recruitmentStatus === 'CLOSED' ? (
               <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 border border-red-200 text-center space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#E83E8C]/15 text-[#9E1B21] flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-2xl bg-[#9E1B21]/15 text-[#9E1B21] flex items-center justify-center mx-auto">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <p className="text-sm sm:text-base font-medium text-slate-800 leading-relaxed max-w-xl mx-auto">
@@ -1763,56 +1763,56 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       Berikut ini adalah persyaratan umum untuk bergabung menjadi bagian dari EMS
                     </p>
                     <div className="space-y-2">
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.age17Plus}
                           onChange={(e) =>
                             setRecForm({ ...recForm, age17Plus: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           Berusia 17 Tahun Saat Mendaftar (IC)
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.dedicatedUnderPressure}
                           onChange={(e) =>
                             setRecForm({ ...recForm, dedicatedUnderPressure: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           Berdedikasi tinggi, mampu bekerja dalam tekanan dan berkemauan untuk belajar
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.willingTraining1To3Days}
                           onChange={(e) =>
                             setRecForm({ ...recForm, willingTraining1To3Days: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           Bersedia mengikuti masa training selama 1-3 hari
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.willingFollowSOP}
                           onChange={(e) =>
                             setRecForm({ ...recForm, willingFollowSOP: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           Bersedia mengikuti Standar Operasi dan Prosedur yang berlaku selama menjadi anggota EMS
@@ -1827,70 +1827,70 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       Berikut adaalah syarat ic yang harus dimiliki sebelum dilakukan interview
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.hasKtpIme}
                           onChange={(e) =>
                             setRecForm({ ...recForm, hasKtpIme: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           Kartu Identitas Warga Kota Baru (KTP)
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.hasSkb}
                           onChange={(e) =>
                             setRecForm({ ...recForm, hasSkb: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           Memiliki SKB
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.hasSim}
                           onChange={(e) =>
                             setRecForm({ ...recForm, hasSim: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           SIM (bisa menyusul kalau sudah diterima)
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition">
                         <input
                           type="checkbox"
                           checked={recForm.hasSuratKesehatan}
                           onChange={(e) =>
                             setRecForm({ ...recForm, hasSuratKesehatan: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           Memiliki Surat Kesehatan
                         </span>
                       </label>
 
-                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-[#E83E8C]/40 cursor-pointer transition sm:col-span-2">
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-white border border-red-100 hover:border-red-600/40 cursor-pointer transition sm:col-span-2">
                         <input
                           type="checkbox"
                           checked={recForm.hasSuratPsikolog}
                           onChange={(e) =>
                             setRecForm({ ...recForm, hasSuratPsikolog: e.target.checked })
                           }
-                          className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded cursor-pointer"
+                          className="mt-0.5 w-4 h-4 accent-red-600 rounded cursor-pointer"
                         />
                         <span className="text-xs sm:text-sm font-medium text-slate-800">
                           Memiliki Surat Psikolog
@@ -1920,7 +1920,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         value={recForm.fullName}
                         onChange={(e) => setRecForm({ ...recForm, fullName: e.target.value })}
                         placeholder="Masukkan Nama Karakter (IC)"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                       />
                     </div>
 
@@ -1936,7 +1936,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                             gender: e.target.value as 'Laki-laki' | 'Perempuan',
                           })
                         }
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm bg-white"
                       >
                         <option value="Laki-laki">Laki-laki</option>
                         <option value="Perempuan">Perempuan</option>
@@ -1952,7 +1952,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         type="date"
                         value={recForm.birthDateIC}
                         onChange={(e) => setRecForm({ ...recForm, birthDateIC: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                       />
                     </div>
                   </div>
@@ -1970,7 +1970,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={recForm.experience}
                       onChange={(e) => setRecForm({ ...recForm, experience: e.target.value })}
                       placeholder="Tuliskan pengalaman medis/EMS Anda atau isi 0 jika belum ada..."
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -1984,7 +1984,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={recForm.motivation}
                       onChange={(e) => setRecForm({ ...recForm, motivation: e.target.value })}
                       placeholder="Jelaskan motivasi dan tujuan Anda bergabung bersama Kota Baru Medical Center..."
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -2001,7 +2001,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={recForm.rpExperienceOOC}
                       onChange={(e) => setRecForm({ ...recForm, rpExperienceOOC: e.target.value })}
                       placeholder="Contoh: 2 tahun bermain RP, pernah berperan sebagai White Side (EMS / Polisi) atau isi 0 / - ..."
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -2142,7 +2142,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         setRecForm({ ...recForm, otherCityResponsibilityOOC: e.target.value })
                       }
                       placeholder="Jawab dengan jujur apakah ada tanggung jawab di kota lain dan kesiapan membagi waktu..."
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -2159,7 +2159,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           setRecForm({ ...recForm, onlineHoursOOC: e.target.value })
                         }
                         placeholder="Contoh: 19:00 - 24:00 WIB"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                       />
                     </div>
 
@@ -2175,7 +2175,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           setRecForm({ ...recForm, onlineDaysOOC: e.target.value })
                         }
                         placeholder="Contoh: Senin s/d Minggu"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                       />
                     </div>
                   </div>
@@ -2384,7 +2384,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={skwbForm.icName}
                       onChange={(e) => setSkwbForm({ ...skwbForm, icName: e.target.value })}
                       placeholder="Masukkan nama lengkap sesuai identitas IC Anda"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -2398,7 +2398,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       type="date"
                       value={skwbForm.birthDate}
                       onChange={(e) => setSkwbForm({ ...skwbForm, birthDate: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm font-mono"
                     />
                   </div>
 
@@ -2412,7 +2412,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       type="date"
                       value={skwbForm.issueDate}
                       onChange={(e) => setSkwbForm({ ...skwbForm, issueDate: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm font-mono"
                     />
                   </div>
                 </div>
@@ -2678,7 +2678,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         value={ckForm.fullName}
                         onChange={(e) => setCkForm({ ...ckForm, fullName: e.target.value })}
                         placeholder="Masukkan nama lengkap karakter (IC)"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                       />
                     </div>
 
@@ -2691,7 +2691,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         type="date"
                         value={ckForm.birthDate}
                         onChange={(e) => setCkForm({ ...ckForm, birthDate: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm font-mono"
                       />
                     </div>
 
@@ -2707,7 +2707,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                             gender: e.target.value as 'Laki-laki' | 'Perempuan',
                           })
                         }
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                       >
                         <option value="Laki-laki">Laki-laki</option>
                         <option value="Perempuan">Perempuan</option>
@@ -2726,7 +2726,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         value={ckForm.age}
                         onChange={(e) => setCkForm({ ...ckForm, age: e.target.value })}
                         placeholder="Contoh: 28"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm font-mono"
                       />
                     </div>
 
@@ -2740,7 +2740,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         value={ckForm.occupation}
                         onChange={(e) => setCkForm({ ...ckForm, occupation: e.target.value })}
                         placeholder="Pekerjaan karakter di kota"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                       />
                     </div>
 
@@ -2754,7 +2754,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         value={ckForm.citizenId}
                         onChange={(e) => setCkForm({ ...ckForm, citizenId: e.target.value })}
                         placeholder="Masukkan Citizen ID (KTP)"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm font-mono"
                       />
                     </div>
 
@@ -2768,7 +2768,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         value={ckForm.steamHex}
                         onChange={(e) => setCkForm({ ...ckForm, steamHex: e.target.value })}
                         placeholder="Contoh: steam:11000010a4b8c9d"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm font-mono"
                       />
                     </div>
 
@@ -2782,7 +2782,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         value={ckForm.phoneOrIC}
                         onChange={(e) => setCkForm({ ...ckForm, phoneOrIC: e.target.value })}
                         placeholder="Masukkan nomor HP IC"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm font-mono"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm font-mono"
                       />
                     </div>
                   </div>
@@ -2809,7 +2809,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={ckForm.causeOfDeath}
                       onChange={(e) => setCkForm({ ...ckForm, causeOfDeath: e.target.value })}
                       placeholder="Contoh: Luka tembak di bagian dada / Trauma kepala berat"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -2823,7 +2823,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       value={ckForm.chronologyCK}
                       onChange={(e) => setCkForm({ ...ckForm, chronologyCK: e.target.value })}
                       placeholder="Tuliskan kronologi lengkap kejadian Character Kill (CK)..."
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                     />
                   </div>
 
@@ -2839,7 +2839,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           burialType: e.target.value as 'Penguburan' | 'Kremasi',
                         })
                       }
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-[#E83E8C] focus:outline-none text-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-red-600 focus:outline-none text-sm"
                     >
                       <option value="Penguburan">Penguburan</option>
                       <option value="Kremasi">Kremasi</option>
@@ -2848,7 +2848,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                 </div>
 
                 {/* VALIDASI CHECKBOX */}
-                <label className="flex items-start gap-3 p-4 rounded-xl bg-white border border-red-200 hover:border-[#E83E8C] cursor-pointer transition">
+                <label className="flex items-start gap-3 p-4 rounded-xl bg-white border border-red-200 hover:border-red-600 cursor-pointer transition">
                   <input
                     required
                     type="checkbox"
@@ -2856,7 +2856,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     onChange={(e) =>
                       setCkForm({ ...ckForm, accuracyConfirmed: e.target.checked })
                     }
-                    className="mt-0.5 w-4 h-4 accent-[#E83E8C] rounded shrink-0"
+                    className="mt-0.5 w-4 h-4 accent-red-600 rounded shrink-0"
                   />
                   <span className="text-xs sm:text-sm font-medium text-slate-700 leading-relaxed">
                     Saya yakin seluruh data yang saya isi sudah benar dan saya bertanggung jawab atas keakuratan data tersebut.

@@ -5,6 +5,7 @@ import {
   doc,
   getDocFromServer,
   setDoc,
+  deleteDoc,
   collection,
   onSnapshot,
   query,
@@ -130,6 +131,19 @@ export async function syncRecordToFirestore(
     });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Helper to delete a Portal Record from Cloud Firestore
+ */
+export async function deleteRecordFromFirestore(id: string) {
+  const cleanId = id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120);
+  const path = `portal_records/${cleanId}`;
+  try {
+    await deleteDoc(doc(db, 'portal_records', cleanId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }
 

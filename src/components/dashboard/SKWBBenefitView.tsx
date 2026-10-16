@@ -16,6 +16,7 @@ import {
   X,
   ArrowLeft,
   FileImage,
+  Trash2,
 } from 'lucide-react';
 
 // Helper untuk mengecek apakah masa berlaku SKWB (Tanggal Terbit + 7 hari) masih aktif secara otomatis
@@ -55,6 +56,9 @@ export const SKWBBenefitView: React.FC = () => {
     claimSKWBPaketSedang,
     claimSKWBPatientCard,
     claimSKWBOplas,
+    deleteSKWBClaim,
+    deleteSKWBPaketSedangClaim,
+    requestDelete,
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -201,11 +205,11 @@ export const SKWBBenefitView: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Tombol Kembali & Header Detail */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-pink-100 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100 shadow-xs">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSelectedClaimId(null)}
-              className="p-2.5 rounded-xl border border-pink-200 bg-[#FFF5F8] text-[#D63384] hover:bg-pink-100 transition cursor-pointer"
+              className="p-2.5 rounded-xl border border-red-200 bg-red-50/40 text-[#7F1D1D] hover:bg-red-100 transition cursor-pointer"
               title="Kembali ke Daftar Benefit SKWB"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -236,7 +240,7 @@ export const SKWBBenefitView: React.FC = () => {
 
           <button
             onClick={() => setPreviewPhotoClaim(selectedClaim)}
-            className="px-4 py-2.5 rounded-xl border border-pink-200 bg-[#FFF5F8] text-[#D63384] hover:bg-pink-100 text-xs font-semibold flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+            className="px-4 py-2.5 rounded-xl border border-red-200 bg-red-50/40 text-[#7F1D1D] hover:bg-red-100 text-xs font-semibold flex items-center gap-2 self-start sm:self-auto cursor-pointer"
           >
             <Eye className="w-4 h-4" />
             <span>Lihat Foto Surat SKWB</span>
@@ -246,11 +250,11 @@ export const SKWBBenefitView: React.FC = () => {
         {/* Bagian 1 & 2: Informasi Warga & Informasi SKWB */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Informasi Warga & SKWB */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-pink-100 p-6 shadow-xs space-y-5">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Informasi Warga */}
               <div className="space-y-3">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#E83E8C] border-b border-pink-100 pb-2">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#9E1B21] border-b border-red-100 pb-2">
                   Informasi Warga
                 </h2>
                 <div className="space-y-2 text-xs">
@@ -273,7 +277,7 @@ export const SKWBBenefitView: React.FC = () => {
 
               {/* Informasi SKWB */}
               <div className="space-y-3">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#20C997] border-b border-pink-100 pb-2">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#20C997] border-b border-red-100 pb-2">
                   Informasi SKWB
                 </h2>
                 <div className="space-y-2 text-xs">
@@ -291,7 +295,7 @@ export const SKWBBenefitView: React.FC = () => {
                   </div>
                   <div className="flex justify-between py-1.5 border-b border-slate-100">
                     <span className="text-slate-500">Tanggal Berakhir Benefit</span>
-                    <span className="font-mono font-bold text-[#D63384]">
+                    <span className="font-mono font-bold text-[#7F1D1D]">
                       {selectedClaim.endDate}
                     </span>
                   </div>
@@ -322,7 +326,7 @@ export const SKWBBenefitView: React.FC = () => {
           </div>
 
           {/* Foto SKWB Card */}
-          <div className="bg-white rounded-2xl border border-pink-100 p-5 shadow-xs flex flex-col justify-between space-y-3">
+          <div className="bg-white rounded-2xl border border-red-100 p-5 shadow-xs flex flex-col justify-between space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Foto Surat SKWB
@@ -333,7 +337,7 @@ export const SKWBBenefitView: React.FC = () => {
             </div>
             <div
               onClick={() => setPreviewPhotoClaim(selectedClaim)}
-              className="relative group rounded-xl overflow-hidden border border-pink-100 bg-slate-50 h-44 flex items-center justify-center cursor-pointer"
+              className="relative group rounded-xl overflow-hidden border border-red-100 bg-slate-50 h-44 flex items-center justify-center cursor-pointer"
             >
               {selectedClaim.photoDataUrl ? (
                 <img
@@ -363,10 +367,10 @@ export const SKWBBenefitView: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* BENEFIT 1: PAKET SEDANG (Obat dan Perban - Harian 1x/hari, Co-ass+) */}
-            <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
+            <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E83E8C] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-red-50/60 text-[#9E1B21] flex items-center justify-center">
                     <Package className="w-5 h-5" />
                   </div>
                   <span
@@ -388,13 +392,13 @@ export const SKWBBenefitView: React.FC = () => {
 
                 <div>
                   <h3 className="text-base font-bold text-slate-900">1. Paket Sedang</h3>
-                  <p className="text-xs font-semibold text-[#D63384] mt-0.5">Isi: Obat dan Perban</p>
+                  <p className="text-xs font-semibold text-[#7F1D1D] mt-0.5">Isi: Obat dan Perban</p>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                     Dapat diklaim <strong>1 kali setiap hari</strong> selama masa berlaku SKWB masih aktif. Wajib ditangani oleh <strong>Co-ass ke atas</strong>.
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#FFF5F8] border border-pink-100 text-xs space-y-1">
+                <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs space-y-1">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Total Pengambilan:</span>
                     <span className="font-mono font-bold text-slate-900">
@@ -418,7 +422,7 @@ export const SKWBBenefitView: React.FC = () => {
                     className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold transition cursor-pointer ${
                       selectedClaim.claimedPaketToday
                         ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white shadow-xs hover:opacity-95'
+                        : 'bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white shadow-xs hover:opacity-95'
                     }`}
                   >
                     {selectedClaim.claimedPaketToday
@@ -434,7 +438,7 @@ export const SKWBBenefitView: React.FC = () => {
             </div>
 
             {/* BENEFIT 2: DISKON 50% PEMBUATAN KARTU PASIEN (1x selama SKWB, Paramedic+) */}
-            <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
+            <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#20C997] flex items-center justify-center">
@@ -489,13 +493,13 @@ export const SKWBBenefitView: React.FC = () => {
                     </div>
                     <div className="flex justify-between text-[11px]">
                       <span className="text-slate-500">Jabatan Staff:</span>
-                      <span className="font-semibold text-[#D63384]">
+                      <span className="font-semibold text-[#7F1D1D]">
                         {selectedClaim.patientCardRecord.staffRole}
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 rounded-xl bg-[#FFF5F8] border border-pink-100 text-xs text-slate-600">
+                  <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs text-slate-600">
                     Belum pernah diklaim. Kuota tersedia: <strong>1x Klaim</strong>.
                   </div>
                 )}
@@ -512,7 +516,7 @@ export const SKWBBenefitView: React.FC = () => {
                 ) : selectedClaim.isActive ? (
                   <button
                     onClick={() => openClaimModal('kartu_pasien')}
-                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-xs hover:opacity-95 transition cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-xs hover:opacity-95 transition cursor-pointer"
                   >
                     Klaim Diskon 50% Kartu Pasien
                   </button>
@@ -525,10 +529,10 @@ export const SKWBBenefitView: React.FC = () => {
             </div>
 
             {/* BENEFIT 3: FREE 1x OPLAS (1x selama SKWB, Doctor+) */}
-            <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
+            <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E83E8C] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-red-50/60 text-[#9E1B21] flex items-center justify-center">
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <span
@@ -550,7 +554,7 @@ export const SKWBBenefitView: React.FC = () => {
 
                 <div>
                   <h3 className="text-base font-bold text-slate-900">3. Free 1x Oplas</h3>
-                  <p className="text-xs font-semibold text-[#D63384] mt-0.5">
+                  <p className="text-xs font-semibold text-[#7F1D1D] mt-0.5">
                     Gratis 1x Prosedur Operasi Plastik Warga Baru
                   </p>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -578,13 +582,13 @@ export const SKWBBenefitView: React.FC = () => {
                     </div>
                     <div className="flex justify-between text-[11px]">
                       <span className="text-slate-500">Jabatan Dokter:</span>
-                      <span className="font-semibold text-[#D63384]">
+                      <span className="font-semibold text-[#7F1D1D]">
                         {selectedClaim.oplasRecord.staffRole}
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 rounded-xl bg-[#FFF5F8] border border-pink-100 text-xs text-slate-600">
+                  <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs text-slate-600">
                     Belum pernah diklaim. Kuota tersedia: <strong>1x Klaim</strong>.
                   </div>
                 )}
@@ -601,7 +605,7 @@ export const SKWBBenefitView: React.FC = () => {
                 ) : selectedClaim.isActive ? (
                   <button
                     onClick={() => openClaimModal('oplas')}
-                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-xs hover:opacity-95 transition cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-xs hover:opacity-95 transition cursor-pointer"
                   >
                     Klaim Free 1x Oplas
                   </button>
@@ -616,7 +620,7 @@ export const SKWBBenefitView: React.FC = () => {
         </div>
 
         {/* RIWAYAT KLAIM PAKET SEDANG (Sec 15: Record Terpisah per Pengambilan) */}
-        <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs space-y-4">
+        <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h2 className="text-base font-bold text-slate-900">
@@ -626,20 +630,20 @@ export const SKWBBenefitView: React.FC = () => {
                 Setiap pengambilan harian disimpan sebagai histori transaksi terpisah beserta snapshot nama & jabatan staff.
               </p>
             </div>
-            <span className="px-3 py-1 rounded-xl bg-[#FFF5F8] border border-pink-200 text-xs font-mono font-bold text-[#D63384] self-start sm:self-auto">
+            <span className="px-3 py-1 rounded-xl bg-red-50/40 border border-red-200 text-xs font-mono font-bold text-[#7F1D1D] self-start sm:self-auto">
               Total Klaim: {selectedClaim.paketHistory.length} Record
             </span>
           </div>
 
           {selectedClaim.paketHistory.length === 0 ? (
-            <div className="p-8 rounded-xl bg-[#FFF5F8] border border-pink-100 text-center text-xs text-slate-500">
+            <div className="p-8 rounded-xl bg-red-50/40 border border-red-100 text-center text-xs text-slate-500">
               Belum ada riwayat pengambilan Paket Sedang untuk warga ini.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-pink-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-red-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="py-3 px-4">Tanggal Klaim</th>
                     <th className="py-3 px-4">Waktu Klaim</th>
                     <th className="py-3 px-4">Nama Staff yang Menangani</th>
@@ -647,23 +651,38 @@ export const SKWBBenefitView: React.FC = () => {
                     <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-pink-50 text-xs">
+                <tbody className="divide-y divide-red-50 text-xs">
                   {selectedClaim.paketHistory.map((item) => (
-                    <tr key={item.id} className="hover:bg-pink-50/40">
+                    <tr key={item.id} className="hover:bg-red-50/60/40">
                       <td className="py-3 px-4 font-mono font-semibold text-slate-900">
                         {item.claimDate}
                       </td>
                       <td className="py-3 px-4 font-mono text-slate-600">{item.claimTime}</td>
                       <td className="py-3 px-4 font-bold text-slate-900">{item.staffName}</td>
                       <td className="py-3 px-4">
-                        <span className="px-2.5 py-0.5 rounded-md bg-pink-50 text-[#D63384] font-semibold">
+                        <span className="px-2.5 py-0.5 rounded-md bg-red-50/60 text-[#7F1D1D] font-semibold">
                           {item.staffRole}
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700 font-bold">
-                          {item.status}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700 font-bold">
+                            {item.status}
+                          </span>
+                          <button
+                            onClick={() => {
+                              requestDelete(
+                                'Hapus Riwayat Klaim Paket',
+                                `Hapus riwayat klaim paket sedang tanggal ${item.claimDate} oleh ${item.staffName}?`,
+                                () => deleteSKWBPaketSedangClaim(item.id)
+                              );
+                            }}
+                            title="Hapus Riwayat Klaim"
+                            className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition ml-2"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -681,8 +700,8 @@ export const SKWBBenefitView: React.FC = () => {
               if (e.target === e.currentTarget) setActiveClaimModal(null);
             }}
           >
-            <div className="w-full max-w-lg bg-white rounded-2xl border border-pink-100 shadow-xl p-6 space-y-5">
-              <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+            <div className="w-full max-w-lg bg-white rounded-2xl border border-red-100 shadow-xl p-6 space-y-5">
+              <div className="flex items-center justify-between border-b border-red-100 pb-3">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">
                     {activeClaimModal === 'paket_sedang' && 'Klaim Paket Sedang (Obat & Perban)'}
@@ -696,7 +715,7 @@ export const SKWBBenefitView: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setActiveClaimModal(null)}
-                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-pink-50 text-slate-600 cursor-pointer"
+                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-red-50/60 text-slate-600 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -709,23 +728,23 @@ export const SKWBBenefitView: React.FC = () => {
               )}
 
               <form onSubmit={handleConfirmBenefitClaim} className="space-y-4">
-                <div className="p-3 rounded-xl bg-[#FFF5F8] border border-pink-100 text-xs text-slate-700">
+                <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs text-slate-700">
                   {activeClaimModal === 'paket_sedang' && (
                     <span>
                       Syarat Kewenangan: Hanya menampilkan anggota staff aktif dengan jabatan{' '}
-                      <strong className="text-[#D63384]">Co-ass ke atas</strong>.
+                      <strong className="text-[#7F1D1D]">Co-ass ke atas</strong>.
                     </span>
                   )}
                   {activeClaimModal === 'kartu_pasien' && (
                     <span>
                       Syarat Kewenangan: Hanya menampilkan anggota staff aktif dengan jabatan{' '}
-                      <strong className="text-[#D63384]">Paramedic ke atas</strong>.
+                      <strong className="text-[#7F1D1D]">Paramedic ke atas</strong>.
                     </span>
                   )}
                   {activeClaimModal === 'oplas' && (
                     <span>
                       Syarat Kewenangan: Hanya menampilkan anggota staff aktif dengan jabatan{' '}
-                      <strong className="text-[#D63384]">Doctor ke atas</strong>.
+                      <strong className="text-[#7F1D1D]">Doctor ke atas</strong>.
                     </span>
                   )}
                 </div>
@@ -745,7 +764,7 @@ export const SKWBBenefitView: React.FC = () => {
                       value={staffSearchQuery}
                       onChange={(e) => setStaffSearchQuery(e.target.value)}
                       placeholder="Cari nama staff atau jabatan..."
-                      className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-xs"
+                      className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-xs"
                     />
                   </div>
 
@@ -756,7 +775,7 @@ export const SKWBBenefitView: React.FC = () => {
                       setSelectedStaffId(e.target.value);
                       setClaimErrorMsg('');
                     }}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-xs bg-white font-medium"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-xs bg-white font-medium"
                   >
                     <option value="">-- Pilih Nama Anggota Staff --</option>
                     {eligibleStaffList.map((st) => (
@@ -790,7 +809,7 @@ export const SKWBBenefitView: React.FC = () => {
                   </div>
                 )}
 
-                <div className="pt-2 flex justify-end gap-2.5 border-t border-pink-100">
+                <div className="pt-2 flex justify-end gap-2.5 border-t border-red-100">
                   <button
                     type="button"
                     onClick={() => setActiveClaimModal(null)}
@@ -800,7 +819,7 @@ export const SKWBBenefitView: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-xs hover:opacity-95 cursor-pointer"
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-xs hover:opacity-95 cursor-pointer"
                   >
                     Konfirmasi Klaim
                   </button>
@@ -817,10 +836,10 @@ export const SKWBBenefitView: React.FC = () => {
             onClick={() => setPreviewPhotoClaim(null)}
           >
             <div
-              className="max-w-3xl w-full bg-white rounded-2xl border border-pink-100 p-4 sm:p-6 space-y-4"
+              className="max-w-3xl w-full bg-white rounded-2xl border border-red-100 p-4 sm:p-6 space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+              <div className="flex items-center justify-between border-b border-red-100 pb-3">
                 <div>
                   <h3 className="text-base font-bold text-slate-900">
                     Foto Surat Keterangan Warga Baru (SKWB) — {previewPhotoClaim.icName}
@@ -831,7 +850,7 @@ export const SKWBBenefitView: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setPreviewPhotoClaim(null)}
-                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-pink-50 text-slate-700 cursor-pointer"
+                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-red-50/60 text-slate-700 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -854,9 +873,9 @@ export const SKWBBenefitView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-white rounded-2xl border border-pink-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] text-white flex items-center justify-center shrink-0 shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#9E1B21] to-[#7F1D1D] text-white flex items-center justify-center shrink-0 shadow-xs">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
@@ -868,7 +887,7 @@ export const SKWBBenefitView: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <div className="px-3.5 py-2 rounded-xl bg-[#FFF5F8] border border-pink-100">
+          <div className="px-3.5 py-2 rounded-xl bg-red-50/40 border border-red-100">
             <span className="text-slate-500">Total SKWB: </span>
             <strong className="font-mono text-slate-900">{enrichedClaims.length}</strong>
           </div>
@@ -888,7 +907,7 @@ export const SKWBBenefitView: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-white rounded-2xl border border-pink-100 p-4 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl border border-red-100 p-4 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -896,19 +915,19 @@ export const SKWBBenefitView: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari berdasarkan Nama IC, Tanggal Lahir, atau Tanggal Terbit SKWB..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-xs"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-xs"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-pink-100 self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-red-50/40 rounded-xl border border-red-100 self-start sm:self-auto">
           {(['Semua', 'Aktif', 'Kadaluarsa'] as const).map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 statusFilter === st
-                  ? 'bg-[#E83E8C] text-white shadow-2xs'
-                  : 'text-slate-600 hover:text-[#D63384]'
+                  ? 'bg-[#9E1B21] text-white shadow-2xs'
+                  : 'text-slate-600 hover:text-[#7F1D1D]'
               }`}
             >
               {st}
@@ -918,10 +937,10 @@ export const SKWBBenefitView: React.FC = () => {
       </div>
 
       {/* Tabel Daftar Warga yang Mengajukan Benefit SKWB */}
-      <div className="bg-white rounded-2xl border border-pink-100 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         {filteredClaims.length === 0 ? (
           <div className="p-12 text-center space-y-2">
-            <ShieldCheck className="w-10 h-10 text-pink-300 mx-auto" />
+            <ShieldCheck className="w-10 h-10 text-red-300 mx-auto" />
             <h3 className="text-sm font-bold text-slate-800">Belum Ada Data Pengajuan SKWB</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
               Data warga baru yang mengajukan klaim melalui card <strong>Klaim Benefit SKWB</strong> di Portal Umum akan otomatis tampil secara real-time di halaman ini.
@@ -931,7 +950,7 @@ export const SKWBBenefitView: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#FFF5F8] border-b border-pink-100 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <tr className="bg-red-50/40 border-b border-red-100 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Nama IC</th>
                   <th className="py-3.5 px-4">Tgl Lahir</th>
                   <th className="py-3.5 px-4">Tgl Terbit SKWB</th>
@@ -942,9 +961,9 @@ export const SKWBBenefitView: React.FC = () => {
                   <th className="py-3.5 px-4 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pink-50 text-xs">
+              <tbody className="divide-y divide-red-50 text-xs">
                 {filteredClaims.map((item) => (
-                  <tr key={item.id} className="hover:bg-pink-50/40 transition">
+                  <tr key={item.id} className="hover:bg-red-50/60/40 transition">
                     <td className="py-3.5 px-4 font-bold text-slate-900">{item.icName}</td>
                     <td className="py-3.5 px-4 font-mono text-slate-600">{item.birthDate}</td>
                     <td className="py-3.5 px-4 font-mono font-semibold text-slate-800">
@@ -952,7 +971,7 @@ export const SKWBBenefitView: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 font-mono text-slate-700">
                       <span className="inline-flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-[#E83E8C]" />
+                        <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
                         {item.startDate} s/d <strong>{item.endDate}</strong>
                       </span>
                     </td>
@@ -970,7 +989,7 @@ export const SKWBBenefitView: React.FC = () => {
                     <td className="py-3.5 px-4">
                       <button
                         onClick={() => setPreviewPhotoClaim(item)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-pink-200 bg-[#FFF5F8] text-[#D63384] hover:bg-pink-100 font-semibold text-[11px] cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50/40 text-[#7F1D1D] hover:bg-red-100 font-semibold text-[11px] cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Lihat Foto</span>
@@ -1003,7 +1022,7 @@ export const SKWBBenefitView: React.FC = () => {
                           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                             item.oplasRecord
                               ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-pink-50 text-[#D63384]'
+                              : 'bg-red-50/60 text-[#7F1D1D]'
                           }`}
                         >
                           Free Oplas: {item.oplasRecord ? 'Claimed' : 'Belum'}
@@ -1011,12 +1030,27 @@ export const SKWBBenefitView: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => setSelectedClaimId(item.id)}
-                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white text-xs font-semibold shadow-2xs hover:opacity-95 cursor-pointer whitespace-nowrap"
-                      >
-                        Kelola & Detail
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setSelectedClaimId(item.id)}
+                          className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-2xs hover:opacity-95 cursor-pointer whitespace-nowrap"
+                        >
+                          Kelola & Detail
+                        </button>
+                        <button
+                          onClick={() => {
+                            requestDelete(
+                              'Hapus Pengajuan SKWB Warga',
+                              `Apakah Anda yakin ingin menghapus data pengajuan benefit SKWB warga ${item.icName}?`,
+                              () => deleteSKWBClaim(item.id)
+                            );
+                          }}
+                          title="Hapus Data SKWB"
+                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1033,10 +1067,10 @@ export const SKWBBenefitView: React.FC = () => {
           onClick={() => setPreviewPhotoClaim(null)}
         >
           <div
-            className="max-w-3xl w-full bg-white rounded-2xl border border-pink-100 p-4 sm:p-6 space-y-4"
+            className="max-w-3xl w-full bg-white rounded-2xl border border-red-100 p-4 sm:p-6 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+            <div className="flex items-center justify-between border-b border-red-100 pb-3">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
                   Foto Surat Keterangan Warga Baru (SKWB) — {previewPhotoClaim.icName}
@@ -1047,7 +1081,7 @@ export const SKWBBenefitView: React.FC = () => {
               </div>
               <button
                 onClick={() => setPreviewPhotoClaim(null)}
-                className="p-1.5 rounded-xl bg-slate-100 hover:bg-pink-50 text-slate-700 cursor-pointer"
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-red-50/60 text-slate-700 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

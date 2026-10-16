@@ -136,7 +136,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@kotabaru.med"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
                 />
               </div>
 
@@ -150,7 +150,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Masukkan password Anda"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
                 />
               </div>
 
@@ -160,7 +160,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="accent-[#E83E8C] rounded"
+                    className="accent-[#9E1B21] rounded"
                   />
                   <span>Ingat saya</span>
                 </label>
@@ -212,7 +212,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
                   placeholder="Masukkan nama lengkap Anda"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
                 />
               </div>
 
@@ -226,7 +226,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                   placeholder="nama@kotabaru.med"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
                 />
               </div>
 
@@ -241,7 +241,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="Buat password"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
                   />
                 </div>
                 <div>
@@ -254,7 +254,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                     value={regConfirm}
                     onChange={(e) => setRegConfirm(e.target.value)}
                     placeholder="Ulangi password"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
                   />
                 </div>
               </div>
@@ -327,7 +327,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onBackPublic, onLoginSuc
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 placeholder="Masukkan email terdaftar Anda"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
               />
               <div className="flex gap-3">
                 <button

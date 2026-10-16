@@ -337,19 +337,19 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             <div className="grid grid-cols-3 gap-1 text-[10px] text-slate-600 font-medium">
               <button
                 onClick={() => onNavigateRoute('account-approval')}
-                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-red-100 text-center cursor-pointer"
+                className="p-1.5 rounded-lg bg-white hover:border-[#9E1B21] border border-red-100 text-center cursor-pointer"
               >
                 Akun: <strong>{pendingAccountsCount}</strong>
               </button>
               <button
                 onClick={() => onNavigateRoute('leave-approval')}
-                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-red-100 text-center cursor-pointer"
+                className="p-1.5 rounded-lg bg-white hover:border-[#9E1B21] border border-red-100 text-center cursor-pointer"
               >
                 Cuti: <strong>{pendingLeavesCount}</strong>
               </button>
               <button
                 onClick={() => onNavigateRoute('resign-approval')}
-                className="p-1.5 rounded-lg bg-white hover:border-[#E83E8C] border border-red-100 text-center cursor-pointer"
+                className="p-1.5 rounded-lg bg-white hover:border-[#9E1B21] border border-red-100 text-center cursor-pointer"
               >
                 Resign: <strong>{pendingResignsCount}</strong>
               </button>

@@ -92,7 +92,7 @@ export const StaffManagementView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Staff Medis</th>
                 <th className="py-3.5 px-4">Jabatan & Level</th>
                 <th className="py-3.5 px-4">Status</th>
@@ -101,7 +101,7 @@ export const StaffManagementView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {filtered.map((st) => (
                 <tr key={st.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4">
@@ -144,7 +144,7 @@ export const StaffManagementView: React.FC = () => {
                     <div className="inline-flex items-center gap-2">
                       <button
                         onClick={() => openEdit(st)}
-                        className="px-3 py-1.5 rounded-lg bg-[#FFF5F8] hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-red-50/40 hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold flex items-center gap-1 cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                         <span>Edit</span>
@@ -261,8 +261,8 @@ export const StaffManagementView: React.FC = () => {
                               }}
                               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
                                 editSpecialty === sp.id
-                                  ? 'bg-[#E83E8C] text-white border-[#E83E8C]'
-                                  : 'bg-[#FFF5F8] text-[#7F1D1D] border-red-200 hover:bg-red-100'
+                                  ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
+                                  : 'bg-red-50/40 text-[#7F1D1D] border-red-200 hover:bg-red-100'
                               }`}
                             >
                               {sp.id} ({sp.degreeSuffix})
@@ -297,7 +297,7 @@ export const StaffManagementView: React.FC = () => {
                 <h3 className="text-base font-bold text-slate-900">
                   Ubah jabatan dari {editingStaff.role} menjadi {editRole}?
                 </h3>
-                <p className="text-xs text-slate-600 bg-[#FFF5F8] p-3 rounded-xl border border-red-100">
+                <p className="text-xs text-slate-600 bg-red-50/40 p-3 rounded-xl border border-red-100">
                   Perubahan jabatan akan mengubah hak akses staff.
                 </p>
                 <div className="flex items-center justify-center gap-3 pt-2">
@@ -400,7 +400,7 @@ export const StaffManagementView: React.FC = () => {
 // 2. APPROVAL AKUN BARU (Sec 36 & 84 — Heads+ Level 7+)
 // Jika pengajuan akun sudah diproses (Approve atau Reject), maka data pengajuan langsung hilang dari daftar ini
 export const AccountApprovalView: React.FC = () => {
-  const { staffAccounts, approveOrRejectAccount } = useApp();
+  const { staffAccounts, approveOrRejectAccount, deleteStaffAccount, requestDelete } = useApp();
 
   // Hanya menampilkan akun yang masih berstatus 'Pending Approval'
   const pendingList = staffAccounts.filter((s) => s.status === 'Pending Approval');
@@ -414,7 +414,7 @@ export const AccountApprovalView: React.FC = () => {
             Menampilkan pengajuan akun baru. Begitu diproses (Approve / Reject), data pengajuan langsung selesai dan hilang dari antrean ini.
           </p>
         </div>
-        <div className="px-3.5 py-1.5 rounded-xl bg-[#FFF5F8] border border-red-100 text-xs font-bold text-[#7F1D1D]">
+        <div className="px-3.5 py-1.5 rounded-xl bg-red-50/40 border border-red-100 text-xs font-bold text-[#7F1D1D]">
           Antrean Pending: {pendingList.length} Akun
         </div>
       </div>
@@ -423,7 +423,7 @@ export const AccountApprovalView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Nama Lengkap</th>
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Tanggal Register</th>
@@ -431,7 +431,7 @@ export const AccountApprovalView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {pendingList.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-10 text-center text-xs text-slate-500">
@@ -450,7 +450,7 @@ export const AccountApprovalView: React.FC = () => {
                       <span className="text-xs font-bold text-amber-600">{acc.status}</span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <div className="inline-flex items-center gap-2">
+                      <div className="inline-flex items-center gap-1.5">
                         <button
                           onClick={() => approveOrRejectAccount(acc.id, 'Approve')}
                           className="px-3.5 py-1.5 rounded-lg bg-[#20C997] text-white text-xs font-semibold hover:opacity-95 cursor-pointer"
@@ -462,6 +462,19 @@ export const AccountApprovalView: React.FC = () => {
                           className="px-3.5 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold cursor-pointer"
                         >
                           Reject
+                        </button>
+                        <button
+                          onClick={() => {
+                            requestDelete(
+                              'Hapus Pendaftaran Akun',
+                              `Apakah Anda yakin ingin menolak dan menghapus registrasi akun staff ${acc.name} (${acc.email})?`,
+                              () => deleteStaffAccount(acc.id)
+                            );
+                          }}
+                          title="Hapus Registrasi"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -497,13 +510,13 @@ export const AccountManagementView: React.FC = () => {
             Kelola status Active, Pending, Rejected, Inactive serta fitur hapus akun staff
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FFF5F8] rounded-xl border border-red-100">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-red-50/40 rounded-xl border border-red-100">
           {(['All', 'Pending Approval', 'Active', 'Rejected', 'Inactive'] as const).map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-                statusFilter === st ? 'bg-[#E83E8C] text-white' : 'text-slate-600'
+                statusFilter === st ? 'bg-[#9E1B21] text-white' : 'text-slate-600'
               }`}
             >
               {st === 'Pending Approval' ? 'Pending' : st}
@@ -516,7 +529,7 @@ export const AccountManagementView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Nama Akun</th>
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Role</th>
@@ -524,7 +537,7 @@ export const AccountManagementView: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Kelola Status / Delete Akun</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {filtered.map((acc) => (
                 <tr key={acc.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4 font-semibold text-slate-900">{acc.name}</td>
@@ -620,7 +633,7 @@ export const AccountManagementView: React.FC = () => {
 
 // 4. APPROVAL CUTI & APPROVAL RESIGN (Sec 54, 56, 86 — Heads+ Level 7+)
 export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> = ({ mode }) => {
-  const { leaveRequests, resignRequests, reviewLeaveRequest, reviewResignRequest } = useApp();
+  const { leaveRequests, resignRequests, reviewLeaveRequest, reviewResignRequest, deleteLeaveRequest, deleteResignRequest, requestDelete } = useApp();
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -638,7 +651,7 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+                <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                   <th className="py-3.5 px-4">Nama & Jabatan</th>
                   <th className="py-3.5 px-4">Jenis Cuti</th>
                   <th className="py-3.5 px-4">Periode & Durasi</th>
@@ -647,7 +660,7 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
                   <th className="py-3.5 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+              <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
                 {leaveRequests.map((lv) => (
                   <tr key={lv.id} className="hover:bg-red-50/60/30 transition">
                     <td className="py-3.5 px-4">
@@ -680,25 +693,40 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      {lv.status === 'Pending' && (
-                        <div className="inline-flex items-center gap-2">
-                          <button
-                            onClick={() => reviewLeaveRequest(lv.id, 'Approved')}
-                            className="px-3 py-1.5 rounded-lg bg-[#20C997] text-white text-xs font-semibold cursor-pointer"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => {
-                              setRejectId(lv.id);
-                              setRejectionReason('');
-                            }}
-                            className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold cursor-pointer"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {lv.status === 'Pending' && (
+                          <>
+                            <button
+                              onClick={() => reviewLeaveRequest(lv.id, 'Approved')}
+                              className="px-3 py-1.5 rounded-lg bg-[#20C997] text-white text-xs font-semibold cursor-pointer"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => {
+                                setRejectId(lv.id);
+                                setRejectionReason('');
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold cursor-pointer"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => {
+                            requestDelete(
+                              'Hapus Pengajuan Cuti',
+                              `Apakah Anda yakin ingin menghapus data pengajuan cuti milik ${lv.staffName}?`,
+                              () => deleteLeaveRequest(lv.id)
+                            );
+                          }}
+                          title="Hapus Pengajuan Cuti"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -765,7 +793,7 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-[#FFF5F8]/60">
+              <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Nama & Jabatan</th>
                 <th className="py-3.5 px-4">Tgl Pengajuan</th>
                 <th className="py-3.5 px-4">Tgl Efektif</th>
@@ -774,7 +802,7 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
                 <th className="py-3.5 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+            <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {resignRequests.map((r) => (
                 <tr key={r.id} className="hover:bg-red-50/60/30 transition">
                   <td className="py-3.5 px-4">
@@ -910,6 +938,9 @@ export const RecruitmentAndComplaintManageView: React.FC<{
     updateRecruitmentApplicantStatus,
     complaints,
     updateComplaintStatus,
+    deleteRecruitmentApplicant,
+    deleteComplaint,
+    requestDelete,
   } = useApp();
 
   const [selectedApplicant, setSelectedApplicant] = useState<
@@ -967,14 +998,14 @@ export const RecruitmentAndComplaintManageView: React.FC<{
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-red-100 text-xs font-bold text-slate-500 bg-[#FFF5F8]/60">
+                <tr className="border-b border-red-100 text-xs font-bold text-slate-500 bg-red-50/40/60">
                   <th className="py-3.5 px-5">Nama Pelamar Kerja</th>
                   <th className="py-3.5 px-5">Detail Lamaran Kerja</th>
                   <th className="py-3.5 px-5">Status</th>
                   <th className="py-3.5 px-5 text-right">Ubah Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pink-50 text-xs sm:text-sm">
+              <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
                 {recruitmentApplicants.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-10 text-center text-slate-400">
@@ -1022,21 +1053,36 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                       </td>
 
                       <td className="py-4 px-5 text-right">
-                        <select
-                          value={app.status}
-                          onChange={(e) =>
-                            updateRecruitmentApplicantStatus(
-                              app.id,
-                              e.target.value as typeof app.status
-                            )
-                          }
-                          className="px-3 py-1.5 rounded-xl border border-red-200 text-xs bg-white font-semibold cursor-pointer"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Interview">Interview</option>
-                          <option value="Accepted">Accepted</option>
-                          <option value="Rejected">Rejected</option>
-                        </select>
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          <select
+                            value={app.status}
+                            onChange={(e) =>
+                              updateRecruitmentApplicantStatus(
+                                app.id,
+                                e.target.value as typeof app.status
+                              )
+                            }
+                            className="px-3 py-1.5 rounded-xl border border-red-200 text-xs bg-white font-semibold cursor-pointer"
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Interview">Interview</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                          </select>
+                          <button
+                            onClick={() => {
+                              requestDelete(
+                                'Hapus Berkas Pelamar',
+                                `Apakah Anda yakin ingin menghapus data pelamar ${app.fullName}?`,
+                                () => deleteRecruitmentApplicant(app.id)
+                              );
+                            }}
+                            title="Hapus Pelamar"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -1080,7 +1126,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                         e.target.value as typeof activeApp.status
                       )
                     }
-                    className="px-3 py-2 rounded-xl border border-red-200 text-xs bg-[#FFF5F8] text-[#7F1D1D] font-bold cursor-pointer"
+                    className="px-3 py-2 rounded-xl border border-red-200 text-xs bg-red-50/40 text-[#7F1D1D] font-bold cursor-pointer"
                   >
                     <option value="Pending">Status: Pending</option>
                     <option value="Interview">Status: Interview</option>
@@ -1098,7 +1144,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
               </div>
 
               {/* 1. JAWABAN BAGIAN INFORMASI IC (Persyaratan Umum & Syarat Interview) */}
-              <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-red-100 space-y-4">
+              <div className="p-5 rounded-2xl bg-red-50/40 border border-red-100 space-y-4">
                 <h4 className="text-sm font-bold text-[#7F1D1D] uppercase tracking-wider">
                   1. Informasi IC — Persyaratan Umum & Kelengkapan Sebelum Interview
                 </h4>
@@ -1260,7 +1306,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
               </div>
 
               {/* 3. JAWABAN BAGIAN INFORMASI OOC */}
-              <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-red-100 space-y-3">
+              <div className="p-5 rounded-2xl bg-red-50/40 border border-red-100 space-y-3">
                 <h4 className="text-sm font-bold text-[#7F1D1D] uppercase tracking-wider">
                   3. Informasi OOC (Komitmen & Jam Online)
                 </h4>
@@ -1333,7 +1379,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                     return (
                       <div
                         key={docItem.label}
-                        className="p-3.5 rounded-2xl border border-red-100 bg-[#FFF5F8]/60 flex flex-col justify-between gap-3"
+                        className="p-3.5 rounded-2xl border border-red-100 bg-red-50/40/60 flex flex-col justify-between gap-3"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
@@ -1353,7 +1399,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                                 url: resolvedUrl,
                               })
                             }
-                            className="px-3 py-1.5 rounded-xl bg-[#E83E8C] text-white text-[11px] font-bold flex items-center gap-1 shrink-0 hover:opacity-95 cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-[#9E1B21] text-white text-[11px] font-bold flex items-center gap-1 shrink-0 hover:opacity-95 cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>Buka Foto</span>
@@ -1463,7 +1509,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                   onChange={(e) =>
                     updateComplaintStatus(c.id, e.target.value as typeof c.status)
                   }
-                  className="px-3 py-1.5 rounded-xl border border-red-200 text-xs font-bold bg-[#FFF5F8] text-[#7F1D1D]"
+                  className="px-3 py-1.5 rounded-xl border border-red-200 text-xs font-bold bg-red-50/40 text-[#7F1D1D]"
                 >
                   <option value="Baru">Baru</option>
                   <option value="Diproses">Diproses</option>
@@ -1478,6 +1524,19 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                   className="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold cursor-pointer"
                 >
                   Catatan Internal
+                </button>
+                <button
+                  onClick={() => {
+                    requestDelete(
+                      'Hapus Laporan Pengaduan',
+                      `Apakah Anda yakin ingin menghapus laporan pengaduan "${c.subject}"?`,
+                      () => deleteComplaint(c.id)
+                    );
+                  }}
+                  title="Hapus Laporan Pengaduan"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -1528,7 +1587,7 @@ export const RecruitmentAndComplaintManageView: React.FC<{
                   );
                   setSelectedComplaint(null);
                 }}
-                className="px-5 py-2 rounded-xl bg-[#E83E8C] text-white text-xs font-semibold cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-[#9E1B21] text-white text-xs font-semibold cursor-pointer"
               >
                 Simpan Catatan
               </button>

@@ -13,81 +13,140 @@ const IshiharaCanvasPlate: React.FC<{ plate: IshiharaPlateData }> = ({ plate }) 
     if (!ctx) return;
 
     const size = 320;
-    const radius = 142;
+    const radius = 144;
     const cx = size / 2;
     const cy = size / 2;
 
-    // 1. Create offscreen mask canvas for the number text with bold, easy-to-read proportions
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = size;
-    maskCanvas.height = size;
-    const mCtx = maskCanvas.getContext('2d')!;
-    mCtx.fillStyle = '#000000';
-    mCtx.fillRect(0, 0, size, size);
-    mCtx.fillStyle = '#FFFFFF';
-    const fontSize = plate.expectedAnswer.length > 1 ? 132 : 156;
-    mCtx.font = `900 ${fontSize}px "Poppins", Arial, sans-serif`;
-    mCtx.textAlign = 'center';
-    mCtx.textBaseline = 'middle';
-    mCtx.fillText(plate.expectedAnswer, cx, cy + 4);
-
-    const maskData = mCtx.getImageData(0, 0, size, size).data;
-
-    // 2. Clear main canvas
+    // 1. Clear main canvas
     ctx.clearRect(0, 0, size, size);
 
-    // Deterministic pseudo-random based on plateNumber so each plate has organic dense dot packing like the reference image
-    let seed = plate.plateNumber * 12973;
+    // 2. White circular disc plate background with soft clinical border
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius + 10, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Inner subtle disc base
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#FAF5FF';
+    const discGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, radius);
+    discGrad.addColorStop(0, '#FFFFFF');
+    discGrad.addColorStop(1, '#F8FAFC');
+    ctx.fillStyle = discGrad;
+    ctx.fill();
+
+    // 3. Determine solid number text & style
+    const isSingle = plate.expectedAnswer.length <= 1;
+    const fontSize = isSingle ? 144 : 124;
+    const text = plate.expectedAnswer;
+
+    // Measure text bounds to prevent background dots from obscuring the clear solid number
+    ctx.font = `900 ${fontSize}px "Arial Black", "Montserrat", "Poppins", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const metrics = ctx.measureText(text);
+    const textWidth = metrics.width;
+    const textHalfWidth = textWidth / 2 + 16;
+    const textHalfHeight = (fontSize * 0.42) + 16;
+
+    // Helper to check if a dot overlaps the central solid text area
+    const isInsideTextArea = (x: number, y: number, r: number) => {
+      return (
+        x >= cx - textHalfWidth - r &&
+        x <= cx + textHalfWidth + r &&
+        y >= cy - textHalfHeight - r &&
+        y <= cy + textHalfHeight - r
+      );
+    };
+
+    // 4. Deterministic pseudo-random dot generation for the surrounding circles
+    let seed = plate.plateNumber * 14813;
     const rand = () => {
       seed = (seed * 16807) % 2147483647;
       return (seed - 1) / 2147483646;
     };
 
-    const dots: { x: number; y: number; r: number; isFg: boolean }[] = [];
-    // Dense multi-size dots like clinical easy Ishihara plate in the user's screenshot
-    const radii = [7.2, 5.8, 4.8, 4.0, 3.3];
+    const dots: { x: number; y: number; r: number; color: string }[] = [];
+    const radii = [10.5, 8.5, 7.0, 5.5, 4.0, 3.2];
+    const colorPalette = [
+      ...plate.bgColors,
+      ...plate.fgColors,
+      '#F59E0B',
+      '#10B981',
+      '#EF4444',
+      '#3B82F6',
+      '#EC4899',
+      '#8B5CF6',
+      '#06B6D4',
+      '#84CC16',
+      '#F97316',
+    ];
 
     for (const r of radii) {
-      for (let attempt = 0; attempt < 1800; attempt++) {
+      for (let attempt = 0; attempt < 900; attempt++) {
         const angle = rand() * Math.PI * 2;
-        const dist = Math.sqrt(rand()) * (radius - r - 2);
+        const dist = Math.sqrt(rand()) * (radius - r - 4);
         const x = cx + Math.cos(angle) * dist;
         const y = cy + Math.sin(angle) * dist;
+
+        // Skip if inside the text area so the solid number remains 100% unobstructed & clear
+        if (isInsideTextArea(x, y, r)) continue;
 
         let overlaps = false;
         for (const d of dots) {
           const dx = d.x - x;
           const dy = d.y - y;
-          if (Math.sqrt(dx * dx + dy * dy) < d.r + r + 0.8) {
+          if (Math.sqrt(dx * dx + dy * dy) < d.r + r + 0.6) {
             overlaps = true;
             break;
           }
         }
+
         if (!overlaps) {
-          const px = Math.floor(x);
-          const py = Math.floor(y);
-          const idx = (py * size + px) * 4;
-          const isFg = maskData[idx] > 128;
-          dots.push({ x, y, r, isFg });
+          const color = colorPalette[Math.floor(rand() * colorPalette.length)];
+          dots.push({ x, y, r, color });
         }
       }
     }
 
-    // White circular disc plate background with subtle border
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius + 12, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fill();
-
-    // Draw all dots
+    // 5. Draw all surrounding decorative circles
     for (const d of dots) {
-      const palette = d.isFg ? plate.fgColors : plate.bgColors;
-      const color = palette[Math.floor(rand() * palette.length)];
       ctx.beginPath();
       ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-      ctx.fillStyle = color;
+      ctx.fillStyle = d.color;
       ctx.fill();
     }
+
+    // 6. Draw the SOLID, CLEAR, UNMISTAKABLE NUMBER in the center
+    // Solid color matching the plate's primary foreground color
+    const solidColor = plate.fgColors[0] || '#9E1B21';
+
+    // Drop shadow for solid readability
+    ctx.save();
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.28)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+
+    // Solid Crisp Outline
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 7;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(text, cx, cy + 4);
+
+    // Solid Vivid Fill
+    ctx.fillStyle = solidColor;
+    ctx.fillText(text, cx, cy + 4);
+
+    ctx.restore();
+
+    // Thin inner contrast border for extra high definition
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.strokeText(text, cx, cy + 4);
   }, [plate]);
 
   return (
@@ -225,10 +284,10 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-pink-100 shadow-sm p-6 sm:p-8">
-      <div className="flex items-center justify-between border-b border-pink-100 pb-4 mb-6">
+    <div className="bg-white rounded-3xl border border-red-100 shadow-sm p-6 sm:p-8">
+      <div className="flex items-center justify-between border-b border-red-100 pb-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E83E8C] to-[#D63384] flex items-center justify-center text-white">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#9E1B21] to-[#7F1D1D] flex items-center justify-center text-white">
             <Eye className="w-5 h-5" />
           </div>
           <div>
@@ -254,18 +313,18 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
         <div className="max-w-lg mx-auto py-4 space-y-5">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Nama Lengkap Peserta Tes <span className="text-[#E83E8C]">*</span>
+              Nama Lengkap Peserta Tes <span className="text-[#9E1B21]">*</span>
             </label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Masukkan nama lengkap Anda..."
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-xl bg-[#FFF5F8] border border-pink-100">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-red-50/40 border border-red-100">
             <div>
               <p className="text-sm font-semibold text-slate-800">
                 Gunakan Timer Otomatis (12 Detik / Lempeng)
@@ -278,14 +337,14 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
               type="checkbox"
               checked={useTimer}
               onChange={(e) => setUseTimer(e.target.checked)}
-              className="w-5 h-5 accent-[#E83E8C] rounded cursor-pointer"
+              className="w-5 h-5 accent-red-600 rounded cursor-pointer"
             />
           </div>
 
           <button
             disabled={!fullName.trim()}
             onClick={() => setStep('instructions')}
-            className="w-full py-3 px-5 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white font-semibold text-sm shadow-sm hover:opacity-95 disabled:opacity-40 transition flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3 px-5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white font-semibold text-sm shadow-sm hover:opacity-95 disabled:opacity-40 transition flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Lanjut ke Instruksi Pemeriksaan</span>
             <ArrowRight className="w-4 h-4" />
@@ -295,8 +354,8 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
 
       {step === 'instructions' && (
         <div className="max-w-xl mx-auto py-2 space-y-6">
-          <div className="p-5 rounded-2xl bg-[#FFF5F8] border border-pink-200/70 space-y-3">
-            <div className="flex items-center gap-2 text-[#D63384] font-bold text-sm">
+          <div className="p-5 rounded-2xl bg-red-50/40 border border-red-200/70 space-y-3">
+            <div className="flex items-center gap-2 text-[#7F1D1D] font-bold text-sm">
               <AlertCircle className="w-5 h-5" />
               <span>Persiapan & Instruksi Penting Sebelum Memulai</span>
             </div>
@@ -330,7 +389,7 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
                 setSelectedChoice('');
                 setStep('testing');
               }}
-              className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-[#E83E8C] to-[#D63384] text-white font-semibold text-sm shadow-sm hover:opacity-95 flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white font-semibold text-sm shadow-sm hover:opacity-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Play className="w-4 h-4" />
               <span>Mulai Tes 20 Lempeng Ishihara Sekarang</span>
@@ -362,7 +421,7 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
 
             <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-rose-600 to-[#E83E8C] transition-all duration-200 rounded-full"
+                className="h-full bg-gradient-to-r from-rose-600 to-[#9E1B21] transition-all duration-200 rounded-full"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -401,8 +460,8 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
                       }}
                       className={`px-5 py-4 rounded-2xl border transition flex items-center justify-between text-left cursor-pointer ${
                         isSelected
-                          ? 'border-[#E83E8C] bg-pink-50/70 text-[#D63384] shadow-xs'
-                          : 'border-slate-200 bg-[#F8FAFC] hover:bg-white hover:border-[#E83E8C] text-slate-900'
+                          ? 'border-red-600 bg-red-50/60/70 text-[#7F1D1D] shadow-xs'
+                          : 'border-slate-200 bg-[#F8FAFC] hover:bg-white hover:border-red-600 text-slate-900'
                       }`}
                     >
                       <span className="text-sm sm:text-base font-extrabold text-slate-900">
@@ -411,7 +470,7 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
                       <span
                         className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                           isSelected
-                            ? 'border-[#E83E8C] bg-[#E83E8C]'
+                            ? 'border-red-600 bg-[#9E1B21]'
                             : 'border-slate-300 bg-slate-200/80'
                         }`}
                       />
@@ -440,7 +499,7 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
 
       {step === 'result' && finalResult && (
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="p-6 rounded-2xl bg-[#FFF5F8] border border-pink-200 text-center space-y-3">
+          <div className="p-6 rounded-2xl bg-red-50/40 border border-red-200 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-[#20C997]/15 text-[#20C997] flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
             </div>
@@ -448,7 +507,7 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
               HASIL PEMERIKSAAN ISHIHARA — {fullName}
             </p>
             <h4 className="text-2xl font-bold text-slate-900">
-              Kategori Diagnosis: <span className="text-[#E83E8C]">{finalResult.category}</span>
+              Kategori Diagnosis: <span className="text-[#9E1B21]">{finalResult.category}</span>
             </h4>
             <div className="flex items-center justify-center gap-6 pt-2 text-sm tabular-nums">
               <div>
@@ -463,7 +522,7 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
               <span>·</span>
               <div>
                 <span className="text-slate-500">Salah:</span>{' '}
-                <strong className="text-[#E83E8C] font-mono">{finalResult.wrongCount}/20</strong>
+                <strong className="text-[#9E1B21] font-mono">{finalResult.wrongCount}/20</strong>
               </div>
             </div>
             <p className="text-xs text-slate-500 pt-1">
@@ -474,7 +533,7 @@ export const IshiharaTestSection: React.FC<{ onClose?: () => void }> = ({ onClos
           <div className="flex justify-center">
             <button
               onClick={resetTest}
-              className="px-5 py-2.5 rounded-xl border border-pink-200 text-[#D63384] text-sm font-semibold hover:bg-pink-50 flex items-center gap-2 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-red-200 text-[#7F1D1D] text-sm font-semibold hover:bg-red-50/60 flex items-center gap-2 cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Ulangi Tes Buta Warna</span>

@@ -259,7 +259,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
             </button>
             <button
               onClick={() => setActiveModal('regulation')}
-              className="px-6 py-3.5 rounded-xl bg-white border border-red-200 text-slate-800 hover:border-[#E83E8C] text-sm font-semibold transition cursor-pointer whitespace-nowrap"
+              className="px-6 py-3.5 rounded-xl bg-white border border-red-200 text-slate-800 hover:border-[#9E1B21] text-sm font-semibold transition cursor-pointer whitespace-nowrap"
             >
               Lihat Regulasi Pengobatan
             </button>
@@ -272,9 +272,9 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
           <button
             onClick={() => setActiveModal('sks')}
-            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#E83E8C] group-hover:text-white flex items-center justify-center transition mb-3">
+            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#9E1B21] group-hover:text-white flex items-center justify-center transition mb-3">
               <FileText className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-bold text-slate-900">Surat Kesehatan</h3>
@@ -286,9 +286,9 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
               setSelectedDoctor(null);
               setActiveModal('appointment');
             }}
-            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#E83E8C] group-hover:text-white flex items-center justify-center transition mb-3">
+            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#9E1B21] group-hover:text-white flex items-center justify-center transition mb-3">
               <Calendar className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-bold text-slate-900">Buat Janji Temu</h3>
@@ -297,7 +297,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
 
           <button
             onClick={() => setActiveModal('doctor_schedule')}
-            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#20C997] group-hover:bg-[#20C997] group-hover:text-white flex items-center justify-center transition mb-3">
               <Stethoscope className="w-5 h-5" />
@@ -308,9 +308,9 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
 
           <button
             onClick={() => setActiveModal('regulation')}
-            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#E83E8C] group-hover:text-white flex items-center justify-center transition mb-3">
+            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#9E1B21] group-hover:text-white flex items-center justify-center transition mb-3">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-bold text-slate-900">Regulasi</h3>
@@ -319,9 +319,9 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
 
           <button
             onClick={() => scrollToSection('keluhan-warga')}
-            className="col-span-2 sm:col-span-1 p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
+            className="col-span-2 sm:col-span-1 p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#E83E8C] group-hover:text-white flex items-center justify-center transition mb-3">
+            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#9E1B21] group-hover:text-white flex items-center justify-center transition mb-3">
               <MessageSquareWarning className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-bold text-slate-900">Keluhan Warga</h3>
@@ -429,7 +429,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
               <LogoRSKotaBaru className="w-14 h-14 shrink-0 hidden sm:block" />
               <div>
                 <h3 className="text-lg sm:text-xl font-bold">Paramedic Kota Baru</h3>
-                <p className="text-sm text-pink-50 mt-0.5">
+                <p className="text-sm text-red-100 mt-0.5">
                   Tim medis profesional siap melayani kebutuhan Anda.
                 </p>
               </div>
@@ -496,7 +496,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                 setActiveModal('skwb_claim');
               }
             }}
-            className="p-6 rounded-2xl bg-white border border-red-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition flex flex-col justify-between space-y-5 lg:col-span-1 cursor-pointer group"
+            className="p-6 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition flex flex-col justify-between space-y-5 lg:col-span-1 cursor-pointer group"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -536,7 +536,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                 setActiveModal('character_kill');
               }
             }}
-            className="p-6 rounded-2xl bg-white border border-red-100 hover:border-[#E83E8C] shadow-xs hover:shadow-md transition flex flex-col justify-between space-y-5 lg:col-span-1 cursor-pointer group"
+            className="p-6 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition flex flex-col justify-between space-y-5 lg:col-span-1 cursor-pointer group"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -591,7 +591,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                     onChange={(e) =>
                       setComplaintType(e.target.value as 'Laporan / Keluhan' | 'Masukan / Saran')
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm bg-white"
                   >
                     <option value="Laporan / Keluhan">Laporan / Keluhan</option>
                     <option value="Masukan / Saran">Masukan / Saran</option>
@@ -608,7 +608,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                         type="checkbox"
                         checked={isAnonymous}
                         onChange={(e) => setIsAnonymous(e.target.checked)}
-                        className="accent-[#E83E8C] rounded"
+                        className="accent-[#9E1B21] rounded"
                       />
                       <span>Kirim sebagai Anonim</span>
                     </label>
@@ -619,7 +619,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                     value={isAnonymous ? 'Anonim' : reporterName}
                     onChange={(e) => setReporterName(e.target.value)}
                     placeholder="Kosongkan jika ingin anonim"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm disabled:bg-slate-50"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm disabled:bg-slate-50"
                   />
                 </div>
               </div>
@@ -634,7 +634,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Ringkasan topik laporan atau saran Anda"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
                 />
               </div>
 
@@ -648,7 +648,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                   value={chronology}
                   onChange={(e) => setChronology(e.target.value)}
                   placeholder="Tuliskan detail kronologi, waktu kejadian, lokasi, serta pihak terkait..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#E83E8C] focus:outline-none text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#9E1B21] focus:outline-none text-sm"
                 />
               </div>
 
@@ -785,7 +785,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
       <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="rounded-2xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] p-8 sm:p-12 text-white text-center space-y-6 shadow-md">
           <h2 className="text-2xl sm:text-4xl font-bold">Butuh layanan medis sekarang?</h2>
-          <p className="text-sm sm:text-base text-pink-50 max-w-xl mx-auto">
+          <p className="text-sm sm:text-base text-red-100 max-w-xl mx-auto">
             Pilih layanan pemeriksaan atau tinjau regulasi resmi pengobatan Rumah Sakit Kota Baru.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
