@@ -100,7 +100,7 @@ interface MenuItemConfig {
   id: StaffRouteId;
   label: string;
   minLevel: number;
-  category: 'Utama & Pribadi' | 'Rekam & Layanan Medis' | 'Manajemen & Approval (Heads+)';
+  category: 'Utama & Pribadi' | 'Rekam & Layanan Medis' | 'Manajemen & Approval (HRD+)';
   icon: React.FC<{ className?: string }>;
   badgeCount?: number;
 }
@@ -145,51 +145,52 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
     // Level 1+ (Semua Role): Daftar Kematian
     { id: 'daftar-kematian', label: 'Daftar Kematian', minLevel: 1, category: 'Rekam & Layanan Medis', icon: HeartPulse },
-    // Level 3+ (Paramedic+): Benefit SKWB & SKS
+    // Level 3+ (Nurse+): Benefit SKWB & SKS
     { id: 'benefit-skwb', label: 'Benefit SKWB', minLevel: 3, category: 'Rekam & Layanan Medis', icon: ShieldCheck },
     { id: 'sks-results', label: 'Hasil Surat Keterangan Sehat', minLevel: 3, category: 'Rekam & Layanan Medis', icon: FileText },
     // Level 4+ (Co-ass+): Psikologi
     { id: 'psychology-results', label: 'Hasil Tes Psikologi', minLevel: 4, category: 'Rekam & Layanan Medis', icon: Brain },
-    // Level 5+ (Doctor+): Operasi Plastik, Buta Warna, Janji Temu, Jadwal Dokter
-    { id: 'plastic-surgery-requests', label: 'Pengajuan Operasi Plastik', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Sparkles },
+    // Level 5+ (Pharmacist+): Buta Warna, Janji Temu
     { id: 'color-blind-results', label: 'Hasil Tes Buta Warna', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Eye },
     { id: 'appointments-data', label: 'Data Janji Temu', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Calendar },
-    { id: 'doctor-schedules', label: 'Jadwal Praktik Dokter', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Stethoscope },
+    // Level 6+ (Doctor+): Operasi Plastik, Jadwal Dokter
+    { id: 'plastic-surgery-requests', label: 'Pengajuan Operasi Plastik', minLevel: 6, category: 'Rekam & Layanan Medis', icon: Sparkles },
+    { id: 'doctor-schedules', label: 'Jadwal Praktik Dokter', minLevel: 6, category: 'Rekam & Layanan Medis', icon: Stethoscope },
 
-    // Level 7+ (Heads of Departments+): Management & Approvals
-    { id: 'staff-management', label: 'Pengelolaan Staff', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: UserCog },
+    // Level 8+ (Human Resources Department ke atas): Management & Approvals
+    { id: 'staff-management', label: 'Pengelolaan Staff', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: UserCog },
     {
       id: 'account-approval',
       label: 'Approval Akun',
-      minLevel: 7,
-      category: 'Manajemen & Approval (Heads+)',
+      minLevel: 8,
+      category: 'Manajemen & Approval (HRD+)',
       icon: UserCheck,
       badgeCount: pendingAccountsCount,
     },
-    { id: 'account-management', label: 'Kelola Akun', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: KeyRound },
+    { id: 'account-management', label: 'Kelola Akun', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: KeyRound },
     {
       id: 'leave-approval',
       label: 'Approval Cuti',
-      minLevel: 7,
-      category: 'Manajemen & Approval (Heads+)',
+      minLevel: 8,
+      category: 'Manajemen & Approval (HRD+)',
       icon: CheckSquare,
       badgeCount: pendingLeavesCount,
     },
     {
       id: 'resign-approval',
       label: 'Approval Resign',
-      minLevel: 7,
-      category: 'Manajemen & Approval (Heads+)',
+      minLevel: 8,
+      category: 'Manajemen & Approval (HRD+)',
       icon: UserMinus,
       badgeCount: pendingResignsCount,
     },
-    { id: 'recruitment-management', label: 'Recruitment Management', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: UserPlus },
-    { id: 'complaint-management', label: 'Complaint Management', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: MessageSquareWarning },
-    { id: 'duty-management', label: 'Discord Duty Parser', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: Clock },
-    { id: 'weekly-attendance-recap', label: 'Rekap Absensi Mingguan', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: Calendar },
-    { id: 'monthly-attendance-recap', label: 'Rekap Absensi Bulanan', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: FileText },
-    { id: 'payroll-management', label: 'Payroll Management', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: CreditCard },
-    { id: 'regulation-management', label: 'Regulation Management', minLevel: 7, category: 'Manajemen & Approval (Heads+)', icon: ShieldCheck },
+    { id: 'recruitment-management', label: 'Recruitment Management', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: UserPlus },
+    { id: 'complaint-management', label: 'Complaint Management', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: MessageSquareWarning },
+    { id: 'duty-management', label: 'Discord Duty Parser', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: Clock },
+    { id: 'weekly-attendance-recap', label: 'Rekap Absensi Mingguan', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: Calendar },
+    { id: 'monthly-attendance-recap', label: 'Rekap Absensi Bulanan', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: FileText },
+    { id: 'payroll-management', label: 'Payroll Management', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: CreditCard },
+    { id: 'regulation-management', label: 'Regulation Management', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: ShieldCheck },
   ];
 
   // CRITICAL RBAC RULE SEC 10: Only display menu items that the current user's role level has access to!
@@ -325,8 +326,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           </button>
         </div>
 
-        {/* Approval Center Quick Summary for Heads+ (Sec 57) */}
-        {currentUser.level >= 7 && (
+        {/* Approval Center Quick Summary for HRD & Heads+ (Sec 57) */}
+        {currentUser.level >= 8 && (
           <div className="mx-3 mt-3 p-3 rounded-xl bg-slate-50 border border-red-200/70 space-y-1.5">
             <div className="flex items-center justify-between text-xs font-bold text-[#7F1D1D]">
               <span>Approval Center</span>

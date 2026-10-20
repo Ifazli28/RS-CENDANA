@@ -367,149 +367,185 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           case 'recruitment': {
             const recItem = p as unknown as RecruitmentApplicant;
             if (recItem && recItem.id) {
-              setRecruitmentApplicants((prev) => {
-                const exists = prev.some((x) => x.id === recItem.id);
-                if (exists) {
-                  return prev.map((x) =>
-                    x.id === recItem.id
-                      ? {
-                          ...x,
-                          ...recItem,
-                          status: (docItem.status as RecruitmentApplicant['status']) || recItem.status,
-                        }
-                      : x
-                  );
-                }
-                return [recItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setRecruitmentApplicants((prev) => prev.filter((x) => x.id !== recItem.id));
+              } else {
+                setRecruitmentApplicants((prev) => {
+                  const exists = prev.some((x) => x.id === recItem.id);
+                  if (exists) {
+                    return prev.map((x) =>
+                      x.id === recItem.id
+                        ? {
+                            ...x,
+                            ...recItem,
+                            status: (docItem.status as RecruitmentApplicant['status']) || recItem.status,
+                          }
+                        : x
+                    );
+                  }
+                  return [recItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'sks_record': {
             const sksItem = p as unknown as SKSRecord;
             if (sksItem && sksItem.id) {
-              setSksRecords((prev) => {
-                const exists = prev.some((x) => x.id === sksItem.id);
-                if (exists) {
-                  return prev.map((x) =>
-                    x.id === sksItem.id
-                      ? { ...x, ...sksItem, status: (docItem.status as SKSRecord['status']) || sksItem.status }
-                      : x
-                  );
-                }
-                return [sksItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setSksRecords((prev) => prev.filter((x) => x.id !== sksItem.id));
+              } else {
+                setSksRecords((prev) => {
+                  const exists = prev.some((x) => x.id === sksItem.id);
+                  if (exists) {
+                    return prev.map((x) =>
+                      x.id === sksItem.id
+                        ? { ...x, ...sksItem, status: (docItem.status as SKSRecord['status']) || sksItem.status }
+                        : x
+                    );
+                  }
+                  return [sksItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'psychology_record': {
             const psyItem = p as unknown as PsychologyRecord;
             if (psyItem && psyItem.id) {
-              setPsychologyRecords((prev) => {
-                const exists = prev.some((x) => x.id === psyItem.id);
-                if (exists) {
-                  return prev.map((x) =>
-                    x.id === psyItem.id
-                      ? {
-                          ...x,
-                          ...psyItem,
-                          status: (docItem.status as PsychologyRecord['status']) || psyItem.status,
-                        }
-                      : x
-                  );
-                }
-                return [psyItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setPsychologyRecords((prev) => prev.filter((x) => x.id !== psyItem.id));
+              } else {
+                setPsychologyRecords((prev) => {
+                  const exists = prev.some((x) => x.id === psyItem.id);
+                  if (exists) {
+                    return prev.map((x) =>
+                      x.id === psyItem.id
+                        ? {
+                            ...x,
+                            ...psyItem,
+                            status: (docItem.status as PsychologyRecord['status']) || psyItem.status,
+                          }
+                        : x
+                    );
+                  }
+                  return [psyItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'plastic_surgery': {
             const plsItem = p as unknown as PlasticSurgeryRecord;
             if (plsItem && plsItem.id) {
-              setPlasticSurgeryRecords((prev) => {
-                const exists = prev.some((x) => x.id === plsItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === plsItem.id ? { ...x, ...plsItem } : x))
-                  : [plsItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setPlasticSurgeryRecords((prev) => prev.filter((x) => x.id !== plsItem.id));
+              } else {
+                setPlasticSurgeryRecords((prev) => {
+                  const exists = prev.some((x) => x.id === plsItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === plsItem.id ? { ...x, ...plsItem } : x))
+                    : [plsItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'color_blind_result': {
             const cbItem = p as unknown as ColorBlindResult;
             if (cbItem && cbItem.id) {
-              setColorBlindResults((prev) => {
-                const exists = prev.some((x) => x.id === cbItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === cbItem.id ? { ...x, ...cbItem } : x))
-                  : [cbItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setColorBlindResults((prev) => prev.filter((x) => x.id !== cbItem.id));
+              } else {
+                setColorBlindResults((prev) => {
+                  const exists = prev.some((x) => x.id === cbItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === cbItem.id ? { ...x, ...cbItem } : x))
+                    : [cbItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'appointment': {
             const aptItem = p as unknown as AppointmentRecord;
             if (aptItem && aptItem.id) {
-              setAppointments((prev) => {
-                const exists = prev.some((x) => x.id === aptItem.id);
-                if (exists) {
-                  return prev.map((x) =>
-                    x.id === aptItem.id
-                      ? {
-                          ...x,
-                          ...aptItem,
-                          status: (docItem.status as AppointmentRecord['status']) || aptItem.status,
-                        }
-                      : x
-                  );
-                }
-                return [aptItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setAppointments((prev) => prev.filter((x) => x.id !== aptItem.id));
+              } else {
+                setAppointments((prev) => {
+                  const exists = prev.some((x) => x.id === aptItem.id);
+                  if (exists) {
+                    return prev.map((x) =>
+                      x.id === aptItem.id
+                        ? {
+                            ...x,
+                            ...aptItem,
+                            status: (docItem.status as AppointmentRecord['status']) || aptItem.status,
+                          }
+                        : x
+                    );
+                  }
+                  return [aptItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'complaint': {
             const cmpItem = p as unknown as ComplaintRecord;
             if (cmpItem && cmpItem.id) {
-              setComplaints((prev) => {
-                const exists = prev.some((x) => x.id === cmpItem.id);
-                if (exists) {
-                  return prev.map((x) =>
-                    x.id === cmpItem.id
-                      ? {
-                          ...x,
-                          ...cmpItem,
-                          status: (docItem.status as ComplaintRecord['status']) || cmpItem.status,
-                        }
-                      : x
-                  );
-                }
-                return [cmpItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setComplaints((prev) => prev.filter((x) => x.id !== cmpItem.id));
+              } else {
+                setComplaints((prev) => {
+                  const exists = prev.some((x) => x.id === cmpItem.id);
+                  if (exists) {
+                    return prev.map((x) =>
+                      x.id === cmpItem.id
+                        ? {
+                            ...x,
+                            ...cmpItem,
+                            status: (docItem.status as ComplaintRecord['status']) || cmpItem.status,
+                          }
+                        : x
+                    );
+                  }
+                  return [cmpItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'leave_request': {
             const lvItem = p as unknown as LeaveRequest;
             if (lvItem && lvItem.id) {
-              setLeaveRequests((prev) => {
-                const exists = prev.some((x) => x.id === lvItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === lvItem.id ? { ...x, ...lvItem } : x))
-                  : [lvItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setLeaveRequests((prev) => prev.filter((x) => x.id !== lvItem.id));
+              } else {
+                setLeaveRequests((prev) => {
+                  const exists = prev.some((x) => x.id === lvItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === lvItem.id ? { ...x, ...lvItem } : x))
+                    : [lvItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'resign_request': {
             const rsgItem = p as unknown as ResignRequest;
             if (rsgItem && rsgItem.id) {
-              setResignRequests((prev) => {
-                const exists = prev.some((x) => x.id === rsgItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === rsgItem.id ? { ...x, ...rsgItem } : x))
-                  : [rsgItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setResignRequests((prev) => prev.filter((x) => x.id !== rsgItem.id));
+              } else {
+                setResignRequests((prev) => {
+                  const exists = prev.some((x) => x.id === rsgItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === rsgItem.id ? { ...x, ...rsgItem } : x))
+                    : [rsgItem, ...prev];
+                });
+              }
             }
             break;
           }
@@ -548,48 +584,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           case 'sop_document': {
             const sopItem = p as unknown as SOPDocument;
             if (sopItem && sopItem.id) {
-              setSopDocuments((prev) => {
-                const exists = prev.some((x) => x.id === sopItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === sopItem.id ? { ...x, ...sopItem } : x))
-                  : [sopItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setSopDocuments((prev) => prev.filter((x) => x.id !== sopItem.id));
+              } else {
+                setSopDocuments((prev) => {
+                  const exists = prev.some((x) => x.id === sopItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === sopItem.id ? { ...x, ...sopItem } : x))
+                    : [sopItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'duty_log': {
             const dutyItem = p as unknown as DutyLog;
             if (dutyItem && dutyItem.id) {
-              setDutyLogs((prev) => {
-                const exists = prev.some((x) => x.id === dutyItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === dutyItem.id ? { ...x, ...dutyItem } : x))
-                  : [dutyItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setDutyLogs((prev) => prev.filter((x) => x.id !== dutyItem.id));
+              } else {
+                setDutyLogs((prev) => {
+                  const exists = prev.some((x) => x.id === dutyItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === dutyItem.id ? { ...x, ...dutyItem } : x))
+                    : [dutyItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'payroll_record': {
             const payItem = p as unknown as PayrollRecord;
             if (payItem && payItem.id) {
-              setPayrollRecords((prev) => {
-                const exists = prev.some((x) => x.id === payItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === payItem.id ? { ...x, ...payItem } : x))
-                  : [payItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setPayrollRecords((prev) => prev.filter((x) => x.id !== payItem.id));
+              } else {
+                setPayrollRecords((prev) => {
+                  const exists = prev.some((x) => x.id === payItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === payItem.id ? { ...x, ...payItem } : x))
+                    : [payItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'regulation_item': {
             const regItem = p as unknown as RegulationItem;
             if (regItem && regItem.id) {
-              setRegulations((prev) => {
-                const exists = prev.some((x) => x.id === regItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === regItem.id ? { ...x, ...regItem } : x))
-                  : [regItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setRegulations((prev) => prev.filter((x) => x.id !== regItem.id));
+              } else {
+                setRegulations((prev) => {
+                  const exists = prev.some((x) => x.id === regItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === regItem.id ? { ...x, ...regItem } : x))
+                    : [regItem, ...prev];
+                });
+              }
             }
             break;
           }
@@ -608,69 +660,80 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           case 'skwb_claim': {
             const skwbItem = p as unknown as SKWBClaim;
             if (skwbItem && skwbItem.id) {
-              setSkwbClaims((prev) => {
-                const exists = prev.some((x) => x.id === skwbItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === skwbItem.id ? { ...x, ...skwbItem } : x))
-                  : [skwbItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setSkwbClaims((prev) => prev.filter((x) => x.id !== skwbItem.id));
+              } else {
+                setSkwbClaims((prev) => {
+                  const exists = prev.some((x) => x.id === skwbItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === skwbItem.id ? { ...x, ...skwbItem } : x))
+                    : [skwbItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'skwb_paket_sedang_claim': {
             const pktItem = p as unknown as SKWBPaketSedangClaim;
             if (pktItem && pktItem.id) {
-              setSkwbPaketSedangClaims((prev) => {
-                const exists = prev.some((x) => x.id === pktItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === pktItem.id ? { ...x, ...pktItem } : x))
-                  : [pktItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setSkwbPaketSedangClaims((prev) => prev.filter((x) => x.id !== pktItem.id));
+              } else {
+                setSkwbPaketSedangClaims((prev) => {
+                  const exists = prev.some((x) => x.id === pktItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === pktItem.id ? { ...x, ...pktItem } : x))
+                    : [pktItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'skwb_kartu_pasien_claim': {
             const kpItem = p as unknown as SKWBPatientCardClaim;
             if (kpItem && kpItem.id) {
-              setSkwbPatientCardClaims((prev) => {
-                const exists = prev.some((x) => x.id === kpItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === kpItem.id ? { ...x, ...kpItem } : x))
-                  : [kpItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setSkwbPatientCardClaims((prev) => prev.filter((x) => x.id !== kpItem.id));
+              } else {
+                setSkwbPatientCardClaims((prev) => {
+                  const exists = prev.some((x) => x.id === kpItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === kpItem.id ? { ...x, ...kpItem } : x))
+                    : [kpItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'skwb_oplas_claim': {
             const opItem = p as unknown as SKWBOplasClaim;
             if (opItem && opItem.id) {
-              setSkwbOplasClaims((prev) => {
-                const exists = prev.some((x) => x.id === opItem.id);
-                return exists
-                  ? prev.map((x) => (x.id === opItem.id ? { ...x, ...opItem } : x))
-                  : [opItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setSkwbOplasClaims((prev) => prev.filter((x) => x.id !== opItem.id));
+              } else {
+                setSkwbOplasClaims((prev) => {
+                  const exists = prev.some((x) => x.id === opItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === opItem.id ? { ...x, ...opItem } : x))
+                    : [opItem, ...prev];
+                });
+              }
             }
             break;
           }
           case 'character_kill': {
             const ckItem = p as unknown as CharacterKillRecord;
             if (ckItem && ckItem.id) {
-              setCharacterKillRecords((prev) => {
-                const exists = prev.some((x) => x.id === ckItem.id);
-                if (exists) {
-                  return prev.map((x) =>
-                    x.id === ckItem.id
-                      ? {
-                          ...x,
-                          ...ckItem,
-                          status: (docItem.status as CharacterKillRecord['status']) || ckItem.status,
-                        }
-                      : x
-                  );
-                }
-                return [ckItem, ...prev];
-              });
+              if (docItem.status === 'DELETED') {
+                setCharacterKillRecords((prev) => prev.filter((x) => x.id !== ckItem.id));
+              } else {
+                setCharacterKillRecords((prev) => {
+                  const exists = prev.some((x) => x.id === ckItem.id);
+                  return exists
+                    ? prev.map((x) => (x.id === ckItem.id ? { ...x, ...ckItem } : x))
+                    : [ckItem, ...prev];
+                });
+              }
             }
             break;
           }
@@ -740,8 +803,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name: name.trim(),
       email: email.trim(),
       password,
-      role: 'Medical Support',
-      level: ROLE_LEVELS['Medical Support'],
+      role: 'Medical Student',
+      level: ROLE_LEVELS['Medical Student'],
       status: 'Pending Approval',
       avatarUrl: createStaffAvatarSvg(initials || 'ST', '#9E1B21'),
       specialty: 'Anggota Baru Paramedic Kota Baru',
@@ -949,7 +1012,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const approveOrRejectAccount = (accountId: string, action: 'Approve' | 'Reject') => {
-    if (!currentUser || currentUser.level < 7 || accountId === currentUser.id) return;
+    if (!currentUser || currentUser.level < 8 || accountId === currentUser.id) return;
     const newStatus: AccountStatus = action === 'Approve' ? 'Active' : 'Rejected';
     setStaffAccounts((prev) =>
       prev.map((s) => {
@@ -965,7 +1028,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateStaffRoleAndInfo = (staffId: string, newRole: RoleName, newName: string, newSpecialty: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     const newLevel = ROLE_LEVELS[newRole];
     if (staffId === currentUser.id && newLevel > currentUser.level) {
       addToast('error', 'Akses Ditolak', 'Staff tidak dapat menaikkan role dirinya sendiri.');
@@ -989,7 +1052,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deactivateStaff = (staffId: string) => {
-    if (!currentUser || currentUser.level < 7 || staffId === currentUser.id) return;
+    if (!currentUser || currentUser.level < 8 || staffId === currentUser.id) return;
     setStaffAccounts((prev) =>
       prev.map((s) => {
         if (s.id === staffId) {
@@ -1004,7 +1067,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateAccountStatus = (staffId: string, newStatus: AccountStatus) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     setStaffAccounts((prev) =>
       prev.map((s) => {
         if (s.id === staffId) {
@@ -1019,7 +1082,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteInactiveAccount = (staffId: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     if (staffId === currentUser.id) {
       addToast('error', 'Akses Ditolak', 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif login.');
       return;
@@ -1028,6 +1091,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!target) return;
     setStaffAccounts((prev) => prev.filter((s) => s.id !== staffId));
     void syncRecordToFirestore(target.id, 'staff_account', target.name, 'DELETED', { id: target.id });
+    void deleteRecordFromFirestore(target.id);
     addToast('success', 'Akun Staff Dihapus', `Data & akun ${target.name} berhasil dihapus dari Database.`);
   };
 
@@ -1053,7 +1117,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const reviewLeaveRequest = (leaveId: string, status: 'Approved' | 'Rejected', rejectionReason?: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     setLeaveRequests((prev) =>
       prev.map((lv) => {
         if (lv.id === leaveId) {
@@ -1086,7 +1150,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const reviewResignRequest = (resignId: string, status: 'Approved' | 'Rejected', rejectionReason?: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     const target = resignRequests.find((r) => r.id === resignId);
     setResignRequests((prev) =>
       prev.map((r) => {
@@ -1132,7 +1196,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const createVotingPoll = (title: string, description: string, deadline: string, optionLabels: string[]) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     const id = `vote-${Date.now()}`;
     const newPoll: VotingPoll = {
       id,
@@ -1150,7 +1214,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteVotingPoll = (pollId: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     const target = votingPolls.find((p) => p.id === pollId);
     setVotingPolls((prev) => prev.filter((p) => p.id !== pollId));
     void syncRecordToFirestore(pollId, 'voting_poll', target?.title || pollId, 'DELETED', { id: pollId });
@@ -1158,7 +1222,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleRecruitmentStatus = (status: 'OPEN' | 'CLOSED') => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     setRecruitmentStatus(status);
     void syncRecordToFirestore('recruitment_config_main', 'recruitment_config', 'Status Pendaftaran Paramedic', status, {
       status,
@@ -1168,7 +1232,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateRecruitmentApplicantStatus = (id: string, status: RecruitmentApplicant['status']) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     setRecruitmentApplicants((prev) =>
       prev.map((a) => {
         if (a.id === id) {
@@ -1183,7 +1247,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateComplaintStatus = (id: string, status: ComplaintRecord['status'], internalNote?: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     setComplaints((prev) =>
       prev.map((c) => {
         if (c.id === id) {
@@ -1395,7 +1459,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addOrUpdateSOP = (sop: Omit<SOPDocument, 'id' | 'updatedAt' | 'author'>, existingId?: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     const updatedAt = new Date().toISOString().slice(0, 10);
     if (existingId) {
       setSopDocuments((prev) =>
@@ -1418,7 +1482,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addDutyLogsBatch = (logs: Omit<DutyLog, 'id'>[]) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     const created: DutyLog[] = logs.map((l, idx) => ({ ...l, id: `duty-${Date.now()}-${idx}` }));
     setDutyLogs((prev) => [...created, ...prev]);
     created.forEach((dutyItem) => {
@@ -1428,7 +1492,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addOrUpdatePayroll = (record: Omit<PayrollRecord, 'id'>, existingId?: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     if (existingId) {
       setPayrollRecords((prev) =>
         prev.map((p) => {
@@ -1452,7 +1516,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateRoleSalaryConfig = (config: RoleSalaryConfig) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     setRoleSalaryConfigs((prev) =>
       prev.map((c) => (c.role === config.role ? { ...config } : c))
     );
@@ -1468,7 +1532,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addOrUpdateRegulation = (reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>, existingId?: string) => {
-    if (!currentUser || currentUser.level < 7) return;
+    if (!currentUser || currentUser.level < 8) return;
     const updatedAt = new Date().toISOString().slice(0, 10);
     if (existingId) {
       setRegulations((prev) =>
@@ -1604,7 +1668,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 4. Cek apakah staff aktif dan memiliki role Co-ass ke atas (Level >= 4)
     const staff = staffAccounts.find((s) => s.id === handlingStaffId && s.status === 'Active');
-    if (!staff || staff.level < ROLE_LEVELS['Co-ass']) {
+    if (!staff || staff.level < ROLE_LEVELS['Co-Ass']) {
       addToast(
         'error',
         'Kewenangan Tidak Sesuai',
@@ -1688,15 +1752,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const staff = staffAccounts.find((s) => s.id === handlingStaffId && s.status === 'Active');
-    if (!staff || staff.level < ROLE_LEVELS['Paramedic']) {
+    if (!staff || staff.level < ROLE_LEVELS['Nurse']) {
       addToast(
         'error',
         'Kewenangan Tidak Sesuai',
-        'Staff harus memiliki jabatan minimal Paramedic ke atas.'
+        'Staff harus memiliki jabatan minimal Nurse ke atas.'
       );
       return {
         success: false,
-        message: 'Staff harus memiliki jabatan minimal Paramedic ke atas.',
+        message: 'Staff harus memiliki jabatan minimal Nurse ke atas.',
       };
     }
 

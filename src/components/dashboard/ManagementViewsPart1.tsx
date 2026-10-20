@@ -28,7 +28,7 @@ export const StaffManagementView: React.FC = () => {
   const [search, setSearch] = useState('');
   const [editingStaff, setEditingStaff] = useState<typeof staffAccounts[0] | null>(null);
   const [editName, setEditName] = useState('');
-  const [editRole, setEditRole] = useState<RoleName>('Paramedic');
+  const [editRole, setEditRole] = useState<RoleName>('Nurse');
   const [editSpecialty, setEditSpecialty] = useState('');
 
   // Role Change Confirmation Modal State (Sec 46)
@@ -204,7 +204,7 @@ export const StaffManagementView: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Jabatan / Role (Level 1 – 10)
+                      Jabatan / Role (Level 1 – 12)
                     </label>
                     <select
                       value={editRole}
@@ -238,11 +238,12 @@ export const StaffManagementView: React.FC = () => {
                     {/* Pilihan Cepat Spesialis Dokter (Obgyn, Kecantikan, Forensik, Jantung, dll) */}
                     {[
                       'Doctor',
-                      'Specialist Doctor',
-                      'Heads of Departments',
-                      'Deputy Chief',
-                      'Chief Executive Officer',
-                      'Executive Board',
+                      'Doctor Specialist',
+                      'Human Resources Department',
+                      'Secretary & Treasurer',
+                      'Deputy Director',
+                      'Director',
+                      'Hospital Comitee',
                     ].includes(editRole) && (
                       <div className="pt-2 space-y-1.5">
                         <p className="text-[11px] font-semibold text-slate-500">
@@ -833,25 +834,40 @@ export const LeaveAndResignApprovalView: React.FC<{ mode: 'leave' | 'resign' }> 
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-right">
-                    {r.status === 'Pending' && (
-                      <div className="inline-flex items-center gap-2">
-                        <button
-                          onClick={() => reviewResignRequest(r.id, 'Approved')}
-                          className="px-3 py-1.5 rounded-lg bg-[#20C997] text-white text-xs font-semibold cursor-pointer"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => {
-                            setRejectId(r.id);
-                            setRejectionReason('');
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold cursor-pointer"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
+                    <div className="inline-flex items-center gap-2">
+                      {r.status === 'Pending' && (
+                        <>
+                          <button
+                            onClick={() => reviewResignRequest(r.id, 'Approved')}
+                            className="px-3 py-1.5 rounded-lg bg-[#20C997] text-white text-xs font-semibold cursor-pointer"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => {
+                              setRejectId(r.id);
+                              setRejectionReason('');
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold cursor-pointer"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => {
+                          requestDelete(
+                            'Hapus Pengajuan Resign',
+                            `Apakah Anda yakin ingin menghapus data pengajuan resign milik ${r.staffName}?`,
+                            () => deleteResignRequest(r.id)
+                          );
+                        }}
+                        title="Hapus Pengajuan Resign"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

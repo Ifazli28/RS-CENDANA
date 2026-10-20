@@ -94,6 +94,46 @@ export function computeStaffWeeklySalary(
   };
 }
 
+// Helper to normalize dates from Discord logs (e.g. DD/MM/YYYY HH:mm:ss or YYYY-MM-DD)
+export function parseDiscordDutyDate(dateStr: string): { normalized: string; monthKey: string; dayNum: number; dateOnly: string } {
+  if (!dateStr) return { normalized: '', monthKey: '2026-10', dayNum: 17, dateOnly: '2026-10-17' };
+  const trimmed = dateStr.trim();
+  // Format DD/MM/YYYY HH:mm:ss or DD/MM/YYYY
+  const dmyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}:\d{1,2}(?::\d{1,2})?))?/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, '0');
+    const month = dmyMatch[2].padStart(2, '0');
+    const year = dmyMatch[3];
+    const time = dmyMatch[4] || '00:00:00';
+    return {
+      normalized: `${year}-${month}-${day} ${time}`,
+      dateOnly: `${year}-${month}-${day}`,
+      monthKey: `${year}-${month}`,
+      dayNum: parseInt(day, 10),
+    };
+  }
+  // Format YYYY-MM-DD HH:mm:ss or YYYY-MM-DD
+  const ymdMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}:\d{1,2}(?::\d{1,2})?))?/);
+  if (ymdMatch) {
+    const year = ymdMatch[1];
+    const month = ymdMatch[2].padStart(2, '0');
+    const day = ymdMatch[3].padStart(2, '0');
+    const time = ymdMatch[4] || '00:00:00';
+    return {
+      normalized: `${year}-${month}-${day} ${time}`,
+      dateOnly: `${year}-${month}-${day}`,
+      monthKey: `${year}-${month}`,
+      dayNum: parseInt(day, 10),
+    };
+  }
+  return {
+    normalized: trimmed,
+    dateOnly: trimmed.slice(0, 10),
+    monthKey: '2026-10',
+    dayNum: 17,
+  };
+}
+
 // 1. DISCORD DUTY PARSER (Sec 66)
 export const DutyManagementView: React.FC = () => {
   const { staffAccounts, dutyLogs, addDutyLogsBatch, addToast, deleteDutyLog, requestDelete } = useApp();
@@ -101,38 +141,73 @@ export const DutyManagementView: React.FC = () => {
   const [parsedPreview, setParsedPreview] = useState<ParsedDutyPreview[] | null>(null);
 
   const handleParseDiscordLogs = () => {
-    const blocks = rawLogText
-      .trim()
-      .split(/\n\s*\n/)
+    // Split on blocks containing Nama: so multiple discord messages / embeds are cleanly separated
+    const rawBlocks = rawLogText
+      .split(/(?=Nama\s*:)/i)
       .map((b) => b.trim())
-      .filter(Boolean);
+      .filter((b) => /Nama\s*:/i.test(b));
+
+    const blocks = rawBlocks.length > 0
+      ? rawBlocks
+      : rawLogText.trim().split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
 
     const results: ParsedDutyPreview[] = blocks.map((block) => {
       const getField = (label: string) => {
-        const regex = new RegExp(`${label}\\s*:\\s*(.+)`, 'i');
+        const regex = new RegExp(`${label}\\s*:\\s*([^\\n\\r]+)`, 'i');
         const m = block.match(regex);
         return m ? m[1].trim() : '';
       };
 
       const rawName = getField('Nama');
-      const jobTitle = getField('Pekerjaan');
+      const jobTitle = getField('Pekerjaan') || 'ambulance';
       const durationText = getField('Durasi Bekerja');
       const startDate = getField('Tanggal Mulai');
       const endDate = getField('Tanggal Berakhir');
 
-      let hours = 0;
-      let mins = 0;
-      const hMatch = durationText.match(/(\d+)\s*Jam/i);
-      const mMatch = durationText.match(/(\d+)\s*Menit/i);
-      if (hMatch) hours = parseInt(hMatch[1], 10);
-      if (mMatch) mins = parseInt(mMatch[1], 10);
-      const durationMinutes = hours * 60 + mins;
+      let durationMinutes = 0;
+      const hMatch = durationText.match(/(\d+)\s*(?:jam|hours?|hrs?|h)\b/i);
+      const mMatch = durationText.match(/(\d+)\s*(?:menit|minutes?|mins?|m)\b/i);
+      if (hMatch) durationMinutes += parseInt(hMatch[1], 10) * 60;
+      if (mMatch) durationMinutes += parseInt(mMatch[1], 10);
 
-      const matched = staffAccounts.find(
-        (s) =>
-          s.name.toLowerCase() === rawName.toLowerCase() ||
-          s.name.toLowerCase().includes(rawName.toLowerCase())
-      );
+      if (durationMinutes === 0) {
+        const numOnly = durationText.match(/^\s*(\d+)\s*$/);
+        if (numOnly) durationMinutes = parseInt(numOnly[1], 10);
+      }
+
+      // Fallback: calculate from start & end date if duration string couldn't be parsed
+      if (durationMinutes === 0 && startDate && endDate) {
+        try {
+          const s = parseDiscordDutyDate(startDate);
+          const e = parseDiscordDutyDate(endDate);
+          const sMs = new Date(s.normalized.replace(' ', 'T')).getTime();
+          const eMs = new Date(e.normalized.replace(' ', 'T')).getTime();
+          if (!isNaN(sMs) && !isNaN(eMs) && eMs > sMs) {
+            durationMinutes = Math.round((eMs - sMs) / 60000);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      // Clean parenthetical tag (e.g., "Deandra Aditya (deandra)" -> "Deandra Aditya")
+      const cleanName = rawName.replace(/\s*\([^)]*\)/g, '').trim();
+      const tagMatch = rawName.match(/\(([^)]+)\)/);
+      const discordTag = tagMatch ? tagMatch[1].trim().toLowerCase() : '';
+
+      const matched = staffAccounts.find((s) => {
+        const sLower = s.name.toLowerCase();
+        const rawLower = rawName.toLowerCase();
+        const cleanLower = cleanName.toLowerCase();
+        const emailPrefix = s.email.split('@')[0].toLowerCase();
+        return (
+          sLower === cleanLower ||
+          sLower === rawLower ||
+          rawLower.includes(sLower) ||
+          (cleanLower.length > 3 && sLower.includes(cleanLower)) ||
+          (discordTag && (emailPrefix === discordTag || sLower.includes(discordTag)))
+        );
+      });
 
       if (!rawName || !durationText || !startDate || !endDate) {
         return {
@@ -210,21 +285,25 @@ export const DutyManagementView: React.FC = () => {
     if (!parsedPreview) return;
     const validLogs: Omit<DutyLog, 'id'>[] = parsedPreview
       .filter((p) => p.isValid && p.matchedStaffId && p.matchedRole)
-      .map((p) => ({
-        staffId: p.matchedStaffId!,
-        staffName: p.matchedStaffName!,
-        role: p.matchedRole!,
-        jobTitleInLog: p.jobTitle,
-        durationMinutes: p.durationMinutes,
-        durationFormatted: p.durationText,
-        startDate: p.startDate,
-        endDate: p.endDate,
-        weekKey: 'current-week',
-        monthKey: p.startDate.slice(0, 7) || '2026-10',
-      }));
+      .map((p) => {
+        const startParsed = parseDiscordDutyDate(p.startDate);
+        const endParsed = parseDiscordDutyDate(p.endDate);
+        return {
+          staffId: p.matchedStaffId!,
+          staffName: p.matchedStaffName!,
+          role: p.matchedRole!,
+          jobTitleInLog: p.jobTitle,
+          durationMinutes: p.durationMinutes,
+          durationFormatted: p.durationText,
+          startDate: startParsed.normalized,
+          endDate: endParsed.normalized,
+          weekKey: 'current-week',
+          monthKey: startParsed.monthKey,
+        };
+      });
 
     if (validLogs.length === 0) {
-      addToast('error', 'Tidak Ada Log Valid', 'Periksa kembali format log Discord Anda.');
+      addToast('error', 'Tidak Ada Log Valid', 'Periksa kembali format log Discord Anda atau sesuaikan nama staff.');
       return;
     }
 
@@ -312,12 +391,47 @@ export const DutyManagementView: React.FC = () => {
                       <td className="py-2.5 px-3">
                         {item.isValid ? (
                           <span className="text-[#20C997] font-bold">
-                            ✓ Cocok ({item.matchedRole})
+                            ✓ Cocok ({item.matchedStaffName} · {item.matchedRole})
                           </span>
                         ) : (
-                          <span className="text-rose-600 font-bold">
-                            ✗ Gagal: {item.errorReason}
-                          </span>
+                          <div className="space-y-1">
+                            <span className="text-rose-600 font-bold block text-[11px]">
+                              ✗ {item.errorReason}
+                            </span>
+                            <select
+                              onChange={(e) => {
+                                const st = staffAccounts.find((s) => s.id === e.target.value);
+                                if (st) {
+                                  setParsedPreview((prev) =>
+                                    prev
+                                      ? prev.map((p, pIdx) =>
+                                          pIdx === idx
+                                            ? {
+                                                ...p,
+                                                matchedStaffId: st.id,
+                                                matchedStaffName: st.name,
+                                                matchedRole: st.role,
+                                                isValid: p.durationMinutes > 0,
+                                                errorReason: undefined,
+                                              }
+                                            : p
+                                        )
+                                      : null
+                                  );
+                                }
+                              }}
+                              className="text-[11px] p-1.5 rounded-lg border border-red-200 bg-white"
+                            >
+                              <option value="">Pilih staff secara manual...</option>
+                              {staffAccounts
+                                .filter((s) => s.status === 'Active')
+                                .map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.name} ({s.role})
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -439,17 +553,18 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
         const staffLogs = dutyLogs.filter((l) => l.staffId === st.id);
 
         staffLogs.forEach((l) => {
-          const logDatePrefix = l.startDate.slice(0, 10);
-          const exactDayIdx = weekDays.findIndex((wd) => wd.fullDate === logDatePrefix);
+          const norm = parseDiscordDutyDate(l.startDate);
+          const exactDayIdx = weekDays.findIndex((wd) => wd.fullDate === norm.dateOnly);
           if (exactDayIdx !== -1) {
             dayMinutes[exactDayIdx] += l.durationMinutes;
-          } else if (l.weekKey === 'current-week' && weekStartStr === '2026-10-05') {
-            // Fallback day-of-week mapping for current-week logs
-            const parsed = new Date(l.startDate.replace(' ', 'T'));
+          } else {
+            const parsed = new Date(norm.normalized.replace(' ', 'T'));
             if (!isNaN(parsed.getTime())) {
               const jsDay = parsed.getDay(); // 0=Sun, 1=Mon...
               const monBasedIdx = jsDay === 0 ? 6 : jsDay - 1;
-              dayMinutes[monBasedIdx] += l.durationMinutes;
+              if (monBasedIdx >= 0 && monBasedIdx <= 6) {
+                dayMinutes[monBasedIdx] += l.durationMinutes;
+              }
             }
           }
         });
@@ -544,6 +659,31 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
               onChange={(e) => setWeekStartStr(e.target.value)}
               className="text-xs font-mono font-bold text-[#7F1D1D] bg-transparent focus:outline-none cursor-pointer"
             />
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setWeekStartStr('2026-10-05')}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition ${
+                weekStartStr === '2026-10-05'
+                  ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              05–11 Okt
+            </button>
+            <button
+              type="button"
+              onClick={() => setWeekStartStr('2026-10-12')}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition ${
+                weekStartStr === '2026-10-12'
+                  ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              12–18 Okt (Terbaru)
+            </button>
           </div>
 
           <div className="relative">
@@ -706,10 +846,14 @@ export const MonthlyAttendanceRecapView: React.FC = () => {
         let sessionsCount = 0;
 
         dutyLogs
-          .filter((l) => l.staffId === st.id && l.monthKey === selectedMonth)
+          .filter(
+            (l) =>
+              l.staffId === st.id &&
+              (l.monthKey === selectedMonth || parseDiscordDutyDate(l.startDate).monthKey === selectedMonth)
+          )
           .forEach((l) => {
             sessionsCount += 1;
-            const dayNum = parseInt(l.startDate.slice(8, 10), 10);
+            const dayNum = parseDiscordDutyDate(l.startDate).dayNum;
             if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31) {
               const bucketIdx = Math.min(4, Math.floor((dayNum - 1) / 7));
               weekBuckets[bucketIdx] += l.durationMinutes;
@@ -939,6 +1083,7 @@ export const PayrollManagementView: React.FC = () => {
     addOrUpdatePayroll,
     addToast,
     deletePayrollRecord,
+    requestDelete,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'role-config' | 'weekly-payroll'>('role-config');

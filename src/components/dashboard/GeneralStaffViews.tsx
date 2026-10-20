@@ -656,7 +656,7 @@ export const VotingView: React.FC = () => {
   const [deletingPollId, setDeletingPollId] = useState<string | null>(null);
 
   if (!currentUser) return null;
-  const canCreate = currentUser.level >= 7;
+  const canCreate = currentUser.level >= 8;
 
   return (
     <div className="space-y-6">
@@ -673,7 +673,7 @@ export const VotingView: React.FC = () => {
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Buat Voting Baru (Heads+)</span>
+            <span>Buat Voting Baru (HRD+)</span>
           </button>
         )}
       </div>
@@ -1355,7 +1355,7 @@ export const SOPMedisView: React.FC = () => {
   const [pdfFileName, setPdfFileName] = useState('');
 
   if (!currentUser) return null;
-  const canManage = currentUser.level >= 7;
+  const canManage = currentUser.level >= 8;
 
   return (
     <div className="space-y-6">
@@ -1379,7 +1379,7 @@ export const SOPMedisView: React.FC = () => {
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Buat / Upload SOP PDF (Heads+)</span>
+            <span>Buat / Upload SOP PDF (HRD+)</span>
           </button>
         )}
       </div>

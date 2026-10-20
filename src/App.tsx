@@ -41,7 +41,13 @@ const GlobalConfirmModal: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              confirmModal.onConfirm();
+              const action = confirmModal.onConfirm;
+              closeConfirmModal();
+              try {
+                action();
+              } catch (err) {
+                console.error('Gagal menjalankan aksi hapus:', err);
+              }
             }}
             className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] hover:opacity-95 text-white text-xs font-bold shadow-xs cursor-pointer transition flex items-center gap-1.5"
           >

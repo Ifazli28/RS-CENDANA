@@ -56,14 +56,15 @@ export function formatDoctorNameWithTitleAndDegree(
   const trimmed = rawName.trim();
   if (!trimmed) return trimmed;
 
-  // Hanya terapkan otomatis untuk jabatan Doctor ke atas (Doctor, Specialist Doctor, Heads, Deputy, CEO, Executive Board)
+  // Hanya terapkan otomatis untuk jabatan Doctor ke atas (Doctor, Doctor Specialist, HRD, Sec & Treas, Deputy Dir, Director, Hospital Comitee)
   const doctorRoles: RoleName[] = [
     'Doctor',
-    'Specialist Doctor',
-    'Heads of Departments',
-    'Deputy Chief',
-    'Chief Executive Officer',
-    'Executive Board',
+    'Doctor Specialist',
+    'Human Resources Department',
+    'Secretary & Treasurer',
+    'Deputy Director',
+    'Director',
+    'Hospital Comitee',
   ];
 
   if (!doctorRoles.includes(role)) {
@@ -102,7 +103,7 @@ export function formatDoctorNameWithTitleAndDegree(
     targetDegree = 'Sp.KJ';
   } else if (specLower.includes('gawat darurat')) {
     targetDegree = 'Sp.EM';
-  } else if (role === 'Specialist Doctor') {
+  } else if (role === 'Doctor Specialist') {
     targetDegree = 'Sp.PD';
   } else if (role === 'Doctor') {
     targetDegree = 'S.Ked';

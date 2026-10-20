@@ -925,10 +925,10 @@ export const AppointmentsDataView: React.FC = () => {
 
 // 5. JADWAL PRAKTIK DOKTER MANAGEMENT (Sec 63 — Doctor+ Level 5+)
 export const DoctorScheduleManageView: React.FC = () => {
-  const { doctorSchedules, staffAccounts, currentUser, addDoctorSchedule, deleteDoctorSchedule } =
+  const { doctorSchedules, staffAccounts, currentUser, addDoctorSchedule, deleteDoctorSchedule, requestDelete } =
     useApp();
 
-  const doctorsList = staffAccounts.filter((s) => s.status === 'Active' && s.level >= 5);
+  const doctorsList = staffAccounts.filter((s) => s.status === 'Active' && s.level >= 6);
   const [selectedDocId, setSelectedDocId] = useState(currentUser?.id || doctorsList[0]?.id || '');
   const [specialty, setSpecialty] = useState('Doctor');
   const [days, setDays] = useState('Senin, Rabu, Jumat');

@@ -74,8 +74,8 @@ export const SKWBBenefitView: React.FC = () => {
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [claimErrorMsg, setClaimErrorMsg] = useState('');
 
-  // RBAC Guard Berlapis: Hanya Paramedic ke atas (Level >= 3)
-  if (!currentUser || currentUser.level < ROLE_LEVELS['Paramedic']) {
+  // RBAC Guard Berlapis: Hanya Nurse ke atas (Level >= 3)
+  if (!currentUser || currentUser.level < ROLE_LEVELS['Nurse']) {
     return (
       <div className="bg-white rounded-2xl border border-rose-200 p-10 text-center max-w-lg mx-auto my-8 space-y-3 shadow-xs">
         <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
@@ -140,9 +140,9 @@ export const SKWBBenefitView: React.FC = () => {
   // Benefit 3 (Free 1x Oplas): Role >= Doctor (Level >= 5)
   const eligibleStaffList = useMemo(() => {
     let minLevel = 4;
-    if (activeClaimModal === 'paket_sedang') minLevel = ROLE_LEVELS['Co-ass']; // 4
-    if (activeClaimModal === 'kartu_pasien') minLevel = ROLE_LEVELS['Paramedic']; // 3
-    if (activeClaimModal === 'oplas') minLevel = ROLE_LEVELS['Doctor']; // 5
+    if (activeClaimModal === 'paket_sedang') minLevel = ROLE_LEVELS['Co-Ass']; // 4
+    if (activeClaimModal === 'kartu_pasien') minLevel = ROLE_LEVELS['Nurse']; // 3
+    if (activeClaimModal === 'oplas') minLevel = ROLE_LEVELS['Doctor']; // 6
 
     return staffAccounts
       .filter(
@@ -238,13 +238,31 @@ export const SKWBBenefitView: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => setPreviewPhotoClaim(selectedClaim)}
-            className="px-4 py-2.5 rounded-xl border border-red-200 bg-red-50/40 text-[#7F1D1D] hover:bg-red-100 text-xs font-semibold flex items-center gap-2 self-start sm:self-auto cursor-pointer"
-          >
-            <Eye className="w-4 h-4" />
-            <span>Lihat Foto Surat SKWB</span>
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <button
+              onClick={() => setPreviewPhotoClaim(selectedClaim)}
+              className="px-4 py-2.5 rounded-xl border border-red-200 bg-red-50/40 text-[#7F1D1D] hover:bg-red-100 text-xs font-semibold flex items-center gap-2 cursor-pointer"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Lihat Foto Surat SKWB</span>
+            </button>
+            <button
+              onClick={() => {
+                requestDelete(
+                  'Hapus Data SKWB Warga',
+                  `Apakah Anda yakin ingin menghapus seluruh data pengajuan benefit SKWB warga ${selectedClaim.icName}? Tindakan ini permanen.`,
+                  () => {
+                    deleteSKWBClaim(selectedClaim.id);
+                    setSelectedClaimId(null);
+                  }
+                );
+              }}
+              className="px-3.5 py-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Hapus Data SKWB</span>
+            </button>
+          </div>
         </div>
 
         {/* Bagian 1 & 2: Informasi Warga & Informasi SKWB */}

@@ -1,39 +1,45 @@
 export type RoleName =
-  | 'Medical Support'
+  | 'Medical Student'
   | 'Trainee'
-  | 'Paramedic'
-  | 'Co-ass'
+  | 'Nurse'
+  | 'Co-Ass'
+  | 'Pharmacist'
   | 'Doctor'
-  | 'Specialist Doctor'
-  | 'Heads of Departments'
-  | 'Deputy Chief'
-  | 'Chief Executive Officer'
-  | 'Executive Board';
+  | 'Doctor Specialist'
+  | 'Human Resources Department'
+  | 'Secretary & Treasurer'
+  | 'Deputy Director'
+  | 'Director'
+  | 'Hospital Comitee';
 
 export const ROLE_LEVELS: Record<RoleName, number> = {
-  'Medical Support': 1,
+  'Medical Student': 1,
   'Trainee': 2,
-  'Paramedic': 3,
-  'Co-ass': 4,
-  'Doctor': 5,
-  'Specialist Doctor': 6,
-  'Heads of Departments': 7,
-  'Deputy Chief': 8,
-  'Chief Executive Officer': 9,
-  'Executive Board': 10,
+  'Nurse': 3,
+  'Co-Ass': 4,
+  'Pharmacist': 5,
+  'Doctor': 6,
+  'Doctor Specialist': 7,
+  'Human Resources Department': 8,
+  'Secretary & Treasurer': 9,
+  'Deputy Director': 10,
+  'Director': 11,
+  'Hospital Comitee': 12,
 };
 
 export const ROLE_LIST: RoleName[] = [
-  'Medical Support',
+  'Medical Student',
   'Trainee',
-  'Paramedic',
-  'Co-ass',
+  'Nurse',
+  'Co-Ass',
+  'Pharmacist',
   'Doctor',
-  'Specialist Doctor',
-  'Heads of Departments',
-  'Deputy Chief',
-  'Chief Executive Officer',
-  'Executive Board',
+  'Doctor Specialist',
+  'Human Resources Department',
+  'Secretary & Treasurer',
+  'Deputy Director',
+  'Director',
+  'Hospital Comitee',
 ];
 
 export type AccountStatus = 'Pending Approval' | 'Active' | 'Rejected' | 'Inactive';
