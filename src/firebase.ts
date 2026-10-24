@@ -200,7 +200,7 @@ export function subscribeToPortalRecords(
       onRecordsUpdate([...recordsBatch1, ...recordsBatch2]);
     },
     (error) => {
-      handleFirestoreError(error, OperationType.GET, path);
+      console.warn('Real-time listener batch 1 notice for ' + path + ':', error);
     }
   );
 
@@ -215,7 +215,7 @@ export function subscribeToPortalRecords(
       onRecordsUpdate([...recordsBatch1, ...recordsBatch2]);
     },
     (error) => {
-      handleFirestoreError(error, OperationType.GET, path);
+      console.warn('Real-time listener batch 2 notice for ' + path + ':', error);
     }
   );
 

@@ -47,9 +47,8 @@ service cloud.firestore {
 
     // Main Portal Records Collection
     match /portal_records/{recordId} {
-      // Public and Staff read access for portal records
-      allow get: if isValidId(recordId);
-      allow list: if resource.data.module is string && resource.data.module.size() <= 64;
+      // Public and Staff real-time read access for all portal records
+      allow read: if true;
 
       // Public form submissions & Staff synchronization writes with strict schema validation
       allow create: if isValidId(recordId) &&

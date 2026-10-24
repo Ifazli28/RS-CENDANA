@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SAMPLE_DISCORD_DUTY_LOG } from '../../data/initialData';
 import { DutyLog, RoleName, RoleSalaryConfig } from '../../types';
+import { compressImageForFirestore } from '../../utils/imageCompressor';
 import {
   FileSpreadsheet,
   Printer,
@@ -15,6 +16,9 @@ import {
   AlertCircle,
   Search,
   Trash2,
+  Loader2,
+  Image as ImageIcon,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 interface ParsedDutyPreview {
@@ -1701,17 +1705,42 @@ export const RegulationManagementView: React.FC = () => {
   const [category, setCategory] = useState('Pengobatan & Tarif Utama');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionInfo, setCompressionInfo] = useState<{ sizeKb: number; ratio?: string } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
+  const [directUrlInput, setDirectUrlInput] = useState('');
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setImageUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsCompressing(true);
+    setCompressionInfo(null);
+    try {
+      // Compress and optimize image for seamless Cloud Firestore cross-browser sync
+      const result = await compressImageForFirestore(file, {
+        maxWidth: 1400,
+        maxHeight: 1800,
+        quality: 0.82,
+        targetMaxBytes: 450 * 1024,
+      });
+      setImageUrl(result.dataUrl);
+      setCompressionInfo({
+        sizeKb: Math.round(result.byteSize / 1024),
+        ratio: result.compressionRatio,
+      });
+    } catch (err) {
+      console.warn('Kompresi canvas fallback ke raw data URL:', err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setImageUrl(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   return (
@@ -1720,7 +1749,7 @@ export const RegulationManagementView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900">Regulation Management (Heads+)</h2>
           <p className="text-xs text-slate-500">
-            Upload atau perbarui gambar Regulasi Pengobatan · Seluruh gambar ditampilkan utuh 100% (object-contain)
+            Upload atau perbarui poster Regulasi Pengobatan · Sinkronisasi Cloud Firestore real-time ke seluruh browser & akun publik
           </p>
         </div>
         <button
@@ -1738,8 +1767,11 @@ export const RegulationManagementView: React.FC = () => {
             setCategory('Pengobatan & Tarif Utama');
             setDescription('');
             setImageUrl(regulations[0]?.imageUrl || '');
+            setCompressionInfo(null);
+            setImageInputMode('upload');
+            setDirectUrlInput('');
           }}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-sm hover:opacity-95"
         >
           <Plus className="w-4 h-4" />
           <span>Upload Regulasi Baru</span>
@@ -1748,19 +1780,36 @@ export const RegulationManagementView: React.FC = () => {
 
       {editingReg && (
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            addOrUpdateRegulation(
-              { title, category, description, imageUrl },
-              editingReg.id || undefined
-            );
-            setEditingReg(null);
+            if (!imageUrl.trim()) {
+              return;
+            }
+            setIsSubmitting(true);
+            try {
+              const res = await addOrUpdateRegulation(
+                { title, category, description, imageUrl },
+                editingReg.id || undefined
+              );
+              if (res.success) {
+                setEditingReg(null);
+                setCompressionInfo(null);
+              }
+            } finally {
+              setIsSubmitting(false);
+            }
           }}
-          className="bg-white rounded-2xl border border-red-200 p-6 space-y-4"
+          className="bg-white rounded-2xl border border-red-200 p-6 space-y-4 shadow-sm"
         >
-          <h3 className="text-base font-bold text-slate-900">
-            {editingReg.id ? 'Ganti Gambar / Perbarui Regulasi' : 'Upload Regulasi Pengobatan Baru'}
-          </h3>
+          <div className="flex items-center justify-between border-b border-red-100 pb-3">
+            <h3 className="text-base font-bold text-slate-900">
+              {editingReg.id ? 'Ganti Poster / Perbarui Regulasi' : 'Upload Regulasi Pengobatan Baru'}
+            </h3>
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-50 text-[#7F1D1D] border border-red-200">
+              Auto-Sync Cloud Firestore
+            </span>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Judul Regulasi *</label>
@@ -1769,7 +1818,8 @@ export const RegulationManagementView: React.FC = () => {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm"
+                placeholder="Contoh: Regulasi Tarif Resmi Pengobatan & Tindakan Medis 2026"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#9E1B21] focus:outline-none"
               />
             </div>
             <div>
@@ -1779,43 +1829,160 @@ export const RegulationManagementView: React.FC = () => {
                 type="text"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm"
+                placeholder="Contoh: Pengobatan & Tarif Utama"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#9E1B21] focus:outline-none"
               />
             </div>
           </div>
+
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Deskripsi *</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Deskripsi Ringkas *</label>
             <textarea
               required
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm"
+              placeholder="Jelaskan ringkasan isi regulasi atau perubahan ketentuan..."
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#9E1B21] focus:outline-none"
             />
           </div>
+
+          {/* Image Upload / URL Mode Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Upload / Ganti Gambar Poster Regulasi (JPG / PNG / WebP)
-            </label>
-            <label className="flex items-center justify-between px-4 py-3 rounded-xl border border-dashed border-red-300 bg-red-50/40 text-xs cursor-pointer">
-              <span>Klik untuk memilih file gambar regulasi baru...</span>
-              <Upload className="w-4 h-4 text-[#9E1B21]" />
-              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-slate-700">
+                Poster Regulasi (JPG / PNG / WebP / SVG) *
+              </label>
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setImageInputMode('upload')}
+                  className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                    imageInputMode === 'upload'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-1">
+                    <Upload className="w-3 h-3" />
+                    <span>Upload File</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageInputMode('url')}
+                  className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                    imageInputMode === 'url'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-1">
+                    <LinkIcon className="w-3 h-3" />
+                    <span>Tautan URL</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {imageInputMode === 'upload' ? (
+              <div className="space-y-2">
+                <label className="flex items-center justify-between px-4 py-3.5 rounded-xl border-2 border-dashed border-red-300 bg-red-50/30 hover:bg-red-50/60 transition text-xs cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-[#9E1B21]" />
+                    <span className="font-medium text-slate-700">
+                      {isCompressing ? 'Mengompresi & mengoptimasi gambar...' : 'Klik untuk memilih file poster regulasi baru (JPG, PNG, WebP)...'}
+                    </span>
+                  </div>
+                  {isCompressing ? (
+                    <Loader2 className="w-4 h-4 text-[#9E1B21] animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4 text-[#9E1B21]" />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isCompressing}
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                </label>
+
+                {compressionInfo && (
+                  <div className="flex items-center gap-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+                    <span>
+                      Gambar teroptimasi: <strong>{compressionInfo.sizeKb} KB</strong>
+                      {compressionInfo.ratio ? ` (${compressionInfo.ratio})` : ''} · Siap sinkron Cloud Firestore real-time.
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={directUrlInput}
+                  onChange={(e) => setDirectUrlInput(e.target.value)}
+                  placeholder="https://i.imgur.com/... atau https://cdn.discordapp.com/..."
+                  className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#9E1B21] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (directUrlInput.trim()) {
+                      setImageUrl(directUrlInput.trim());
+                      setCompressionInfo(null);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-white text-xs font-semibold hover:bg-slate-900 cursor-pointer"
+                >
+                  Terapkan URL
+                </button>
+              </div>
+            )}
           </div>
-          <div className="flex justify-end gap-2">
+
+          {/* Live Preview of Poster (Uncropped 100% object-contain) */}
+          {imageUrl && (
+            <div className="space-y-1.5 pt-2">
+              <span className="text-[11px] font-semibold text-slate-600">
+                Preview Poster Regulasi (Ditampilkan Utuh 100% di Halaman Publik):
+              </span>
+              <div className="w-full max-h-80 overflow-y-auto rounded-xl bg-slate-50 border border-red-100 p-3 flex items-center justify-center">
+                <img
+                  src={imageUrl}
+                  alt="Preview Regulasi"
+                  referrerPolicy="no-referrer"
+                  className="max-h-72 w-auto max-w-full object-contain mx-auto block rounded-lg shadow-xs"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
             <button
               type="button"
-              onClick={() => setEditingReg(null)}
-              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold"
+              disabled={isSubmitting || isCompressing}
+              onClick={() => {
+                setEditingReg(null);
+                setCompressionInfo(null);
+              }}
+              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold hover:bg-slate-50 cursor-pointer disabled:opacity-50"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-[#9E1B21] text-white text-xs font-semibold cursor-pointer"
+              disabled={isSubmitting || isCompressing || !imageUrl}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm hover:opacity-95 disabled:opacity-50"
             >
-              Simpan & Terbitkan ke Publik
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>
+                {isSubmitting
+                  ? 'Menyimpan & Menyinkronkan ke Cloud...'
+                  : 'Simpan & Terbitkan ke Publik (Real-Time)'}
+              </span>
             </button>
           </div>
         </form>

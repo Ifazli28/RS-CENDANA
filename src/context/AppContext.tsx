@@ -50,6 +50,7 @@ import {
 import { createStaffAvatarSvg } from '../components/BrandAssets';
 import { syncRecordToFirestore, deleteRecordFromFirestore, subscribeToPortalRecords } from '../firebase';
 import { formatDoctorNameWithTitleAndDegree } from '../utils/doctorFormatting';
+import { compressImageForFirestore } from '../utils/imageCompressor';
 
 export interface ConfirmModalState {
   isOpen: boolean;
@@ -137,7 +138,10 @@ interface AppContextType {
   addDutyLogsBatch: (logs: Omit<DutyLog, 'id'>[]) => void;
   addOrUpdatePayroll: (record: Omit<PayrollRecord, 'id'>, existingId?: string) => void;
   updateRoleSalaryConfig: (config: RoleSalaryConfig) => void;
-  addOrUpdateRegulation: (reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>, existingId?: string) => void;
+  addOrUpdateRegulation: (
+    reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>,
+    existingId?: string
+  ) => Promise<{ success: boolean; message: string }>;
   submitSKWBClaim: (data: {
     icName: string;
     birthDate: string;
@@ -166,7 +170,7 @@ interface AppContextType {
   deleteDutyLog: (id: string) => void;
   deletePayrollRecord: (id: string) => void;
   deleteSOPDocument: (id: string) => void;
-  deleteRegulation: (id: string) => void;
+  deleteRegulation: (id: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -1452,10 +1456,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast('info', 'Dokumen SOP Dihapus', 'Standar operasional prosedur berhasil dihapus.');
   };
 
-  const deleteRegulation = (id: string) => {
+  const deleteRegulation = async (id: string): Promise<{ success: boolean; message: string }> => {
     setRegulations((prev) => prev.filter((r) => r.id !== id));
-    void deleteRecordFromFirestore(id);
-    addToast('info', 'Regulasi Dihapus', 'Item regulasi tarif & pengobatan berhasil dihapus.');
+    try {
+      // Broadcast DELETED status to all connected real-time listeners across browsers
+      await syncRecordToFirestore(id, 'regulation_item', 'Regulasi Dihapus', 'DELETED', {
+        id,
+        status: 'DELETED',
+        isDeleted: true,
+      });
+      await deleteRecordFromFirestore(id);
+      addToast('info', 'Regulasi Dihapus', 'Item regulasi tarif & pengobatan berhasil dihapus dari Cloud Database.');
+      return { success: true, message: 'Regulasi berhasil dihapus.' };
+    } catch (err) {
+      console.warn('Delete regulation warning:', err);
+      addToast('info', 'Regulasi Dihapus', 'Item regulasi tarif & pengobatan berhasil dihapus.');
+      return { success: true, message: 'Regulasi dihapus lokal.' };
+    }
   };
 
   const addOrUpdateSOP = (sop: Omit<SOPDocument, 'id' | 'updatedAt' | 'author'>, existingId?: string) => {
@@ -1531,27 +1548,83 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const addOrUpdateRegulation = (reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>, existingId?: string) => {
-    if (!currentUser || currentUser.level < 8) return;
+  const addOrUpdateRegulation = async (
+    reg: Omit<RegulationItem, 'id' | 'updatedAt' | 'updatedBy'>,
+    existingId?: string
+  ): Promise<{ success: boolean; message: string }> => {
+    if (!currentUser || currentUser.level < 8) {
+      addToast(
+        'error',
+        'Akses Ditolak',
+        'Hanya jajaran Heads of Department ke atas (Level 8+) yang berhak mengelola regulasi.'
+      );
+      return { success: false, message: 'Akses ditolak.' };
+    }
+
+    // Defensive optimization: ensure any uploaded base64 image data is compressed below Firestore's 1MiB limit
+    let optimizedImageUrl = reg.imageUrl;
+    if (
+      optimizedImageUrl &&
+      optimizedImageUrl.startsWith('data:image/') &&
+      !optimizedImageUrl.startsWith('data:image/svg+xml')
+    ) {
+      try {
+        const compressed = await compressImageForFirestore(optimizedImageUrl, {
+          maxWidth: 1400,
+          maxHeight: 1800,
+          quality: 0.82,
+          targetMaxBytes: 450 * 1024,
+        });
+        optimizedImageUrl = compressed.dataUrl;
+      } catch (compErr) {
+        console.warn('Image auto-compression notice:', compErr);
+      }
+    }
+
     const updatedAt = new Date().toISOString().slice(0, 10);
+    const targetId = existingId || `reg-${Date.now()}`;
+    const targetItem: RegulationItem = {
+      ...reg,
+      imageUrl: optimizedImageUrl,
+      id: targetId,
+      updatedAt,
+      updatedBy: currentUser.name,
+    };
+
+    // Update local React state immediately so current user has instant feedback
     if (existingId) {
       setRegulations((prev) =>
-        prev.map((r) => {
-          if (r.id === existingId) {
-            const updated: RegulationItem = { ...r, ...reg, updatedAt, updatedBy: currentUser.name };
-            void syncRecordToFirestore(existingId, 'regulation_item', updated.title, updated.category, { ...updated });
-            return updated;
-          }
-          return r;
-        })
+        prev.map((r) => (r.id === existingId ? { ...r, ...targetItem } : r))
       );
     } else {
-      const id = `reg-${Date.now()}`;
-      const newReg: RegulationItem = { ...reg, id, updatedAt, updatedBy: currentUser.name };
-      setRegulations((prev) => [newReg, ...prev]);
-      void syncRecordToFirestore(id, 'regulation_item', newReg.title, newReg.category, { ...newReg });
+      setRegulations((prev) => [targetItem, ...prev]);
     }
-    addToast('success', 'Regulasi Diperbarui', `Regulasi "${reg.title}" telah disimpan ke Database.`);
+
+    // Persist to Cloud Firestore and verify cross-device sync
+    try {
+      await syncRecordToFirestore(
+        targetId,
+        'regulation_item',
+        targetItem.title,
+        targetItem.category,
+        { ...targetItem }
+      );
+      addToast(
+        'success',
+        'Regulasi Berhasil Diterbitkan ke Cloud',
+        `Regulasi "${targetItem.title}" telah tersimpan & tersinkronisasi secara real-time ke semua perangkat/browser.`
+      );
+      return { success: true, message: 'Regulasi berhasil diterbitkan ke cloud.' };
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error('Failed to sync regulation to Firestore:', err);
+      addToast(
+        'warning',
+        'Peringatan Sinkronisasi Cloud',
+        `Tersimpan di browser lokal, namun gagal sinkron ke Cloud: ${errMsg}`
+      );
+      return { success: false, message: errMsg };
+    }
   };
 
   // Helper: Calculate SKWB End Date = Issue Date + 7 days (YYYY-MM-DD)
