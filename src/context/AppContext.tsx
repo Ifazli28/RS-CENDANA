@@ -48,9 +48,10 @@ import {
   INITIAL_CHARACTER_KILL_RECORDS,
 } from '../data/initialData';
 import { createStaffAvatarSvg } from '../components/BrandAssets';
-import { syncRecordToFirestore, deleteRecordFromFirestore, subscribeToPortalRecords } from '../firebase';
+import { syncRecordToFirestore, deleteRecordFromFirestore, subscribeToPortalRecords, CloudPortalRecord } from '../firebase';
 import { formatDoctorNameWithTitleAndDegree } from '../utils/doctorFormatting';
 import { compressImageForFirestore } from '../utils/imageCompressor';
+import { bootstrapInitialPortalData } from '../utils/bootstrapDatabase';
 
 export interface ConfirmModalState {
   isOpen: boolean;
@@ -340,411 +341,240 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Real-time synchronization from Cloud Firestore across all public & internal staff modules
   useEffect(() => {
     const unsubscribe = subscribeToPortalRecords((cloudRecords) => {
-      if (!cloudRecords.length) return;
+      // 1. Proactively bootstrap canonical foundation data if this is a fresh/unseeded database
+      void bootstrapInitialPortalData(cloudRecords);
 
+      if (!cloudRecords || !cloudRecords.length) return;
+
+      // 2. Group all records currently in Cloud Firestore by module
+      const byModule = new Map<string, CloudPortalRecord[]>();
       cloudRecords.forEach((docItem) => {
-        const p = docItem.payload || {};
-        switch (docItem.module) {
-          case 'staff_account': {
-            const stItem = p as unknown as StaffAccount;
-            if (stItem && stItem.id) {
-              if (docItem.status === 'DELETED') {
-                setStaffAccounts((prev) => prev.filter((x) => x.id !== stItem.id));
-              } else {
-                setStaffAccounts((prev) => {
-                  const exists = prev.some((x) => x.id === stItem.id);
-                  if (exists) {
-                    return prev.map((x) => (x.id === stItem.id ? { ...x, ...stItem } : x));
-                  }
-                  return [stItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'recruitment_config': {
-            if (docItem.status === 'OPEN' || docItem.status === 'CLOSED') {
-              setRecruitmentStatus(docItem.status);
-            }
-            break;
-          }
-          case 'recruitment': {
-            const recItem = p as unknown as RecruitmentApplicant;
-            if (recItem && recItem.id) {
-              if (docItem.status === 'DELETED') {
-                setRecruitmentApplicants((prev) => prev.filter((x) => x.id !== recItem.id));
-              } else {
-                setRecruitmentApplicants((prev) => {
-                  const exists = prev.some((x) => x.id === recItem.id);
-                  if (exists) {
-                    return prev.map((x) =>
-                      x.id === recItem.id
-                        ? {
-                            ...x,
-                            ...recItem,
-                            status: (docItem.status as RecruitmentApplicant['status']) || recItem.status,
-                          }
-                        : x
-                    );
-                  }
-                  return [recItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'sks_record': {
-            const sksItem = p as unknown as SKSRecord;
-            if (sksItem && sksItem.id) {
-              if (docItem.status === 'DELETED') {
-                setSksRecords((prev) => prev.filter((x) => x.id !== sksItem.id));
-              } else {
-                setSksRecords((prev) => {
-                  const exists = prev.some((x) => x.id === sksItem.id);
-                  if (exists) {
-                    return prev.map((x) =>
-                      x.id === sksItem.id
-                        ? { ...x, ...sksItem, status: (docItem.status as SKSRecord['status']) || sksItem.status }
-                        : x
-                    );
-                  }
-                  return [sksItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'psychology_record': {
-            const psyItem = p as unknown as PsychologyRecord;
-            if (psyItem && psyItem.id) {
-              if (docItem.status === 'DELETED') {
-                setPsychologyRecords((prev) => prev.filter((x) => x.id !== psyItem.id));
-              } else {
-                setPsychologyRecords((prev) => {
-                  const exists = prev.some((x) => x.id === psyItem.id);
-                  if (exists) {
-                    return prev.map((x) =>
-                      x.id === psyItem.id
-                        ? {
-                            ...x,
-                            ...psyItem,
-                            status: (docItem.status as PsychologyRecord['status']) || psyItem.status,
-                          }
-                        : x
-                    );
-                  }
-                  return [psyItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'plastic_surgery': {
-            const plsItem = p as unknown as PlasticSurgeryRecord;
-            if (plsItem && plsItem.id) {
-              if (docItem.status === 'DELETED') {
-                setPlasticSurgeryRecords((prev) => prev.filter((x) => x.id !== plsItem.id));
-              } else {
-                setPlasticSurgeryRecords((prev) => {
-                  const exists = prev.some((x) => x.id === plsItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === plsItem.id ? { ...x, ...plsItem } : x))
-                    : [plsItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'color_blind_result': {
-            const cbItem = p as unknown as ColorBlindResult;
-            if (cbItem && cbItem.id) {
-              if (docItem.status === 'DELETED') {
-                setColorBlindResults((prev) => prev.filter((x) => x.id !== cbItem.id));
-              } else {
-                setColorBlindResults((prev) => {
-                  const exists = prev.some((x) => x.id === cbItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === cbItem.id ? { ...x, ...cbItem } : x))
-                    : [cbItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'appointment': {
-            const aptItem = p as unknown as AppointmentRecord;
-            if (aptItem && aptItem.id) {
-              if (docItem.status === 'DELETED') {
-                setAppointments((prev) => prev.filter((x) => x.id !== aptItem.id));
-              } else {
-                setAppointments((prev) => {
-                  const exists = prev.some((x) => x.id === aptItem.id);
-                  if (exists) {
-                    return prev.map((x) =>
-                      x.id === aptItem.id
-                        ? {
-                            ...x,
-                            ...aptItem,
-                            status: (docItem.status as AppointmentRecord['status']) || aptItem.status,
-                          }
-                        : x
-                    );
-                  }
-                  return [aptItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'complaint': {
-            const cmpItem = p as unknown as ComplaintRecord;
-            if (cmpItem && cmpItem.id) {
-              if (docItem.status === 'DELETED') {
-                setComplaints((prev) => prev.filter((x) => x.id !== cmpItem.id));
-              } else {
-                setComplaints((prev) => {
-                  const exists = prev.some((x) => x.id === cmpItem.id);
-                  if (exists) {
-                    return prev.map((x) =>
-                      x.id === cmpItem.id
-                        ? {
-                            ...x,
-                            ...cmpItem,
-                            status: (docItem.status as ComplaintRecord['status']) || cmpItem.status,
-                          }
-                        : x
-                    );
-                  }
-                  return [cmpItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'leave_request': {
-            const lvItem = p as unknown as LeaveRequest;
-            if (lvItem && lvItem.id) {
-              if (docItem.status === 'DELETED') {
-                setLeaveRequests((prev) => prev.filter((x) => x.id !== lvItem.id));
-              } else {
-                setLeaveRequests((prev) => {
-                  const exists = prev.some((x) => x.id === lvItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === lvItem.id ? { ...x, ...lvItem } : x))
-                    : [lvItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'resign_request': {
-            const rsgItem = p as unknown as ResignRequest;
-            if (rsgItem && rsgItem.id) {
-              if (docItem.status === 'DELETED') {
-                setResignRequests((prev) => prev.filter((x) => x.id !== rsgItem.id));
-              } else {
-                setResignRequests((prev) => {
-                  const exists = prev.some((x) => x.id === rsgItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === rsgItem.id ? { ...x, ...rsgItem } : x))
-                    : [rsgItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'voting_poll': {
-            const pollItem = p as unknown as VotingPoll;
-            if (pollItem && pollItem.id) {
-              if (docItem.status === 'DELETED') {
-                setVotingPolls((prev) => prev.filter((x) => x.id !== pollItem.id));
-              } else {
-                setVotingPolls((prev) => {
-                  const exists = prev.some((x) => x.id === pollItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === pollItem.id ? { ...x, ...pollItem } : x))
-                    : [pollItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'doctor_schedule': {
-            const schItem = p as unknown as DoctorSchedule;
-            if (schItem && schItem.id) {
-              if (docItem.status === 'DELETED') {
-                setDoctorSchedules((prev) => prev.filter((x) => x.id !== schItem.id));
-              } else {
-                setDoctorSchedules((prev) => {
-                  const exists = prev.some((x) => x.id === schItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === schItem.id ? { ...x, ...schItem } : x))
-                    : [schItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'sop_document': {
-            const sopItem = p as unknown as SOPDocument;
-            if (sopItem && sopItem.id) {
-              if (docItem.status === 'DELETED') {
-                setSopDocuments((prev) => prev.filter((x) => x.id !== sopItem.id));
-              } else {
-                setSopDocuments((prev) => {
-                  const exists = prev.some((x) => x.id === sopItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === sopItem.id ? { ...x, ...sopItem } : x))
-                    : [sopItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'duty_log': {
-            const dutyItem = p as unknown as DutyLog;
-            if (dutyItem && dutyItem.id) {
-              if (docItem.status === 'DELETED') {
-                setDutyLogs((prev) => prev.filter((x) => x.id !== dutyItem.id));
-              } else {
-                setDutyLogs((prev) => {
-                  const exists = prev.some((x) => x.id === dutyItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === dutyItem.id ? { ...x, ...dutyItem } : x))
-                    : [dutyItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'payroll_record': {
-            const payItem = p as unknown as PayrollRecord;
-            if (payItem && payItem.id) {
-              if (docItem.status === 'DELETED') {
-                setPayrollRecords((prev) => prev.filter((x) => x.id !== payItem.id));
-              } else {
-                setPayrollRecords((prev) => {
-                  const exists = prev.some((x) => x.id === payItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === payItem.id ? { ...x, ...payItem } : x))
-                    : [payItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'regulation_item': {
-            const regItem = p as unknown as RegulationItem;
-            if (regItem && regItem.id) {
-              if (docItem.status === 'DELETED') {
-                setRegulations((prev) => prev.filter((x) => x.id !== regItem.id));
-              } else {
-                setRegulations((prev) => {
-                  const exists = prev.some((x) => x.id === regItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === regItem.id ? { ...x, ...regItem } : x))
-                    : [regItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'role_salary_config': {
-            const roleCfg = p as unknown as RoleSalaryConfig;
-            if (roleCfg && roleCfg.role) {
-              setRoleSalaryConfigs((prev) => {
-                const exists = prev.some((x) => x.role === roleCfg.role);
-                return exists
-                  ? prev.map((x) => (x.role === roleCfg.role ? { ...x, ...roleCfg } : x))
-                  : [roleCfg, ...prev];
-              });
-            }
-            break;
-          }
-          case 'skwb_claim': {
-            const skwbItem = p as unknown as SKWBClaim;
-            if (skwbItem && skwbItem.id) {
-              if (docItem.status === 'DELETED') {
-                setSkwbClaims((prev) => prev.filter((x) => x.id !== skwbItem.id));
-              } else {
-                setSkwbClaims((prev) => {
-                  const exists = prev.some((x) => x.id === skwbItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === skwbItem.id ? { ...x, ...skwbItem } : x))
-                    : [skwbItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'skwb_paket_sedang_claim': {
-            const pktItem = p as unknown as SKWBPaketSedangClaim;
-            if (pktItem && pktItem.id) {
-              if (docItem.status === 'DELETED') {
-                setSkwbPaketSedangClaims((prev) => prev.filter((x) => x.id !== pktItem.id));
-              } else {
-                setSkwbPaketSedangClaims((prev) => {
-                  const exists = prev.some((x) => x.id === pktItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === pktItem.id ? { ...x, ...pktItem } : x))
-                    : [pktItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'skwb_kartu_pasien_claim': {
-            const kpItem = p as unknown as SKWBPatientCardClaim;
-            if (kpItem && kpItem.id) {
-              if (docItem.status === 'DELETED') {
-                setSkwbPatientCardClaims((prev) => prev.filter((x) => x.id !== kpItem.id));
-              } else {
-                setSkwbPatientCardClaims((prev) => {
-                  const exists = prev.some((x) => x.id === kpItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === kpItem.id ? { ...x, ...kpItem } : x))
-                    : [kpItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'skwb_oplas_claim': {
-            const opItem = p as unknown as SKWBOplasClaim;
-            if (opItem && opItem.id) {
-              if (docItem.status === 'DELETED') {
-                setSkwbOplasClaims((prev) => prev.filter((x) => x.id !== opItem.id));
-              } else {
-                setSkwbOplasClaims((prev) => {
-                  const exists = prev.some((x) => x.id === opItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === opItem.id ? { ...x, ...opItem } : x))
-                    : [opItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          case 'character_kill': {
-            const ckItem = p as unknown as CharacterKillRecord;
-            if (ckItem && ckItem.id) {
-              if (docItem.status === 'DELETED') {
-                setCharacterKillRecords((prev) => prev.filter((x) => x.id !== ckItem.id));
-              } else {
-                setCharacterKillRecords((prev) => {
-                  const exists = prev.some((x) => x.id === ckItem.id);
-                  return exists
-                    ? prev.map((x) => (x.id === ckItem.id ? { ...x, ...ckItem } : x))
-                    : [ckItem, ...prev];
-                });
-              }
-            }
-            break;
-          }
-          default:
-            break;
-        }
+        if (docItem.status === 'DELETED') return;
+        const list = byModule.get(docItem.module) || [];
+        list.push(docItem);
+        byModule.set(docItem.module, list);
       });
+
+      const isDatabaseBootstrapped = cloudRecords.some(
+        (r) => r.module === 'system_metadata' || r.id === 'system_bootstrap_metadata'
+      );
+
+      // 3. Atomically synchronize state per module directly from Cloud Firestore (single source of truth)
+      const staffDocs = byModule.get('staff_account');
+      if (staffDocs && staffDocs.length > 0) {
+        const items = staffDocs
+          .map((r) => r.payload as unknown as StaffAccount)
+          .filter((x) => Boolean(x && x.id));
+        if (items.length > 0) setStaffAccounts(items);
+      }
+
+      const regDocs = byModule.get('regulation_item');
+      if (regDocs && regDocs.length > 0) {
+        const items = regDocs
+          .map((r) => r.payload as unknown as RegulationItem)
+          .filter((x) => Boolean(x && x.id));
+        if (items.length > 0) setRegulations(items);
+      }
+
+      const schDocs = byModule.get('doctor_schedule');
+      if (schDocs && schDocs.length > 0) {
+        const items = schDocs
+          .map((r) => r.payload as unknown as DoctorSchedule)
+          .filter((x) => Boolean(x && x.id));
+        if (items.length > 0) setDoctorSchedules(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setDoctorSchedules([]);
+      }
+
+      const dutyDocs = byModule.get('duty_log');
+      if (dutyDocs && dutyDocs.length > 0) {
+        const items = dutyDocs
+          .map((r) => r.payload as unknown as DutyLog)
+          .filter((x) => Boolean(x && x.id));
+        if (items.length > 0) setDutyLogs(items);
+      }
+
+      const sopDocs = byModule.get('sop_document');
+      if (sopDocs && sopDocs.length > 0) {
+        const items = sopDocs
+          .map((r) => r.payload as unknown as SOPDocument)
+          .filter((x) => Boolean(x && x.id));
+        if (items.length > 0) setSopDocuments(items);
+      }
+
+      const roleSalDocs = byModule.get('role_salary_config');
+      if (roleSalDocs && roleSalDocs.length > 0) {
+        const items = roleSalDocs
+          .map((r) => r.payload as unknown as RoleSalaryConfig)
+          .filter((x) => Boolean(x && x.role));
+        if (items.length > 0) setRoleSalaryConfigs(items);
+      }
+
+      const payDocs = byModule.get('payroll_record');
+      if (payDocs && payDocs.length > 0) {
+        const items = payDocs
+          .map((r) => r.payload as unknown as PayrollRecord)
+          .filter((x) => Boolean(x && x.id));
+        setPayrollRecords(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setPayrollRecords([]);
+      }
+
+      const recConfigDocs = byModule.get('recruitment_config');
+      if (recConfigDocs && recConfigDocs.length > 0) {
+        const st = recConfigDocs[0].status;
+        if (st === 'OPEN' || st === 'CLOSED') setRecruitmentStatus(st);
+      }
+
+      const recDocs = byModule.get('recruitment');
+      if (recDocs && recDocs.length > 0) {
+        const items = recDocs
+          .map((r) => r.payload as unknown as RecruitmentApplicant)
+          .filter((x) => Boolean(x && x.id));
+        setRecruitmentApplicants(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setRecruitmentApplicants([]);
+      }
+
+      const sksDocs = byModule.get('sks_record');
+      if (sksDocs && sksDocs.length > 0) {
+        const items = sksDocs
+          .map((r) => r.payload as unknown as SKSRecord)
+          .filter((x) => Boolean(x && x.id));
+        setSksRecords(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setSksRecords([]);
+      }
+
+      const psyDocs = byModule.get('psychology_record');
+      if (psyDocs && psyDocs.length > 0) {
+        const items = psyDocs
+          .map((r) => r.payload as unknown as PsychologyRecord)
+          .filter((x) => Boolean(x && x.id));
+        setPsychologyRecords(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setPsychologyRecords([]);
+      }
+
+      const plsDocs = byModule.get('plastic_surgery');
+      if (plsDocs && plsDocs.length > 0) {
+        const items = plsDocs
+          .map((r) => r.payload as unknown as PlasticSurgeryRecord)
+          .filter((x) => Boolean(x && x.id));
+        setPlasticSurgeryRecords(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setPlasticSurgeryRecords([]);
+      }
+
+      const cbDocs = byModule.get('color_blind_result');
+      if (cbDocs && cbDocs.length > 0) {
+        const items = cbDocs
+          .map((r) => r.payload as unknown as ColorBlindResult)
+          .filter((x) => Boolean(x && x.id));
+        setColorBlindResults(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setColorBlindResults([]);
+      }
+
+      const aptDocs = byModule.get('appointment');
+      if (aptDocs && aptDocs.length > 0) {
+        const items = aptDocs
+          .map((r) => r.payload as unknown as AppointmentRecord)
+          .filter((x) => Boolean(x && x.id));
+        setAppointments(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setAppointments([]);
+      }
+
+      const cmpDocs = byModule.get('complaint');
+      if (cmpDocs && cmpDocs.length > 0) {
+        const items = cmpDocs
+          .map((r) => r.payload as unknown as ComplaintRecord)
+          .filter((x) => Boolean(x && x.id));
+        setComplaints(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setComplaints([]);
+      }
+
+      const voteDocs = byModule.get('voting_poll');
+      if (voteDocs && voteDocs.length > 0) {
+        const items = voteDocs
+          .map((r) => r.payload as unknown as VotingPoll)
+          .filter((x) => Boolean(x && x.id));
+        setVotingPolls(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setVotingPolls([]);
+      }
+
+      const lvDocs = byModule.get('leave_request');
+      if (lvDocs && lvDocs.length > 0) {
+        const items = lvDocs
+          .map((r) => r.payload as unknown as LeaveRequest)
+          .filter((x) => Boolean(x && x.id));
+        setLeaveRequests(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setLeaveRequests([]);
+      }
+
+      const rsgDocs = byModule.get('resign_request');
+      if (rsgDocs && rsgDocs.length > 0) {
+        const items = rsgDocs
+          .map((r) => r.payload as unknown as ResignRequest)
+          .filter((x) => Boolean(x && x.id));
+        setResignRequests(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setResignRequests([]);
+      }
+
+      const ckDocs = byModule.get('character_kill');
+      if (ckDocs && ckDocs.length > 0) {
+        const items = ckDocs
+          .map((r) => r.payload as unknown as CharacterKillRecord)
+          .filter((x) => Boolean(x && x.id));
+        setCharacterKillRecords(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setCharacterKillRecords([]);
+      }
+
+      const skwbDocs = byModule.get('skwb_claim');
+      if (skwbDocs && skwbDocs.length > 0) {
+        const items = skwbDocs
+          .map((r) => r.payload as unknown as SKWBClaim)
+          .filter((x) => Boolean(x && x.id));
+        setSkwbClaims(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setSkwbClaims([]);
+      }
+
+      const pktDocs = byModule.get('skwb_paket_sedang_claim');
+      if (pktDocs && pktDocs.length > 0) {
+        const items = pktDocs
+          .map((r) => r.payload as unknown as SKWBPaketSedangClaim)
+          .filter((x) => Boolean(x && x.id));
+        setSkwbPaketSedangClaims(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setSkwbPaketSedangClaims([]);
+      }
+
+      const kpDocs = byModule.get('skwb_kartu_pasien_claim');
+      if (kpDocs && kpDocs.length > 0) {
+        const items = kpDocs
+          .map((r) => r.payload as unknown as SKWBPatientCardClaim)
+          .filter((x) => Boolean(x && x.id));
+        setSkwbPatientCardClaims(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setSkwbPatientCardClaims([]);
+      }
+
+      const opDocs = byModule.get('skwb_oplas_claim');
+      if (opDocs && opDocs.length > 0) {
+        const items = opDocs
+          .map((r) => r.payload as unknown as SKWBOplasClaim)
+          .filter((x) => Boolean(x && x.id));
+        setSkwbOplasClaims(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setSkwbOplasClaims([]);
+      }
     });
 
     return () => unsubscribe();
