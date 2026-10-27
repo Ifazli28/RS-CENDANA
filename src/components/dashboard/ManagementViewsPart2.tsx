@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SAMPLE_DISCORD_DUTY_LOG } from '../../data/initialData';
-import { DutyLog, RoleName, RoleSalaryConfig } from '../../types';
+import { DutyLog, RoleName, RoleSalaryConfig, ROLE_LIST, ROLE_LEVELS } from '../../types';
 import { compressImageForFirestore } from '../../utils/imageCompressor';
+import { LogoRSKotaBaru, LogoKotaBaruRoleplay } from '../BrandAssets';
 import {
   FileSpreadsheet,
   Printer,
@@ -19,6 +20,9 @@ import {
   Loader2,
   Image as ImageIcon,
   Link as LinkIcon,
+  Filter,
+  Eye,
+  X,
 } from 'lucide-react';
 
 interface ParsedDutyPreview {
@@ -1076,7 +1080,7 @@ export const MonthlyAttendanceRecapView: React.FC = () => {
   );
 };
 
-// 4. PAYROLL MANAGEMENT & SKEMA GAJI BERDASARKAN JABATAN (Sec 69 — Heads+ Level 7+)
+// 4. PAYROLL MANAGEMENT & SKEMA GAJI BERDASARKAN JABATAN (Sec 69 — Heads+ Level 8+)
 export const PayrollManagementView: React.FC = () => {
   const {
     staffAccounts,
@@ -1090,32 +1094,64 @@ export const PayrollManagementView: React.FC = () => {
     requestDelete,
   } = useApp();
 
+  // Pengaturan gaji dipusatkan pada skema jabatan (role-config) sebagai tab utama
   const [activeTab, setActiveTab] = useState<'role-config' | 'weekly-payroll'>('role-config');
   const [editingRoleConfig, setEditingRoleConfig] = useState<RoleSalaryConfig | null>(null);
 
-  // State for editing individual staff payroll override/payment status
+  // Search & Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+
+  // Printable Slip Modal State
+  const [previewSlip, setPreviewSlip] = useState<{
+    staffName: string;
+    role: RoleName;
+    period: string;
+    dutyHours: number;
+    basicSalary: number;
+    dutyBonus: number;
+    allowance: number;
+    deduction: number;
+    totalSalary: number;
+    paymentStatus: string;
+    paidAt?: string;
+  } | null>(null);
+
+  // State for updating staff payment status & allowances (Base salary & bonus are strictly locked from role config)
   const [editingStaffPay, setEditingStaffPay] = useState<{
     staffId: string;
     staffName: string;
     role: RoleName;
+    level: number;
     existingPayId?: string;
     dutyHours: number;
+    targetHours: number;
+    hourlyRate: number;
+    meetsTarget: boolean;
     baseEarned: number;
     dutyBonus: number;
+    bonusMultiples: number;
     allowance: number;
     deduction: number;
     paymentStatus: 'Paid' | 'Pending' | 'Processing';
   } | null>(null);
 
-  // Compute live weekly payroll rows for all active staff based on their role config & weekly duty logs
-  const calculatedStaffPayrollRows = React.useMemo(() => {
+  // Compute live weekly payroll rows for all active staff based strictly on their role config & weekly duty logs
+  const allStaffPayrollRows = React.useMemo(() => {
     const activeStaff = staffAccounts
       .filter((s) => s.status === 'Active')
       .sort((a, b) => b.level - a.level);
 
     return activeStaff.map((st) => {
+      // Aggregates weekly logs by ID or by Staff Name for robust Discord parser matching
       const weeklyMins = dutyLogs
-        .filter((l) => l.staffId === st.id && l.weekKey === 'current-week')
+        .filter(
+          (l) =>
+            (l.staffId === st.id ||
+              l.staffName.toLowerCase().trim() === st.name.toLowerCase().trim()) &&
+            l.weekKey === 'current-week'
+        )
         .reduce((acc, l) => acc + l.durationMinutes, 0);
 
       const roleCfg = roleSalaryConfigs.find((c) => c.role === st.role);
@@ -1139,8 +1175,40 @@ export const PayrollManagementView: React.FC = () => {
     });
   }, [staffAccounts, dutyLogs, roleSalaryConfigs, payrollRecords]);
 
+  // Filtered rows for UI
+  const filteredStaffPayrollRows = React.useMemo(() => {
+    return allStaffPayrollRows.filter((row) => {
+      if (roleFilter !== 'ALL' && row.staff.role !== roleFilter) return false;
+      if (statusFilter !== 'ALL' && row.paymentStatus !== statusFilter) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchName = row.staff.name.toLowerCase().includes(q);
+        const matchRole = row.staff.role.toLowerCase().includes(q);
+        if (!matchName && !matchRole) return false;
+      }
+      return true;
+    });
+  }, [allStaffPayrollRows, roleFilter, statusFilter, searchQuery]);
+
+  // Summary Metrics
+  const summaryMetrics = React.useMemo(() => {
+    const totalStaff = allStaffPayrollRows.length;
+    const meetsTargetCount = allStaffPayrollRows.filter((r) => r.calc.meetsTarget).length;
+    const belowTargetCount = totalStaff - meetsTargetCount;
+    const totalPayrollAmount = allStaffPayrollRows.reduce((acc, r) => acc + r.finalTotal, 0);
+    const totalBonusAmount = allStaffPayrollRows.reduce((acc, r) => acc + r.calc.dutyBonus, 0);
+
+    return {
+      totalStaff,
+      meetsTargetCount,
+      belowTargetCount,
+      totalPayrollAmount,
+      totalBonusAmount,
+    };
+  }, [allStaffPayrollRows]);
+
   const handleSyncAllCalculatedToPayroll = () => {
-    calculatedStaffPayrollRows.forEach((row) => {
+    allStaffPayrollRows.forEach((row) => {
       addOrUpdatePayroll(
         {
           staffId: row.staff.id,
@@ -1162,256 +1230,451 @@ export const PayrollManagementView: React.FC = () => {
     addToast(
       'success',
       'Kalkulasi Gaji Mingguan Disinkronkan',
-      'Seluruh slip gaji staff telah diperbarui berdasarkan jam duty mingguan & skema jabatan.'
+      'Seluruh slip gaji staff telah diperbarui berdasarkan jam duty mingguan & skema jabatan ke Database Cloud.'
     );
   };
 
   return (
     <div className="space-y-6">
       {/* Header & Tab Switcher */}
-      <div className="bg-white p-5 rounded-2xl border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-red-100 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">
-            Sistem Gaji Berdasarkan Jabatan & Kalkulasi Target Duty Mingguan
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#9E1B21] text-white">
+              PENGATURAN SKEMA GAJI BERDASARKAN JABATAN
+            </span>
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">
+            Sistem Penggajian Terpusat Berdasarkan Jabatan (Bukan Perorangan)
           </h2>
-          <p className="text-xs text-slate-500">
-            Memenuhi target jam mingguan = <strong>Gaji Utuh</strong> · Tidak memenuhi ={' '}
-            <strong>Dihitung Per Jam</strong> · Melebihi target ={' '}
-            <strong>Bonus per Kelipatan Jam</strong>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Nominal gaji pokok, target jam duty mingguan, tarif per jam, dan bonus kelipatan diatur murni di level <strong>Jabatan</strong>. Seluruh staff otomatis mengikuti skema jabatannya.
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 bg-red-50/40 rounded-xl border border-red-100 self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-red-50/40 rounded-xl border border-red-100 self-start md:self-auto">
           <button
             onClick={() => setActiveTab('role-config')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'role-config'
                 ? 'bg-[#9E1B21] text-white shadow-xs'
                 : 'text-slate-600 hover:text-[#7F1D1D]'
             }`}
           >
             <Settings className="w-3.5 h-3.5" />
-            <span>Atur Skema Gaji Jabatan</span>
+            <span>Atur Skema 12 Jabatan</span>
           </button>
           <button
             onClick={() => setActiveTab('weekly-payroll')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'weekly-payroll'
                 ? 'bg-[#9E1B21] text-white shadow-xs'
                 : 'text-slate-600 hover:text-[#7F1D1D]'
             }`}
           >
             <DollarSign className="w-3.5 h-3.5" />
-            <span>Kalkulasi & Slip Gaji Staff</span>
+            <span>Rekap Gaji & Slip Staff</span>
           </button>
         </div>
       </div>
 
-      {/* TAB 1: PENGATURAN SKEMA GAJI PER JABATAN */}
+      {/* TAB 1: PENGATURAN SKEMA GAJI PER JABATAN (12 ROLES) - PUSAT PENGATURAN GAJI */}
       {activeTab === 'role-config' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-red-50/40/50">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">
-                Tabel Pengaturan Gaji Utuh, Gaji Per Jam, Target Duty Mingguan & Bonus Kelipatan Jam
-              </h3>
-              <p className="text-xs text-slate-500">
-                Klik tombol <strong>Atur Skema</strong> pada jabatan untuk mengubah target jam per minggu, gaji utuh, tarif per jam, atau kelipatan jam bonus.
+        <div className="space-y-4">
+          {/* Policy Banner */}
+          <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200/80 flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-blue-600 text-white shrink-0 mt-0.5">
+              <Settings className="w-4 h-4" />
+            </div>
+            <div className="text-xs space-y-1">
+              <h4 className="font-bold text-blue-950 text-sm">
+                Prinsip Penggajian RS Kota Baru: Pengaturan Mengikat Pada Jabatan, Bukan Perorangan
+              </h4>
+              <p className="text-blue-800 leading-relaxed">
+                Di RS Kota Baru, <strong>gaji tidak pernah diatur atau ditentukan perorangan</strong>. Seluruh hak gaji dihitung secara sistemik berdasarkan skema jabatan di bawah ini:
+              </p>
+              <ul className="list-disc list-inside text-blue-900 font-medium space-y-0.5 pl-1">
+                <li><strong>Gaji Utuh</strong>: Diberikan jika staff memenuhi target jam duty mingguan jabatan tersebut.</li>
+                <li><strong>Gaji Per Jam</strong>: Diberikan jika jam duty kurang dari target mingguan (&times; tarif per jam jabatan).</li>
+                <li><strong>Bonus Kelipatan Jam</strong>: Diberikan untuk kelebihan jam duty di atas target (&times; nominal bonus jabatan).</li>
+              </ul>
+              <p className="text-[11px] text-blue-700 italic pt-1">
+                Setiap perubahan pada skema jabatan akan otomatis langsung memperbarui perhitungan gaji seluruh tenaga medis pada jabatan terkait secara real-time.
               </p>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#0F1E36] text-white text-[11px] font-extrabold tracking-wider uppercase">
-                  <th className="py-3.5 px-4 text-center w-12">LV</th>
-                  <th className="py-3.5 px-4">JABATAN (ROLE)</th>
-                  <th className="py-3.5 px-4 text-center">TARGET DUTY / MINGGU</th>
-                  <th className="py-3.5 px-4 text-right">GAJI UTUH (CAPAI TARGET)</th>
-                  <th className="py-3.5 px-4 text-right">GAJI PER JAM (KURANG TARGET)</th>
-                  <th className="py-3.5 px-4 text-center">KELIPATAN JAM BONUS</th>
-                  <th className="py-3.5 px-4 text-right text-[#FBBF24]">NOMINAL BONUS / KELIPATAN</th>
-                  <th className="py-3.5 px-4 text-right">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs sm:text-sm tabular-nums">
-                {[...roleSalaryConfigs]
-                  .sort((a, b) => b.level - a.level)
-                  .map((cfg) => (
-                    <tr key={cfg.role} className="hover:bg-red-50/60/30 transition">
-                      <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                        {cfg.level}
-                      </td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900">{cfg.role}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="inline-block px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-mono font-bold text-xs">
-                          {cfg.targetWeeklyHours} Jam / Minggu
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-700">
-                        ${cfg.fullSalary.toLocaleString()}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono text-amber-700 font-semibold">
-                        ${cfg.hourlyRate.toLocaleString()} / jam
-                      </td>
-                      <td className="py-3.5 px-4 text-center font-mono text-slate-700">
-                        Setiap +{cfg.bonusStepHours} Jam
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-[#7F1D1D]">
-                        +${cfg.bonusPerStepAmount.toLocaleString()}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => setEditingRoleConfig({ ...cfg })}
-                          className="px-3 py-1.5 rounded-lg bg-red-50/40 hover:bg-red-100 text-[#7F1D1D] border border-red-200 text-xs font-bold cursor-pointer"
-                        >
-                          Atur Skema
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="p-5 border-b border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-red-50/40">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  Tabel Skema Penggajian Resmi 12 Tingkat Jabatan RS Kota Baru
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Klik tombol <strong>Atur Skema</strong> pada jabatan untuk mengatur target jam, gaji utuh, tarif per jam, serta bonus lembur.
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold px-3 py-1 bg-white rounded-lg border border-red-200 text-[#9E1B21]">
+                12 Jabatan Terkonfigurasi
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#0F1E36] text-white text-[11px] font-extrabold tracking-wider uppercase">
+                    <th className="py-3.5 px-4 text-center w-12">LV</th>
+                    <th className="py-3.5 px-4">JABATAN RESMI (ROLE)</th>
+                    <th className="py-3.5 px-4 text-center">STAFF TERDAMPAK</th>
+                    <th className="py-3.5 px-4 text-center">TARGET DUTY / MINGGU</th>
+                    <th className="py-3.5 px-4 text-right">GAJI UTUH (CAPAI TARGET)</th>
+                    <th className="py-3.5 px-4 text-right">GAJI PER JAM (&lt; TARGET)</th>
+                    <th className="py-3.5 px-4 text-center">KELIPATAN BONUS</th>
+                    <th className="py-3.5 px-4 text-right text-[#FBBF24]">NOMINAL BONUS / KELIPATAN</th>
+                    <th className="py-3.5 px-4 text-right">AKSI</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs sm:text-sm tabular-nums">
+                  {[...roleSalaryConfigs]
+                    .sort((a, b) => b.level - a.level)
+                    .map((cfg) => {
+                      const staffCount = staffAccounts.filter(
+                        (s) => s.role === cfg.role && s.status === 'Active'
+                      ).length;
+
+                      return (
+                        <tr key={cfg.role} className="hover:bg-red-50/30 transition">
+                          <td className="py-3.5 px-4 text-center font-mono font-bold">
+                            <span className="inline-block w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-extrabold">
+                              {cfg.level}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-slate-900">{cfg.role}</div>
+                            <div className="text-[10px] text-slate-400">
+                              {cfg.level >= 8 ? 'Heads of Department & Pimpinan' : 'Tenaga Medis & Paramedic'}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${
+                                staffCount > 0
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-slate-100 text-slate-500'
+                              }`}
+                            >
+                              {staffCount} Staff Aktif
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className="inline-block px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-mono font-bold text-xs border border-blue-200">
+                              {cfg.targetWeeklyHours} Jam / Minggu
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-700">
+                            ${cfg.fullSalary.toLocaleString()}
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-mono text-amber-700 font-semibold">
+                            ${cfg.hourlyRate.toLocaleString()} / jam
+                          </td>
+                          <td className="py-3.5 px-4 text-center font-mono text-slate-700">
+                            Setiap +{cfg.bonusStepHours} Jam
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-mono font-bold text-[#7F1D1D]">
+                            +${cfg.bonusPerStepAmount.toLocaleString()}
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              onClick={() => setEditingRoleConfig({ ...cfg })}
+                              className="px-3 py-1.5 rounded-lg bg-[#9E1B21] hover:bg-[#85161B] text-white text-xs font-bold cursor-pointer transition shadow-xs"
+                            >
+                              Atur Skema
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: KALKULASI GAJI STAFF BERDASARKAN JAM DUTY MINGGUAN */}
+      {/* TAB 2: REKAP GAJI & SLIP GAJI STAFF (OTOMATIS DARI SKEMA JABATAN) */}
       {activeTab === 'weekly-payroll' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-red-50/40/50">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">
-                Kalkulasi Otomatis Gaji & Bonus Mingguan Seluruh Staff Aktif
-              </h3>
-              <p className="text-xs text-slate-500">
-                Dihitung otomatis dari total jam duty minggu berjalan dibandingkan dengan target jam mingguan jabatan masing-masing
+        <div className="space-y-4">
+          {/* Summary KPI Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-red-100 shadow-xs">
+              <span className="text-[10px] text-slate-500 uppercase font-bold block">Total Penggajian Minggu Ini</span>
+              <p className="text-2xl font-extrabold font-mono text-slate-900 mt-1">
+                ${summaryMetrics.totalPayrollAmount.toLocaleString()}
               </p>
+              <span className="text-[11px] text-slate-400">Total Take Home Pay {summaryMetrics.totalStaff} staff</span>
             </div>
-            <button
-              onClick={handleSyncAllCalculatedToPayroll}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer self-start sm:self-auto"
-            >
-              Terbitkan / Update Semua Slip Gaji ke Database
-            </button>
+
+            <div className="bg-white p-4 rounded-2xl border border-red-100 shadow-xs">
+              <span className="text-[10px] text-emerald-600 uppercase font-bold block">Memenuhi Target Jam</span>
+              <p className="text-2xl font-extrabold font-mono text-emerald-700 mt-1">
+                {summaryMetrics.meetsTargetCount} <span className="text-sm font-sans font-semibold text-slate-500">/ {summaryMetrics.totalStaff}</span>
+              </p>
+              <span className="text-[11px] text-emerald-600 font-semibold">Berhak Gaji Utuh Jabatan</span>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-red-100 shadow-xs">
+              <span className="text-[10px] text-amber-600 uppercase font-bold block">Kurang Dari Target</span>
+              <p className="text-2xl font-extrabold font-mono text-amber-700 mt-1">
+                {summaryMetrics.belowTargetCount} <span className="text-sm font-sans font-semibold text-slate-500">Staff</span>
+              </p>
+              <span className="text-[11px] text-amber-600 font-semibold">Dihitung tarif per jam jabatan</span>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-red-100 shadow-xs">
+              <span className="text-[10px] text-purple-600 uppercase font-bold block">Total Bonus Lembur</span>
+              <p className="text-2xl font-extrabold font-mono text-purple-700 mt-1">
+                +${summaryMetrics.totalBonusAmount.toLocaleString()}
+              </p>
+              <span className="text-[11px] text-slate-400">Dihitung kelipatan lembur jabatan</span>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#0F1E36] text-white text-[11px] font-extrabold tracking-wider uppercase">
-                  <th className="py-3.5 px-4">NAMA TENAGA MEDIS & JABATAN</th>
-                  <th className="py-3.5 px-4 text-center">JAM DUTY / TARGET</th>
-                  <th className="py-3.5 px-4 text-center">SKEMA GAJI POKOK</th>
-                  <th className="py-3.5 px-4 text-right">GAJI POKOK DITERIMA</th>
-                  <th className="py-3.5 px-4 text-right">BONUS LEBIH JAM</th>
-                  <th className="py-3.5 px-4 text-right">TUNJANGAN / POTONGAN</th>
-                  <th className="py-3.5 px-4 text-right text-[#FBBF24]">TOTAL TAKE HOME PAY</th>
-                  <th className="py-3.5 px-4 text-center">STATUS</th>
-                  <th className="py-3.5 px-4 text-right">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs sm:text-sm tabular-nums">
-                {calculatedStaffPayrollRows.map((row) => (
-                  <tr key={row.staff.id} className="hover:bg-red-50/60/30 transition">
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900">{row.staff.name}</div>
-                      <div className="text-[11px] text-[#9E1B21] font-semibold">
-                        {row.staff.role}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-center font-mono">
-                      <span className="font-extrabold text-slate-900">{row.calc.dutyHours}j</span>
-                      <span className="text-slate-400"> / {row.calc.targetHours}j</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      {row.calc.meetsTarget ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-bold">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Gaji Utuh
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-[11px] font-bold">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          Per Jam (${row.roleCfg?.hourlyRate}/j)
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
-                      ${row.calc.baseEarned.toLocaleString()}
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-mono">
-                      <div className="font-bold text-[#20C997]">
-                        +${row.calc.dutyBonus.toLocaleString()}
-                      </div>
-                      {row.calc.bonusMultiples > 0 && (
-                        <div className="text-[10px] text-slate-400">
-                          +{row.calc.excessHours}j ({row.calc.bonusMultiples}x kelipatan)
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-mono text-xs">
-                      <span className="text-emerald-600">+${row.allowance.toLocaleString()}</span>
-                      {' / '}
-                      <span className="text-rose-600">-${row.deduction.toLocaleString()}</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-mono font-extrabold text-slate-900">
-                      ${row.finalTotal.toLocaleString()}
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span
-                        className={`text-xs font-bold ${
-                          row.paymentStatus === 'Paid' ? 'text-[#20C997]' : 'text-amber-600'
-                        }`}
-                      >
-                        {row.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="inline-flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() =>
-                            setEditingStaffPay({
-                              staffId: row.staff.id,
-                              staffName: row.staff.name,
-                              role: row.staff.role,
-                              existingPayId: row.savedPay?.id,
-                              dutyHours: row.calc.dutyHours,
-                              baseEarned: row.calc.baseEarned,
-                              dutyBonus: row.calc.dutyBonus,
-                              allowance: row.allowance,
-                              deduction: row.deduction,
-                              paymentStatus: row.paymentStatus,
-                            })
-                          }
-                          className="px-3 py-1.5 rounded-lg bg-red-50/40 hover:bg-red-100 text-[#7F1D1D] text-xs font-semibold cursor-pointer"
-                        >
-                          Detail / Bayar
-                        </button>
-                        {row.savedPay && (
-                          <button
-                            onClick={() => {
-                              if (!row.savedPay) return;
-                              const payId = row.savedPay.id;
-                              requestDelete(
-                                'Hapus Slip Gaji',
-                                `Apakah Anda yakin ingin menghapus rekam slip gaji milik ${row.staff.name}?`,
-                                () => deletePayrollRecord(payId)
-                              );
-                            }}
-                            title="Hapus Rekam Slip Gaji"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden space-y-0">
+            {/* Controls Bar: Search, Filters, and Sync Action */}
+            <div className="p-5 border-b border-red-100 bg-red-50/30 flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Kalkulasi Otomatis Gaji Mingguan Seluruh Staff
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Gaji pokok dan bonus lembur dihitung 100% otomatis dari Skema Jabatan yang berlaku dan jam duty log minggu berjalan.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                  <button
+                    onClick={() => setActiveTab('role-config')}
+                    className="px-3.5 py-2 rounded-xl bg-white border border-red-200 text-[#7F1D1D] text-xs font-bold hover:bg-red-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    <span>Ubah Skema Gaji Jabatan</span>
+                  </button>
+                  <button
+                    onClick={handleSyncAllCalculatedToPayroll}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Terbitkan / Update Semua Slip Gaji ke Cloud</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    placeholder="Cari nama staff medis..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:ring-2 focus:ring-[#9E1B21]"
+                  />
+                </div>
+
+                <div>
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-medium"
+                  >
+                    <option value="ALL">Semua Jabatan (12 Jabatan)</option>
+                    {ROLE_LIST.map((role) => (
+                      <option key={role} value={role}>
+                        Level {ROLE_LEVELS[role]} · {role}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-medium"
+                  >
+                    <option value="ALL">Semua Status Pembayaran</option>
+                    <option value="Paid">Sudah Dibayar (Paid)</option>
+                    <option value="Processing">Diproses (Processing)</option>
+                    <option value="Pending">Menunggu (Pending)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#0F1E36] text-white text-[11px] font-extrabold tracking-wider uppercase">
+                    <th className="py-3.5 px-4">TENAGA MEDIS & JABATAN</th>
+                    <th className="py-3.5 px-4 text-center">JAM DUTY / TARGET JABATAN</th>
+                    <th className="py-3.5 px-4 text-center">SKEMA CAPAIAN</th>
+                    <th className="py-3.5 px-4 text-right">GAJI POKOK (DARI JABATAN)</th>
+                    <th className="py-3.5 px-4 text-right">BONUS LEMBUR (DARI JABATAN)</th>
+                    <th className="py-3.5 px-4 text-right">TUNJANGAN / POTONGAN</th>
+                    <th className="py-3.5 px-4 text-right text-[#FBBF24]">TAKE HOME PAY</th>
+                    <th className="py-3.5 px-4 text-center">STATUS</th>
+                    <th className="py-3.5 px-4 text-right">AKSI</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs sm:text-sm tabular-nums">
+                  {filteredStaffPayrollRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-10 text-center text-xs text-slate-500">
+                        Tidak ada data staff yang cocok dengan filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStaffPayrollRows.map((row) => (
+                      <tr key={row.staff.id} className="hover:bg-red-50/30 transition">
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900">{row.staff.name}</div>
+                          <div className="text-[11px] text-[#9E1B21] font-semibold flex items-center gap-1.5 mt-0.5">
+                            <span className="inline-block px-1.5 py-0.5 rounded-sm bg-red-100 text-[#9E1B21] text-[10px] font-bold">
+                              LV {row.staff.level}
+                            </span>
+                            <span>{row.staff.role}</span>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-center font-mono">
+                          <div className="font-extrabold text-slate-900">
+                            {row.calc.dutyHours}j <span className="text-slate-400 font-normal">/ {row.calc.targetHours}j</span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            {Math.round((row.calc.dutyHours / row.calc.targetHours) * 100)}% target {row.staff.role}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          {row.calc.meetsTarget ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Gaji Utuh
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-200">
+                              <AlertCircle className="w-3.5 h-3.5" />
+                              Per Jam (${row.roleCfg?.hourlyRate}/j)
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
+                          ${row.calc.baseEarned.toLocaleString()}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono">
+                          <div className="font-bold text-emerald-600">
+                            +${row.calc.dutyBonus.toLocaleString()}
+                          </div>
+                          {row.calc.bonusMultiples > 0 && (
+                            <div className="text-[10px] text-slate-400">
+                              +{row.calc.excessHours}j ({row.calc.bonusMultiples}x)
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono text-xs">
+                          <span className="text-emerald-600">+${row.allowance.toLocaleString()}</span>
+                          {' / '}
+                          <span className="text-rose-600">-${row.deduction.toLocaleString()}</span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-extrabold text-slate-900">
+                          ${row.finalTotal.toLocaleString()}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                              row.paymentStatus === 'Paid'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : row.paymentStatus === 'Processing'
+                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}
+                          >
+                            {row.paymentStatus}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="inline-flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() =>
+                                setPreviewSlip({
+                                  staffName: row.staff.name,
+                                  role: row.staff.role,
+                                  period: 'Minggu Ini (Okt 2026)',
+                                  dutyHours: row.calc.dutyHours,
+                                  basicSalary: row.calc.baseEarned,
+                                  dutyBonus: row.calc.dutyBonus,
+                                  allowance: row.allowance,
+                                  deduction: row.deduction,
+                                  totalSalary: row.finalTotal,
+                                  paymentStatus: row.paymentStatus,
+                                  paidAt: row.savedPay?.paidAt,
+                                })
+                              }
+                              title="Pratinjau / Cetak Slip"
+                              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition"
+                            >
+                              <Printer className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                setEditingStaffPay({
+                                  staffId: row.staff.id,
+                                  staffName: row.staff.name,
+                                  role: row.staff.role,
+                                  level: row.staff.level,
+                                  existingPayId: row.savedPay?.id,
+                                  dutyHours: row.calc.dutyHours,
+                                  targetHours: row.calc.targetHours,
+                                  hourlyRate: row.roleCfg?.hourlyRate ?? 350,
+                                  meetsTarget: row.calc.meetsTarget,
+                                  baseEarned: row.calc.baseEarned,
+                                  dutyBonus: row.calc.dutyBonus,
+                                  bonusMultiples: row.calc.bonusMultiples,
+                                  allowance: row.allowance,
+                                  deduction: row.deduction,
+                                  paymentStatus: row.paymentStatus,
+                                })
+                              }
+                              className="px-3 py-1.5 rounded-lg bg-red-50/60 hover:bg-red-100 text-[#7F1D1D] text-xs font-bold cursor-pointer transition border border-red-200/60"
+                            >
+                              Status / Bayar
+                            </button>
+                            {row.savedPay && (
+                              <button
+                                onClick={() => {
+                                  if (!row.savedPay) return;
+                                  const payId = row.savedPay.id;
+                                  requestDelete(
+                                    'Hapus Slip Gaji',
+                                    `Apakah Anda yakin ingin menghapus rekam slip gaji milik ${row.staff.name}?`,
+                                    () => deletePayrollRecord(payId)
+                                  );
+                                }}
+                                title="Hapus Rekam Slip Gaji"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -1431,6 +1694,9 @@ export const PayrollManagementView: React.FC = () => {
                 LEVEL {editingRoleConfig.level} · PENGATURAN SKEMA GAJI JABATAN
               </span>
               <h3 className="text-lg font-bold text-slate-900">{editingRoleConfig.role}</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Pengaturan ini berlaku otomatis untuk seluruh tenaga medis dengan jabatan <strong>{editingRoleConfig.role}</strong>.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1452,7 +1718,7 @@ export const PayrollManagementView: React.FC = () => {
                   className="w-full px-3.5 py-2 rounded-xl border border-blue-300 bg-white text-sm font-mono font-bold"
                 />
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Jika jam duty mingguan mencapai nilai ini, staff mendapat <strong>Gaji Utuh</strong>. Jika kurang, dihitung <strong>Gaji Per Jam</strong>.
+                  Jika jam duty mingguan staff mencapai nilai ini, staff mendapat <strong>Gaji Utuh</strong>. Jika kurang, dihitung <strong>Gaji Per Jam</strong>.
                 </p>
               </div>
 
@@ -1548,16 +1814,16 @@ export const PayrollManagementView: React.FC = () => {
                   updateRoleSalaryConfig(editingRoleConfig);
                   setEditingRoleConfig(null);
                 }}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold cursor-pointer shadow-xs"
               >
-                Simpan Skema Jabatan
+                Simpan Skema Jabatan ke Database
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL DETAIL / PEMBAYARAN SLIP GAJI INDIVIDU */}
+      {/* MODAL STATUS PEMBAYARAN & TUNJANGAN (GAJI POKOK & BONUS TERKUNCI OTOMATIS DARI SKEMA JABATAN) */}
       {editingStaffPay && (
         <div
           className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
@@ -1567,64 +1833,80 @@ export const PayrollManagementView: React.FC = () => {
             className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-base font-bold text-slate-900">
-              Slip Gaji Mingguan — {editingStaffPay.staffName}
-            </h3>
-            <p className="text-xs text-slate-500">
-              Jabatan: <strong>{editingStaffPay.role}</strong> · Jam Duty Minggu Ini:{' '}
-              <strong>{editingStaffPay.dutyHours} Jam</strong>
-            </p>
+            <div className="border-b border-red-100 pb-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#9E1B21] block">
+                STATUS PEMBAYARAN & TUNJANGAN STAFF
+              </span>
+              <h3 className="text-base font-bold text-slate-900 mt-0.5">
+                {editingStaffPay.staffName}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Jabatan: <strong className="text-[#9E1B21]">{editingStaffPay.role} (Level {editingStaffPay.level})</strong> · Jam Duty: <strong>{editingStaffPay.dutyHours} Jam</strong>
+              </p>
+            </div>
 
+            {/* Read-Only Role-Locked Salary Notice */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500">Gaji Pokok (Terkunci dari Jabatan):</span>
+                <strong className="font-mono text-slate-900 text-sm">
+                  ${editingStaffPay.baseEarned.toLocaleString()}
+                </strong>
+              </div>
+              <div className="text-[11px] text-slate-400">
+                {editingStaffPay.meetsTarget ? (
+                  <span className="text-emerald-600 font-semibold">
+                    ✓ Memenuhi target mingguan ({editingStaffPay.targetHours}j) &rarr; Berhak Gaji Utuh {editingStaffPay.role}
+                  </span>
+                ) : (
+                  <span className="text-amber-600 font-semibold">
+                    &bull; Kurang target &rarr; Dihitung {editingStaffPay.dutyHours}j &times; ${editingStaffPay.hourlyRate}/jam
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200">
+                <span className="text-slate-500">Bonus Lembur (Terkunci dari Jabatan):</span>
+                <strong className="font-mono text-emerald-600 text-sm">
+                  +${editingStaffPay.dutyBonus.toLocaleString()}
+                </strong>
+              </div>
+              {editingStaffPay.bonusMultiples > 0 && (
+                <div className="text-[11px] text-slate-400">
+                  {editingStaffPay.bonusMultiples}x kelipatan jam lembur jabatan
+                </div>
+              )}
+            </div>
+
+            {/* Editable Adjustments: Allowance, Deduction, Payment Status */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Gaji Pokok Terhitung ($)
-                </label>
-                <input
-                  type="number"
-                  value={editingStaffPay.baseEarned}
-                  onChange={(e) =>
-                    setEditingStaffPay({ ...editingStaffPay, baseEarned: Number(e.target.value) })
-                  }
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Bonus Lebih Jam ($)
-                </label>
-                <input
-                  type="number"
-                  value={editingStaffPay.dutyBonus}
-                  onChange={(e) =>
-                    setEditingStaffPay({ ...editingStaffPay, dutyBonus: Number(e.target.value) })
-                  }
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-mono"
-                />
-              </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Tunjangan Tambahan ($)
                 </label>
                 <input
                   type="number"
+                  min={0}
                   value={editingStaffPay.allowance}
                   onChange={(e) =>
-                    setEditingStaffPay({ ...editingStaffPay, allowance: Number(e.target.value) })
+                    setEditingStaffPay({ ...editingStaffPay, allowance: Math.max(0, Number(e.target.value)) })
                   }
+                  placeholder="0"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-mono"
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Potongan ($)
+                  Potongan Sanksi ($)
                 </label>
                 <input
                   type="number"
+                  min={0}
                   value={editingStaffPay.deduction}
                   onChange={(e) =>
-                    setEditingStaffPay({ ...editingStaffPay, deduction: Number(e.target.value) })
+                    setEditingStaffPay({ ...editingStaffPay, deduction: Math.max(0, Number(e.target.value)) })
                   }
+                  placeholder="0"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-mono"
                 />
               </div>
@@ -1640,13 +1922,26 @@ export const PayrollManagementView: React.FC = () => {
                       paymentStatus: e.target.value as 'Paid' | 'Pending' | 'Processing',
                     })
                   }
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white font-medium"
                 >
                   <option value="Paid">Paid (Sudah Dibayar)</option>
-                  <option value="Processing">Processing (Diproses)</option>
-                  <option value="Pending">Pending (Menunggu)</option>
+                  <option value="Processing">Processing (Sedang Diproses)</option>
+                  <option value="Pending">Pending (Menunggu Pembayaran)</option>
                 </select>
               </div>
+            </div>
+
+            {/* Total Take Home Pay Summary */}
+            <div className="p-3.5 rounded-xl bg-red-50/60 border border-red-200 flex items-center justify-between">
+              <span className="text-xs font-bold text-[#7F1D1D]">Total Take Home Pay Bersih:</span>
+              <strong className="text-base font-extrabold font-mono text-[#9E1B21]">
+                ${(
+                  editingStaffPay.baseEarned +
+                  editingStaffPay.dutyBonus +
+                  editingStaffPay.allowance -
+                  editingStaffPay.deduction
+                ).toLocaleString()}
+              </strong>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
@@ -1685,10 +1980,167 @@ export const PayrollManagementView: React.FC = () => {
                   );
                   setEditingStaffPay(null);
                 }}
-                className="px-5 py-2 rounded-xl bg-[#9E1B21] text-white text-xs font-bold cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-[#9E1B21] text-white text-xs font-bold cursor-pointer shadow-xs"
               >
-                Simpan Slip Gaji
+                Simpan Status Slip Gaji
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PRINT / PREVIEW SLIP GAJI RESMI */}
+      {previewSlip && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 print:p-0 print:bg-white"
+          onClick={() => setPreviewSlip(null)}
+        >
+          <div
+            className="bg-white rounded-3xl border border-slate-200 p-8 max-w-2xl w-full space-y-6 shadow-2xl relative print:border-none print:shadow-none print:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Action Bar (hidden on print) */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 print:hidden">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Pratinjau Slip Gaji Resmi
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 rounded-xl bg-[#9E1B21] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-[#85161B] shadow-xs"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Cetak / Simpan PDF</span>
+                </button>
+                <button
+                  onClick={() => setPreviewSlip(null)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Official Letterhead */}
+            <div className="border-b-2 border-slate-900 pb-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <LogoRSKotaBaru className="w-12 h-12 text-[#9E1B21]" />
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight leading-tight">
+                      RUMAH SAKIT KOTA BARU
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-600">
+                      DEPARTEMEN SUMBER DAYA MANUSIA & KEUANGAN
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      Kotabaru Roleplay Medical Center · Jl. Pelayanan Medis No. 1
+                    </p>
+                  </div>
+                </div>
+                <LogoKotaBaruRoleplay className="w-12 h-12 opacity-80" />
+              </div>
+            </div>
+
+            {/* Title & Slip Metadata */}
+            <div className="text-center">
+              <h2 className="text-base font-extrabold uppercase tracking-widest text-[#0F1E36]">
+                SLIP GAJI TENAGA MEDIS
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">Periode Penggajian: {previewSlip.period}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Nama Tenaga Medis</span>
+                <strong className="text-slate-900 text-sm">{previewSlip.staffName}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Jabatan Resmi</span>
+                <strong className="text-[#9E1B21] text-sm">{previewSlip.role}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Total Jam Duty</span>
+                <strong className="text-slate-900 font-mono text-sm">{previewSlip.dutyHours} Jam</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Status Pembayaran</span>
+                <strong className="text-emerald-700 font-mono text-sm">
+                  {previewSlip.paymentStatus} {previewSlip.paidAt && `(${previewSlip.paidAt})`}
+                </strong>
+              </div>
+            </div>
+
+            {/* Earnings Breakdown Table */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 text-xs">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#0F1E36] text-white text-[11px] font-bold">
+                    <th className="py-2.5 px-4">KOMPONEN PENGHASILAN</th>
+                    <th className="py-2.5 px-4 text-right">JUMLAH ($)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 tabular-nums">
+                  <tr>
+                    <td className="py-2.5 px-4 text-slate-800">
+                      Gaji Pokok (Berdasarkan Jam Kerja & Skema Jabatan {previewSlip.role})
+                    </td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                      ${previewSlip.basicSalary.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-4 text-slate-800">
+                      Bonus Kelebihan Jam Duty ({previewSlip.dutyHours}j)
+                    </td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-600">
+                      +${previewSlip.dutyBonus.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-4 text-slate-800">Tunjangan Tambahan / Insentif</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-600">
+                      +${previewSlip.allowance.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-4 text-slate-800">Potongan Administrasi / Disiplin</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-rose-600">
+                      -${previewSlip.deduction.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr className="bg-red-50/60 font-extrabold text-sm border-t-2 border-red-200">
+                    <td className="py-3 px-4 text-[#9E1B21]">TOTAL TAKE HOME PAY (BERSIH)</td>
+                    <td className="py-3 px-4 text-right font-mono text-[#9E1B21] text-base">
+                      ${previewSlip.totalSalary.toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Official Signatures */}
+            <div className="pt-6 grid grid-cols-2 text-center text-xs text-slate-600">
+              <div>
+                <p className="text-[10px] text-slate-400">Penerima (Staff Medis)</p>
+                <div className="h-14 flex items-end justify-center font-serif italic text-slate-700">
+                  {previewSlip.staffName}
+                </div>
+                <div className="border-t border-slate-300 pt-1 font-bold text-slate-800">
+                  {previewSlip.staffName}
+                </div>
+                <span className="text-[10px] text-slate-400">{previewSlip.role}</span>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400">Mengetahui & Menyetujui</p>
+                <div className="h-14 flex items-end justify-center font-serif italic text-slate-700">
+                  dr. Aurelia Maharani, Sp.BP-RE
+                </div>
+                <div className="border-t border-slate-300 pt-1 font-bold text-slate-800">
+                  Bagian Keuangan & HRD
+                </div>
+                <span className="text-[10px] text-slate-400">RS Kota Baru Roleplay</span>
+              </div>
             </div>
           </div>
         </div>

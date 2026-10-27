@@ -3,6 +3,7 @@ import {
   StaffAccount,
   RoleName,
   ROLE_LEVELS,
+  ROLE_LIST,
   AccountStatus,
   DoctorSchedule,
   SKSRecord,
@@ -404,10 +405,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const roleSalDocs = byModule.get('role_salary_config');
       if (roleSalDocs && roleSalDocs.length > 0) {
-        const items = roleSalDocs
+        const fromDb = roleSalDocs
           .map((r) => r.payload as unknown as RoleSalaryConfig)
           .filter((x) => Boolean(x && x.role));
-        if (items.length > 0) setRoleSalaryConfigs(items);
+        
+        // Merge with canonical 12 roles so every single role is always present and configured
+        const merged = ROLE_LIST.map((role) => {
+          const fromDbRole = fromDb.find((c) => c.role === role);
+          if (fromDbRole) return fromDbRole;
+          const initial = INITIAL_ROLE_SALARY_CONFIGS.find((c) => c.role === role);
+          return (
+            initial || {
+              role,
+              level: ROLE_LEVELS[role] || 1,
+              fullSalary: 5000,
+              hourlyRate: 300,
+              targetWeeklyHours: 18,
+              bonusStepHours: 2,
+              bonusPerStepAmount: 300,
+            }
+          );
+        });
+        setRoleSalaryConfigs(merged);
       }
 
       const payDocs = byModule.get('payroll_record');
@@ -1364,10 +1383,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateRoleSalaryConfig = (config: RoleSalaryConfig) => {
     if (!currentUser || currentUser.level < 8) return;
-    setRoleSalaryConfigs((prev) =>
-      prev.map((c) => (c.role === config.role ? { ...config } : c))
-    );
-    const id = `role_sal_${config.role.toLowerCase().replace(/\s+/g, '_')}`;
+    setRoleSalaryConfigs((prev) => {
+      const exists = prev.some((c) => c.role === config.role);
+      if (exists) {
+        return prev.map((c) => (c.role === config.role ? { ...config } : c));
+      }
+      return [...prev, { ...config }];
+    });
+    const id = `role_sal_${config.role.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
     void syncRecordToFirestore(id, 'role_salary_config', `Skema Gaji ${config.role}`, 'Active', {
       ...config,
     });

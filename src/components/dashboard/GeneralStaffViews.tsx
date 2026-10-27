@@ -17,7 +17,13 @@ import {
   Search,
   Plus,
   Trash2,
+  Printer,
+  ChevronDown,
+  ChevronUp,
+  X,
+  ShieldCheck,
 } from 'lucide-react';
+import { LogoRSKotaBaru, LogoKotaBaruRoleplay } from '../BrandAssets';
 
 // Helper to get real-time current week's Monday and Sunday (YYYY-MM-DD)
 export function getCurrentWeekMondaySunday(nowDate: Date) {
@@ -876,13 +882,22 @@ export const VotingView: React.FC = () => {
 // 5. GAJI SAYA (Sec 52 — Terintegrasi Skema Gaji Jabatan, Target Jam Mingguan, Gaji Utuh/Perjam & Bonus Kelipatan)
 export const MySalaryView: React.FC = () => {
   const { payrollRecords, dutyLogs, roleSalaryConfigs, currentUser } = useApp();
+  const [selectedSlipToPrint, setSelectedSlipToPrint] = useState<(typeof payrollRecords)[0] | null>(null);
+  const [showDutyLogsList, setShowDutyLogsList] = useState(false);
+
   if (!currentUser) return null;
 
   const myRoleConfig = roleSalaryConfigs.find((c) => c.role === currentUser.role);
-  const myWeeklyMinutes = dutyLogs
-    .filter((l) => l.staffId === currentUser.id && l.weekKey === 'current-week')
-    .reduce((acc, l) => acc + l.durationMinutes, 0);
+  
+  // Filter contributing logs for the current week matching by ID or by Staff Name
+  const myWeeklyDutyLogs = dutyLogs.filter(
+    (l) =>
+      (l.staffId === currentUser.id ||
+        l.staffName.toLowerCase().trim() === currentUser.name.toLowerCase().trim()) &&
+      l.weekKey === 'current-week'
+  );
 
+  const myWeeklyMinutes = myWeeklyDutyLogs.reduce((acc, l) => acc + l.durationMinutes, 0);
   const dutyHours = Number((myWeeklyMinutes / 60).toFixed(2));
   const targetHours = myRoleConfig?.targetWeeklyHours ?? 18;
   const meetsTarget = dutyHours >= targetHours;
@@ -901,149 +916,451 @@ export const MySalaryView: React.FC = () => {
       ? Math.floor(excessHours / myRoleConfig.bonusStepHours)
       : 0;
   const liveBonus = myRoleConfig ? bonusMultiples * myRoleConfig.bonusPerStepAmount : 0;
+  const estimatedTakeHome = baseEarned + liveBonus;
+
+  const progressPercent = Math.min(100, Math.round((dutyHours / targetHours) * 100));
 
   const myPayrolls = payrollRecords.filter((p) => p.staffId === currentUser.id);
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-5 rounded-2xl border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header Info Jabatan & Skema Gaji */}
+      <div className="bg-white p-5 rounded-2xl border border-red-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Gaji Saya & Estimasi Mingguan Real-Time</h2>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-[#9E1B21] text-white">
+              LEVEL {currentUser.level}
+            </span>
+            <span className="text-xs font-bold text-[#9E1B21] tracking-wide uppercase">
+              {currentUser.role}
+            </span>
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">Gaji Saya & Estimasi Mingguan Real-Time</h2>
           <p className="text-xs text-slate-500">
-            Jabatan: <strong>{currentUser.role}</strong> · Target Duty Mingguan:{' '}
-            <strong>{targetHours} Jam/Minggu</strong>
+            Sistem otomatis menghitung gaji berdasarkan jam kerja (Duty Log) dan target mingguan jabatan Anda.
           </p>
         </div>
-        {myRoleConfig && (
+
+        {myRoleConfig ? (
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-              Gaji Utuh: ${myRoleConfig.fullSalary.toLocaleString()}
-            </span>
-            <span className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 font-bold border border-amber-200">
-              Per Jam: ${myRoleConfig.hourlyRate.toLocaleString()}/jam
-            </span>
-            <span className="px-3 py-1.5 rounded-xl bg-red-50/60 text-[#7F1D1D] font-bold border border-red-200">
-              Bonus: +${myRoleConfig.bonusPerStepAmount.toLocaleString()} / {myRoleConfig.bonusStepHours} jam lebih
-            </span>
+            <div className="px-3.5 py-2 rounded-xl bg-blue-50/80 border border-blue-200/70">
+              <span className="text-[10px] text-blue-600 block uppercase font-bold">Target Jam Duty</span>
+              <strong className="text-blue-900 font-mono text-sm">{myRoleConfig.targetWeeklyHours} Jam/Minggu</strong>
+            </div>
+            <div className="px-3.5 py-2 rounded-xl bg-emerald-50/80 border border-emerald-200/70">
+              <span className="text-[10px] text-emerald-600 block uppercase font-bold">Gaji Utuh (Capaian)</span>
+              <strong className="text-emerald-900 font-mono text-sm">${myRoleConfig.fullSalary.toLocaleString()}</strong>
+            </div>
+            <div className="px-3.5 py-2 rounded-xl bg-amber-50/80 border border-amber-200/70">
+              <span className="text-[10px] text-amber-600 block uppercase font-bold">Gaji Per Jam (&lt; Target)</span>
+              <strong className="text-amber-900 font-mono text-sm">${myRoleConfig.hourlyRate.toLocaleString()}/jam</strong>
+            </div>
+            <div className="px-3.5 py-2 rounded-xl bg-purple-50/80 border border-purple-200/70">
+              <span className="text-[10px] text-purple-600 block uppercase font-bold">Bonus Lembur</span>
+              <strong className="text-purple-900 font-mono text-sm">+${myRoleConfig.bonusPerStepAmount.toLocaleString()} / +{myRoleConfig.bonusStepHours}j</strong>
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-200">
+            Skema gaji untuk jabatan Anda sedang disiapkan oleh HRD.
           </div>
         )}
       </div>
 
       {/* Kartu Kalkulasi Jam Duty Minggu Berjalan */}
-      <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-red-100 pb-4">
+      <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-100 pb-4">
           <div>
-            <span className="text-xs font-bold text-[#9E1B21] uppercase tracking-wider">
-              KALKULASI MINGGU BERJALAN (REAL-TIME DARI LOG DUTY)
+            <span className="text-[11px] font-bold text-[#9E1B21] uppercase tracking-wider flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              KALKULASI MINGGU BERJALAN (REAL-TIME DARI DISCORD / DUTY LOG)
             </span>
-            <h3 className="text-lg font-bold text-slate-900 mt-0.5">
-              Progress Jam Duty: {dutyHours} Jam / {targetHours} Jam
+            <h3 className="text-xl font-bold text-slate-900 mt-1">
+              {dutyHours} Jam <span className="text-sm font-normal text-slate-500">/ target {targetHours} Jam</span>
             </h3>
           </div>
           <span
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold self-start sm:self-auto ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold self-start sm:self-auto flex items-center gap-1.5 ${
               meetsTarget
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                 : 'bg-amber-50 text-amber-700 border border-amber-200'
             }`}
           >
-            {meetsTarget
-              ? '✓ Memenuhi Target Mingguan (Berhak Gaji Utuh)'
-              : `Belum Capai Target (Dihitung Per Jam × $${myRoleConfig?.hourlyRate ?? 0})`}
+            {meetsTarget ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Target Tercapai (Berhak Gaji Utuh Penuh)</span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-4 h-4 text-amber-600" />
+                <span>Kurang {(targetHours - dutyHours).toFixed(2)}j (Dihitung Per Jam × ${myRoleConfig?.hourlyRate ?? 0})</span>
+              </>
+            )}
           </span>
         </div>
 
+        {/* Visual Progress Bar */}
+        <div>
+          <div className="flex items-center justify-between text-xs text-slate-600 mb-1.5">
+            <span>Pencapaian Jam Duty Mingguan</span>
+            <span className="font-bold font-mono text-slate-900">{progressPercent}%</span>
+          </div>
+          <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                meetsTarget ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-gradient-to-r from-amber-400 to-[#9E1B21]'
+              }`}
+              style={{ width: `${Math.min(100, progressPercent)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* KPI Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-sm tabular-nums">
-          <div className="p-4 rounded-xl bg-red-50/40">
+          <div className="p-4 rounded-xl bg-red-50/40 border border-red-100">
             <p className="text-xs text-slate-500">Status Perhitungan Gaji</p>
-            <p className="text-base font-bold text-slate-900 mt-0.5">
+            <p className="text-base font-bold text-slate-900 mt-1">
               {meetsTarget ? 'Gaji Utuh' : 'Gaji Per Jam'}
             </p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {meetsTarget ? 'Target mingguan terpenuhi' : `${dutyHours} jam × $${myRoleConfig?.hourlyRate ?? 0}`}
+            </p>
           </div>
-          <div className="p-4 rounded-xl bg-red-50/40">
+          <div className="p-4 rounded-xl bg-red-50/40 border border-red-100">
             <p className="text-xs text-slate-500">Gaji Pokok Terhitung</p>
-            <p className="text-lg font-extrabold font-mono text-slate-900 mt-0.5">
+            <p className="text-xl font-extrabold font-mono text-slate-900 mt-1">
               ${baseEarned.toLocaleString()}
             </p>
-          </div>
-          <div className="p-4 rounded-xl bg-red-50/40">
-            <p className="text-xs text-slate-500">
-              Bonus Kelebihan Jam ({bonusMultiples}x kelipatan)
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {meetsTarget ? `Skema utuh ${currentUser.role}` : 'Sesuai durasi riil'}
             </p>
-            <p className="text-lg font-extrabold font-mono text-[#20C997] mt-0.5">
+          </div>
+          <div className="p-4 rounded-xl bg-red-50/40 border border-red-100">
+            <p className="text-xs text-slate-500">
+              Bonus Kelebihan Jam ({bonusMultiples}x)
+            </p>
+            <p className="text-xl font-extrabold font-mono text-emerald-600 mt-1">
               +${liveBonus.toLocaleString()}
             </p>
-          </div>
-          <div className="p-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white">
-            <p className="text-xs text-red-100">Estimasi Gaji Minggu Ini</p>
-            <p className="text-xl font-extrabold font-mono mt-0.5">
-              ${(baseEarned + liveBonus).toLocaleString()}
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {excessHours > 0 ? `+${excessHours}j di atas target` : 'Tidak ada lembur'}
             </p>
           </div>
+          <div className="p-4 rounded-xl bg-gradient-to-br from-[#9E1B21] via-[#85161B] to-[#500e12] text-white shadow-xs">
+            <p className="text-xs text-red-100 font-semibold">Estimasi Take Home Pay</p>
+            <p className="text-2xl font-extrabold font-mono mt-1">
+              ${estimatedTakeHome.toLocaleString()}
+            </p>
+            <p className="text-[10px] text-red-200 mt-0.5">
+              Minggu Ini (Belum potongan/tunjangan)
+            </p>
+          </div>
+        </div>
+
+        {/* Contributing Duty Logs Accordion */}
+        <div className="pt-2">
+          <button
+            onClick={() => setShowDutyLogsList(!showDutyLogsList)}
+            className="flex items-center gap-2 text-xs font-bold text-[#9E1B21] hover:text-[#7F1D1D] transition cursor-pointer"
+          >
+            {showDutyLogsList ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <span>
+              {showDutyLogsList ? 'Sembunyikan' : 'Lihat'} Rincian Sesi Duty Minggu Ini ({myWeeklyDutyLogs.length} Log Terdata)
+            </span>
+          </button>
+
+          {showDutyLogsList && (
+            <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/50">
+              {myWeeklyDutyLogs.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-500">
+                  Belum ada log duty yang tercatat atas nama Anda pada minggu berjalan ini.
+                </div>
+              ) : (
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100/80 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
+                      <th className="py-2.5 px-3">Waktu Mulai</th>
+                      <th className="py-2.5 px-3">Waktu Selesai</th>
+                      <th className="py-2.5 px-3">Pekerjaan</th>
+                      <th className="py-2.5 px-3 text-right">Durasi Menit</th>
+                      <th className="py-2.5 px-3 text-right">Format</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white tabular-nums">
+                    {myWeeklyDutyLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-red-50/40">
+                        <td className="py-2 px-3 font-mono text-slate-700">{log.startDate}</td>
+                        <td className="py-2 px-3 font-mono text-slate-700">{log.endDate}</td>
+                        <td className="py-2 px-3 font-medium text-slate-900 capitalize">{log.jobTitleInLog}</td>
+                        <td className="py-2 px-3 text-right font-mono font-bold text-blue-700">
+                          {log.durationMinutes} min
+                        </td>
+                        <td className="py-2 px-3 text-right font-mono text-slate-500">
+                          {log.durationFormatted}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {myPayrolls.length === 0 ? (
-        <div className="bg-white p-8 rounded-2xl border border-red-100 text-center text-sm text-slate-500">
-          Belum ada catatan slip gaji resmi yang diterbitkan untuk akun Anda pada periode ini.
+      {/* Daftar Slip Gaji Resmi dari HRD/Database */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Riwayat Slip Gaji Resmi</h3>
+            <p className="text-xs text-slate-500">
+              Slip gaji yang telah diverifikasi dan diterbitkan resmi oleh Bagian Keuangan / HRD RS Kota Baru.
+            </p>
+          </div>
+          <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
+            {myPayrolls.length} Slip Tersedia
+          </span>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {myPayrolls.map((pay) => (
-            <div
-              key={pay.id}
-              className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-red-100 pb-4">
-                <div>
-                  <span className="text-xs font-semibold text-[#9E1B21]">SLIP GAJI RESMI RS KOTA BARU</span>
-                  <h3 className="text-xl font-bold text-slate-900">Periode: {pay.period}</h3>
-                  <p className="text-xs text-slate-500">
-                    {pay.staffName} · Jabatan: {pay.role}
-                  </p>
+
+        {myPayrolls.length === 0 ? (
+          <div className="bg-white p-8 rounded-2xl border border-red-100 text-center text-sm text-slate-500 shadow-xs">
+            Belum ada catatan slip gaji resmi yang diterbitkan untuk akun Anda pada periode ini.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {myPayrolls.map((pay) => (
+              <div
+                key={pay.id}
+                className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4 hover:border-red-200 transition"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-100 pb-4">
+                  <div>
+                    <span className="text-[11px] font-bold text-[#9E1B21] uppercase tracking-wider">
+                      SLIP GAJI RESMI RS KOTA BARU
+                    </span>
+                    <h4 className="text-xl font-bold text-slate-900 mt-0.5">Periode: {pay.period}</h4>
+                    <p className="text-xs text-slate-500">
+                      {pay.staffName} · Jabatan: <strong>{pay.role}</strong>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 self-start sm:self-auto">
+                    <div className="text-left sm:text-right">
+                      <span className="text-[10px] text-slate-500 block uppercase font-bold">Status Pembayaran</span>
+                      <span
+                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${
+                          pay.paymentStatus === 'Paid'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : pay.paymentStatus === 'Processing'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                      >
+                        {pay.paymentStatus} {pay.paidAt && `(${pay.paidAt})`}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedSlipToPrint(pay)}
+                      className="px-3.5 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Cetak Slip</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="text-left sm:text-right">
-                  <span className="text-xs text-slate-500">Status Pembayaran:</span>
-                  <div className="text-sm font-bold text-[#20C997]">
-                    {pay.paymentStatus} {pay.paidAt && `(${pay.paidAt})`}
+
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm tabular-nums">
+                  <div className="p-3.5 rounded-xl bg-red-50/40 border border-red-100/60">
+                    <p className="text-xs text-slate-500">Gaji Pokok</p>
+                    <p className="text-base font-bold font-mono text-slate-900">
+                      ${pay.basicSalary.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-red-50/40 border border-red-100/60">
+                    <p className="text-xs text-slate-500">Bonus Duty ({pay.dutyHours}j)</p>
+                    <p className="text-base font-bold font-mono text-emerald-600">
+                      +${pay.dutyBonus.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-red-50/40 border border-red-100/60">
+                    <p className="text-xs text-slate-500">Tunjangan Tambahan</p>
+                    <p className="text-base font-bold font-mono text-emerald-600">
+                      +${pay.allowance.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-red-50/40 border border-red-100/60">
+                    <p className="text-xs text-slate-500">Potongan</p>
+                    <p className="text-base font-bold font-mono text-rose-600">
+                      -${pay.deduction.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white">
+                    <p className="text-xs text-red-100">Take Home Pay</p>
+                    <p className="text-xl font-extrabold font-mono">
+                      ${pay.totalSalary.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-sm tabular-nums">
-                <div className="p-3.5 rounded-xl bg-red-50/40">
-                  <p className="text-xs text-slate-500">Gaji Pokok</p>
-                  <p className="text-base font-bold font-mono text-slate-900">
-                    ${pay.basicSalary.toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-xl bg-red-50/40">
-                  <p className="text-xs text-slate-500">Bonus Duty ({pay.dutyHours}j)</p>
-                  <p className="text-base font-bold font-mono text-[#20C997]">
-                    +${pay.dutyBonus.toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-xl bg-red-50/40">
-                  <p className="text-xs text-slate-500">Tunjangan Tambahan</p>
-                  <p className="text-base font-bold font-mono text-[#20C997]">
-                    +${pay.allowance.toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-xl bg-red-50/40">
-                  <p className="text-xs text-slate-500">Potongan</p>
-                  <p className="text-base font-bold font-mono text-rose-600">
-                    -${pay.deduction.toLocaleString()}
-                  </p>
-                </div>
-                <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white">
-                  <p className="text-xs text-red-100">Take Home Pay</p>
-                  <p className="text-lg font-extrabold font-mono">
-                    ${pay.totalSalary.toLocaleString()}
-                  </p>
-                </div>
+      {/* MODAL PRINT SLIP GAJI RESMI */}
+      {selectedSlipToPrint && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 print:p-0 print:bg-white"
+          onClick={() => setSelectedSlipToPrint(null)}
+        >
+          <div
+            className="bg-white rounded-3xl border border-slate-200 p-8 max-w-2xl w-full space-y-6 shadow-2xl relative print:border-none print:shadow-none print:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Action Bar (hidden on print) */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 print:hidden">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Pratinjau Slip Gaji Resmi
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 rounded-xl bg-[#9E1B21] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-[#85161B] shadow-xs"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Cetak / Simpan PDF</span>
+                </button>
+                <button
+                  onClick={() => setSelectedSlipToPrint(null)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
-          ))}
+
+            {/* Official Letterhead */}
+            <div className="border-b-2 border-slate-900 pb-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <LogoRSKotaBaru className="w-12 h-12 text-[#9E1B21]" />
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight leading-tight">
+                      RUMAH SAKIT KOTA BARU
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-600">
+                      DEPARTEMEN SUMBER DAYA MANUSIA & KEUANGAN
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      Kotabaru Roleplay Medical Center · Jl. Pelayanan Medis No. 1
+                    </p>
+                  </div>
+                </div>
+                <LogoKotaBaruRoleplay className="w-12 h-12 opacity-80" />
+              </div>
+            </div>
+
+            {/* Title & Slip Metadata */}
+            <div className="text-center">
+              <h2 className="text-base font-extrabold uppercase tracking-widest text-[#0F1E36]">
+                SLIP GAJI TENAGA MEDIS
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">Periode Penggajian: {selectedSlipToPrint.period}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Nama Tenaga Medis</span>
+                <strong className="text-slate-900 text-sm">{selectedSlipToPrint.staffName}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Jabatan Resmi</span>
+                <strong className="text-[#9E1B21] text-sm">{selectedSlipToPrint.role}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Total Jam Duty</span>
+                <strong className="text-slate-900 font-mono text-sm">{selectedSlipToPrint.dutyHours} Jam</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Status Pembayaran</span>
+                <strong className="text-emerald-700 font-mono text-sm">
+                  {selectedSlipToPrint.paymentStatus} {selectedSlipToPrint.paidAt && `(${selectedSlipToPrint.paidAt})`}
+                </strong>
+              </div>
+            </div>
+
+            {/* Earnings Breakdown Table */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 text-xs">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#0F1E36] text-white text-[11px] font-bold">
+                    <th className="py-2.5 px-4">KOMPONEN PENGHASILAN</th>
+                    <th className="py-2.5 px-4 text-right">JUMLAH ($)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 tabular-nums">
+                  <tr>
+                    <td className="py-2.5 px-4 text-slate-800">
+                      Gaji Pokok (Berdasarkan Jam Kerja & Jabatan)
+                    </td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                      ${selectedSlipToPrint.basicSalary.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-4 text-slate-800">
+                      Bonus Kelebihan Jam Duty ({selectedSlipToPrint.dutyHours}j)
+                    </td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-600">
+                      +${selectedSlipToPrint.dutyBonus.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-4 text-slate-800">Tunjangan Tambahan / Insentif</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-600">
+                      +${selectedSlipToPrint.allowance.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-4 text-slate-800">Potongan Administrasi / Disiplin</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-rose-600">
+                      -${selectedSlipToPrint.deduction.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr className="bg-red-50/60 font-extrabold text-sm border-t-2 border-red-200">
+                    <td className="py-3 px-4 text-[#9E1B21]">TOTAL TAKE HOME PAY (BERSIH)</td>
+                    <td className="py-3 px-4 text-right font-mono text-[#9E1B21] text-base">
+                      ${selectedSlipToPrint.totalSalary.toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Official Signatures */}
+            <div className="pt-6 grid grid-cols-2 text-center text-xs text-slate-600">
+              <div>
+                <p className="text-[10px] text-slate-400">Penerima (Staff Medis)</p>
+                <div className="h-14 flex items-end justify-center font-serif italic text-slate-700">
+                  {selectedSlipToPrint.staffName}
+                </div>
+                <div className="border-t border-slate-300 pt-1 font-bold text-slate-800">
+                  {selectedSlipToPrint.staffName}
+                </div>
+                <span className="text-[10px] text-slate-400">{selectedSlipToPrint.role}</span>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400">Mengetahui & Menyetujui</p>
+                <div className="h-14 flex items-end justify-center font-serif italic text-slate-700">
+                  dr. Aurelia Maharani, Sp.BP-RE
+                </div>
+                <div className="border-t border-slate-300 pt-1 font-bold text-slate-800">
+                  Bagian Keuangan & HRD
+                </div>
+                <span className="text-[10px] text-slate-400">RS Kota Baru Roleplay</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

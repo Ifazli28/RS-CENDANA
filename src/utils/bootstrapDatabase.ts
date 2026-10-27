@@ -64,10 +64,13 @@ export async function bootstrapInitialPortalData(existingRecords: CloudPortalRec
       }
     }
 
-    // 5. Seed Role Salary Configs if missing
-    if (!hasRoleSalaries) {
-      for (const cfg of INITIAL_ROLE_SALARY_CONFIGS) {
-        const id = `role_sal_${cfg.role.toLowerCase().replace(/\s+/g, '_')}`;
+    // 5. Seed Role Salary Configs: ensure all 12 canonical roles exist in Firestore
+    for (const cfg of INITIAL_ROLE_SALARY_CONFIGS) {
+      const exists = existingRecords.some(
+        (r) => r.module === 'role_salary_config' && (r.payload as any)?.role === cfg.role
+      );
+      if (!exists) {
+        const id = `role_sal_${cfg.role.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
         await syncRecordToFirestore(id, 'role_salary_config', `Skema Gaji ${cfg.role}`, 'Active', { ...cfg });
       }
     }
