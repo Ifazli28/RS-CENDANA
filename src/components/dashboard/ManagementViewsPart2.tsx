@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SAMPLE_DISCORD_DUTY_LOG } from '../../data/initialData';
 import { DutyLog, RoleName, RoleSalaryConfig, ROLE_LIST, ROLE_LEVELS } from '../../types';
@@ -7,6 +7,20 @@ import {
   parseDutyDurationTextToMinutes,
   formatMinutesToCleanDuration,
 } from '../../utils/dutyParser';
+import {
+  getMondayOfDate,
+  getSundayOfMonday,
+  get7DaysOfWeek,
+  formatWeekRangeDisplay,
+  formatMonthDisplay,
+  getCurrentMonthKey,
+  getCurrentDateStr,
+  shiftWeekMonday,
+  isDateInWeek,
+  getDayIndexInWeek,
+  getAvailableWeeksList,
+  normalizeDateOnly,
+} from '../../utils/dateUtils';
 import { LogoRSKotaBaru, LogoKotaBaruRoleplay } from '../BrandAssets';
 import {
   FileSpreadsheet,
@@ -15,6 +29,7 @@ import {
   Upload,
   Plus,
   Clock,
+  Calendar,
   DollarSign,
   Settings,
   CheckCircle2,
@@ -27,6 +42,8 @@ import {
   Filter,
   Eye,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface ParsedDutyPreview {
@@ -108,51 +125,127 @@ export function computeStaffWeeklySalary(
   };
 }
 
-// Helper to normalize dates from Discord logs (e.g. DD/MM/YYYY HH:mm:ss or YYYY-MM-DD)
+// Helper to normalize dates from Discord logs (e.g. DD/MM/YYYY HH:mm:ss, YYYY-MM-DD, ISO)
 export function parseDiscordDutyDate(dateStr: string): { normalized: string; monthKey: string; dayNum: number; dateOnly: string } {
-  if (!dateStr) return { normalized: '', monthKey: '2026-10', dayNum: 17, dateOnly: '2026-10-17' };
-  const trimmed = dateStr.trim();
-  // Format DD/MM/YYYY HH:mm:ss or DD/MM/YYYY
-  const dmyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}:\d{1,2}(?::\d{1,2})?))?/);
-  if (dmyMatch) {
-    const day = dmyMatch[1].padStart(2, '0');
-    const month = dmyMatch[2].padStart(2, '0');
-    const year = dmyMatch[3];
-    const time = dmyMatch[4] || '00:00:00';
-    return {
-      normalized: `${year}-${month}-${day} ${time}`,
-      dateOnly: `${year}-${month}-${day}`,
-      monthKey: `${year}-${month}`,
-      dayNum: parseInt(day, 10),
-    };
+  if (!dateStr) {
+    const cur = getCurrentDateStr();
+    return { normalized: `${cur} 00:00:00`, monthKey: cur.slice(0, 7), dayNum: parseInt(cur.slice(8, 10), 10), dateOnly: cur };
   }
-  // Format YYYY-MM-DD HH:mm:ss or YYYY-MM-DD
-  const ymdMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}:\d{1,2}(?::\d{1,2})?))?/);
-  if (ymdMatch) {
-    const year = ymdMatch[1];
-    const month = ymdMatch[2].padStart(2, '0');
-    const day = ymdMatch[3].padStart(2, '0');
-    const time = ymdMatch[4] || '00:00:00';
-    return {
-      normalized: `${year}-${month}-${day} ${time}`,
-      dateOnly: `${year}-${month}-${day}`,
-      monthKey: `${year}-${month}`,
-      dayNum: parseInt(day, 10),
-    };
-  }
+  const dateOnly = normalizeDateOnly(dateStr);
+  const [yyyy, mm, dd] = dateOnly.split('-');
+  const timeMatch = dateStr.match(/\b(\d{1,2}:\d{1,2}(?::\d{1,2})?)\b/);
+  const time = timeMatch ? (timeMatch[1].length === 5 ? `${timeMatch[1]}:00` : timeMatch[1]) : '00:00:00';
   return {
-    normalized: trimmed,
-    dateOnly: trimmed.slice(0, 10),
-    monthKey: '2026-10',
-    dayNum: 17,
+    normalized: `${dateOnly} ${time}`,
+    dateOnly,
+    monthKey: `${yyyy}-${mm}`,
+    dayNum: parseInt(dd || '1', 10),
   };
 }
 
-// 1. DISCORD DUTY PARSER (Sec 66)
+// 1. DISCORD & MANUAL DUTY INPUT (Sec 66)
 export const DutyManagementView: React.FC = () => {
   const { staffAccounts, dutyLogs, addDutyLogsBatch, addToast, deleteDutyLog, requestDelete } = useApp();
+  const [inputMode, setInputMode] = useState<'discord' | 'manual'>('discord');
   const [rawLogText, setRawLogText] = useState(SAMPLE_DISCORD_DUTY_LOG);
   const [parsedPreview, setParsedPreview] = useState<ParsedDutyPreview[] | null>(null);
+
+  // Manual Input State (Opsi Lain Input Log Duty)
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+  const [manualStaffId, setManualStaffId] = useState<string>('');
+  const [manualStartDate, setManualStartDate] = useState<string>(todayStr);
+  const [manualStartTime, setManualStartTime] = useState<string>('08:00');
+  const [manualEndDate, setManualEndDate] = useState<string>(todayStr);
+  const [manualEndTime, setManualEndTime] = useState<string>('12:00');
+  const [isSubmittingManual, setIsSubmittingManual] = useState(false);
+
+  const selectedStaff = useMemo(() => {
+    return staffAccounts.find((s) => s.id === manualStaffId) || null;
+  }, [staffAccounts, manualStaffId]);
+
+  const manualDurationCalc = useMemo(() => {
+    if (!manualStartDate || !manualStartTime || !manualEndDate || !manualEndTime) {
+      return { isValid: false, minutes: 0, hoursNum: '0.00', formatted: '-', error: 'Lengkapi seluruh tanggal dan jam duty.' };
+    }
+    const startIso = `${manualStartDate}T${manualStartTime}:00`;
+    const endIso = `${manualEndDate}T${manualEndTime}:00`;
+    const sDate = new Date(startIso);
+    const eDate = new Date(endIso);
+    const sMs = sDate.getTime();
+    const eMs = eDate.getTime();
+
+    if (isNaN(sMs) || isNaN(eMs)) {
+      return { isValid: false, minutes: 0, hoursNum: '0.00', formatted: '-', error: 'Format tanggal atau jam tidak valid.' };
+    }
+
+    if (eMs <= sMs) {
+      return {
+        isValid: false,
+        minutes: 0,
+        hoursNum: '0.00',
+        formatted: '-',
+        error: 'Tanggal & Jam Berakhir harus lebih lambat dari Tanggal & Jam Mulai.',
+      };
+    }
+
+    const minutes = Math.round((eMs - sMs) / 60000);
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    const hoursNum = (minutes / 60).toFixed(2);
+    const formatted = h > 0 ? (m > 0 ? `${h} Jam ${m} Menit` : `${h} Jam`) : `${m} Menit`;
+
+    return {
+      isValid: true,
+      minutes,
+      hoursNum,
+      formatted,
+      error: null,
+    };
+  }, [manualStartDate, manualStartTime, manualEndDate, manualEndTime]);
+
+  const handleSubmitManualDuty = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStaff) {
+      addToast('error', 'Staff Belum Dipilih', 'Silakan pilih nama anggota tenaga medis terlebih dahulu.');
+      return;
+    }
+
+    if (!manualDurationCalc.isValid || manualDurationCalc.minutes <= 0) {
+      addToast('error', 'Waktu Tidak Valid', manualDurationCalc.error || 'Periksa kembali tanggal dan jam duty.');
+      return;
+    }
+
+    setIsSubmittingManual(true);
+    try {
+      const startNormalized = `${manualStartDate} ${manualStartTime}:00`;
+      const endNormalized = `${manualEndDate} ${manualEndTime}:00`;
+      const monthKey = manualStartDate.slice(0, 7);
+
+      const newLog: Omit<DutyLog, 'id'> = {
+        staffId: selectedStaff.id,
+        staffName: selectedStaff.name,
+        role: selectedStaff.role,
+        jobTitleInLog: selectedStaff.role,
+        durationMinutes: manualDurationCalc.minutes,
+        durationFormatted: manualDurationCalc.formatted,
+        startDate: startNormalized,
+        endDate: endNormalized,
+        weekKey: getMondayOfDate(manualStartDate),
+        monthKey: monthKey || manualStartDate.slice(0, 7),
+      };
+
+      addDutyLogsBatch([newLog]);
+
+      setManualStaffId('');
+      addToast(
+        'success',
+        'Log Duty Masuk ke Rekap',
+        `Sesi duty ${selectedStaff.name} selama ${manualDurationCalc.formatted} (${manualDurationCalc.minutes} mnt) berhasil ditambahkan ke Rekap & Leaderboard.`
+      );
+    } finally {
+      setIsSubmittingManual(false);
+    }
+  };
 
   const handleParseDiscordLogs = () => {
     // Split on blocks containing Nama: so multiple discord messages / embeds are cleanly separated
@@ -302,7 +395,7 @@ export const DutyManagementView: React.FC = () => {
           durationFormatted: formatMinutesToCleanDuration(p.durationMinutes),
           startDate: startParsed.normalized,
           endDate: endParsed.normalized,
-          weekKey: 'current-week',
+          weekKey: getMondayOfDate(startParsed.dateOnly),
           monthKey: startParsed.monthKey,
         };
       });
@@ -318,153 +411,370 @@ export const DutyManagementView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-red-100 pb-4">
+      <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-100 pb-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Discord Duty Parser — Input Log Absensi</h2>
+            <h2 className="text-lg font-bold text-slate-900">Input Log Absensi & Sesi Duty</h2>
             <p className="text-xs text-slate-500">
-              Tempel log duty dari Discord untuk otomatis masuk ke Rekap Absensi Mingguan, Bulanan & Kalkulasi Gaji
+              Pilih opsi input: Parser Log Discord (teks log) atau Formulir Input Manual (nama anggota & jam kerja). Data otomatis masuk ke Rekap Absensi, Leaderboard & Kalkulasi Gaji.
             </p>
           </div>
+          {inputMode === 'discord' && (
+            <button
+              type="button"
+              onClick={() => setRawLogText(SAMPLE_DISCORD_DUTY_LOG)}
+              className="px-3 py-1.5 rounded-lg bg-red-50/40 border border-red-200 text-xs font-semibold text-[#7F1D1D] cursor-pointer self-start"
+            >
+              Muat Contoh Log Discord
+            </button>
+          )}
+        </div>
+
+        {/* Tab Switcher: Opsi 1 (Discord) vs Opsi 2 (Form Manual) */}
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
           <button
             type="button"
-            onClick={() => setRawLogText(SAMPLE_DISCORD_DUTY_LOG)}
-            className="px-3 py-1.5 rounded-lg bg-red-50/40 border border-red-200 text-xs font-semibold text-[#7F1D1D] cursor-pointer self-start"
+            onClick={() => setInputMode('discord')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+              inputMode === 'discord'
+                ? 'bg-[#9E1B21] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
-            Muat Contoh Log Discord
+            <Play className="w-3.5 h-3.5" />
+            <span>Opsi 1: Parser Log Discord (Teks)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setInputMode('manual')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+              inputMode === 'manual'
+                ? 'bg-[#9E1B21] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>Opsi 2: Form Input Manual (Nama & Jam)</span>
           </button>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1.5">
-            Tempel Log Duty (Satu atau Banyak Pesan Sekaligus)
-          </label>
-          <textarea
-            rows={7}
-            value={rawLogText}
-            onChange={(e) => setRawLogText(e.target.value)}
-            placeholder="Nama: ...\nPekerjaan: ...\nDurasi Bekerja: ...\nTanggal Mulai: ...\nTanggal Berakhir: ..."
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono text-xs focus:border-[#9E1B21] focus:outline-none"
-          />
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={handleParseDiscordLogs}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
-          >
-            <Play className="w-4 h-4" />
-            <span>Proses & Tampilkan Preview Validasi</span>
-          </button>
-        </div>
-
-        {parsedPreview && (
-          <div className="p-5 rounded-2xl bg-red-50/40 border border-red-200 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">
-                Hasil Preview & Pencocokan Database Staff (Wajib Konfirmasi Sebelum Simpan)
-              </h3>
-              <span className="text-xs font-semibold text-slate-600">
-                Valid: {parsedPreview.filter((p) => p.isValid).length} · Gagal:{' '}
-                {parsedPreview.filter((p) => !p.isValid).length}
-              </span>
+        {/* KONTEN OPSI 1: DISCORD DUTY PARSER */}
+        {inputMode === 'discord' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Tempel Log Duty (Satu atau Banyak Pesan Sekaligus)
+              </label>
+              <textarea
+                rows={7}
+                value={rawLogText}
+                onChange={(e) => setRawLogText(e.target.value)}
+                placeholder="Nama: ...&#10;Pekerjaan: ...&#10;Durasi Bekerja: ...&#10;Tanggal Mulai: ...&#10;Tanggal Berakhir: ..."
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono text-xs focus:border-[#9E1B21] focus:outline-none"
+              />
             </div>
 
-            <div className="overflow-x-auto bg-white rounded-xl border border-red-100">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-red-100 bg-slate-50 text-slate-500">
-                    <th className="py-2.5 px-3">Nama di Log</th>
-                    <th className="py-2.5 px-3">Pekerjaan</th>
-                    <th className="py-2.5 px-3">Durasi</th>
-                    <th className="py-2.5 px-3">Mulai — Berakhir</th>
-                    <th className="py-2.5 px-3">Status Validasi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-red-50">
-                  {parsedPreview.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="py-2.5 px-3 font-semibold text-slate-900">{item.rawName}</td>
-                      <td className="py-2.5 px-3 text-slate-600">{item.jobTitle}</td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#7F1D1D]">
-                        <div>{item.durationText}</div>
-                        <div className="text-[11px] font-normal text-slate-500">
-                          = {item.durationMinutes} mnt ({formatHoursCompact(item.durationMinutes)})
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500">
-                        {item.startDate} → {item.endDate}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        {item.isValid ? (
-                          <span className="text-[#20C997] font-bold">
-                            ✓ Cocok ({item.matchedStaffName} · {item.matchedRole})
-                          </span>
-                        ) : (
-                          <div className="space-y-1">
-                            <span className="text-rose-600 font-bold block text-[11px]">
-                              ✗ {item.errorReason}
-                            </span>
-                            <select
-                              onChange={(e) => {
-                                const st = staffAccounts.find((s) => s.id === e.target.value);
-                                if (st) {
-                                  setParsedPreview((prev) =>
-                                    prev
-                                      ? prev.map((p, pIdx) =>
-                                          pIdx === idx
-                                            ? {
-                                                ...p,
-                                                matchedStaffId: st.id,
-                                                matchedStaffName: st.name,
-                                                matchedRole: st.role,
-                                                isValid: p.durationMinutes > 0,
-                                                errorReason: undefined,
-                                              }
-                                            : p
-                                        )
-                                      : null
-                                  );
-                                }
-                              }}
-                              className="text-[11px] p-1.5 rounded-lg border border-red-200 bg-white"
-                            >
-                              <option value="">Pilih staff secara manual...</option>
-                              {staffAccounts
-                                .filter((s) => s.status === 'Active')
-                                .map((s) => (
-                                  <option key={s.id} value={s.id}>
-                                    {s.name} ({s.role})
-                                  </option>
-                                ))}
-                            </select>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => setParsedPreview(null)}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 cursor-pointer"
+                onClick={handleParseDiscordLogs}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer"
               >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmSaveLogs}
-                className="px-6 py-2 rounded-xl bg-[#20C997] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer"
-              >
-                Confirm & Simpan ke Database Duty
+                <Play className="w-4 h-4" />
+                <span>Proses & Tampilkan Preview Validasi</span>
               </button>
             </div>
+
+            {parsedPreview && (
+              <div className="p-5 rounded-2xl bg-red-50/40 border border-red-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Hasil Preview & Pencocokan Database Staff (Wajib Konfirmasi Sebelum Simpan)
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-600">
+                    Valid: {parsedPreview.filter((p) => p.isValid).length} · Gagal:{' '}
+                    {parsedPreview.filter((p) => !p.isValid).length}
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto bg-white rounded-xl border border-red-100">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-red-100 bg-slate-50 text-slate-500">
+                        <th className="py-2.5 px-3">Nama di Log</th>
+                        <th className="py-2.5 px-3">Pekerjaan</th>
+                        <th className="py-2.5 px-3">Durasi</th>
+                        <th className="py-2.5 px-3">Mulai — Berakhir</th>
+                        <th className="py-2.5 px-3">Status Validasi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-red-50">
+                      {parsedPreview.map((item, idx) => (
+                        <tr key={idx}>
+                          <td className="py-2.5 px-3 font-semibold text-slate-900">{item.rawName}</td>
+                          <td className="py-2.5 px-3 text-slate-600">{item.jobTitle}</td>
+                          <td className="py-2.5 px-3 font-mono font-bold text-[#7F1D1D]">
+                            <div>{item.durationText}</div>
+                            <div className="text-[11px] font-normal text-slate-500">
+                              = {item.durationMinutes} mnt ({formatHoursCompact(item.durationMinutes)})
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500">
+                            {item.startDate} → {item.endDate}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            {item.isValid ? (
+                              <span className="text-[#20C997] font-bold">
+                                ✓ Cocok ({item.matchedStaffName} · {item.matchedRole})
+                              </span>
+                            ) : (
+                              <div className="space-y-1">
+                                <span className="text-rose-600 font-bold block text-[11px]">
+                                  ✗ {item.errorReason}
+                                </span>
+                                <select
+                                  onChange={(e) => {
+                                    const st = staffAccounts.find((s) => s.id === e.target.value);
+                                    if (st) {
+                                      setParsedPreview((prev) =>
+                                        prev
+                                          ? prev.map((p, pIdx) =>
+                                              pIdx === idx
+                                                ? {
+                                                    ...p,
+                                                    matchedStaffId: st.id,
+                                                    matchedStaffName: st.name,
+                                                    matchedRole: st.role,
+                                                    isValid: p.durationMinutes > 0,
+                                                    errorReason: undefined,
+                                                  }
+                                                : p
+                                            )
+                                          : null
+                                      );
+                                    }
+                                  }}
+                                  className="text-[11px] p-1.5 rounded-lg border border-red-200 bg-white"
+                                >
+                                  <option value="">Pilih staff secara manual...</option>
+                                  {staffAccounts
+                                    .filter((s) => s.status === 'Active')
+                                    .map((s) => (
+                                      <option key={s.id} value={s.id}>
+                                        {s.name} ({s.role})
+                                      </option>
+                                    ))}
+                                </select>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setParsedPreview(null)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmSaveLogs}
+                    className="px-6 py-2 rounded-xl bg-[#20C997] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer"
+                  >
+                    Confirm & Simpan ke Database Duty
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+        )}
+
+        {/* KONTEN OPSI 2: FORM INPUT MANUAL DUTY */}
+        {inputMode === 'manual' && (
+          <form onSubmit={handleSubmitManualDuty} className="space-y-5 pt-1">
+            <div className="p-4 rounded-2xl bg-red-50/40 border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-bold text-[#9E1B21] uppercase tracking-wider block">
+                  FORMULIR INPUT LOG DUTY MANUAL
+                </span>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Input sesi duty dengan memilih nama anggota, tanggal mulai, jam mulai, tanggal berakhir, dan jam berakhir. Durasi dihitung otomatis dan langsung tersimpan ke Rekap Absensi.
+                </p>
+              </div>
+              <div className="px-3.5 py-1.5 rounded-xl bg-white border border-red-200 text-xs font-bold text-[#9E1B21] shrink-0 flex items-center gap-1.5 shadow-2xs">
+                <Clock className="w-3.5 h-3.5 text-[#9E1B21]" />
+                <span>Kalkulasi Otomatis Real-Time</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Nama Anggota */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Nama Anggota Tenaga Medis *
+                </label>
+                <select
+                  required
+                  value={manualStaffId}
+                  onChange={(e) => setManualStaffId(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-900 focus:border-[#9E1B21] focus:outline-none"
+                >
+                  <option value="">-- Pilih Anggota Staff Medis Aktif --</option>
+                  {staffAccounts
+                    .filter((s) => s.status === 'Active')
+                    .sort((a, b) => b.level - a.level)
+                    .map((st) => (
+                      <option key={st.id} value={st.id}>
+                        {st.name} — {st.role} (Level {st.level}){st.specialty ? ` · ${st.specialty}` : ''}
+                      </option>
+                    ))}
+                </select>
+                {selectedStaff && (
+                  <p className="text-[11px] text-[#9E1B21] font-semibold mt-1.5 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#20C997]" />
+                    <span>
+                      Anggota Terpilih: <strong>{selectedStaff.name}</strong> · Jabatan: <strong>{selectedStaff.role} (Level {selectedStaff.level})</strong>
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              {/* Tanggal Mulai Duty */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
+                  <span>Tanggal Mulai Duty *</span>
+                </label>
+                <input
+                  required
+                  type="date"
+                  value={manualStartDate}
+                  onChange={(e) => setManualStartDate(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono focus:border-[#9E1B21] focus:outline-none bg-white"
+                />
+              </div>
+
+              {/* Jam Mulai Duty */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#9E1B21]" />
+                  <span>Jam Mulai Duty *</span>
+                </label>
+                <input
+                  required
+                  type="time"
+                  value={manualStartTime}
+                  onChange={(e) => setManualStartTime(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono focus:border-[#9E1B21] focus:outline-none bg-white"
+                />
+              </div>
+
+              {/* Tanggal Berakhir Duty */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
+                  <span>Tanggal Berakhir Duty *</span>
+                </label>
+                <input
+                  required
+                  type="date"
+                  value={manualEndDate}
+                  onChange={(e) => setManualEndDate(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono focus:border-[#9E1B21] focus:outline-none bg-white"
+                />
+              </div>
+
+              {/* Jam Berakhir Duty */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#9E1B21]" />
+                  <span>Jam Berakhir Duty *</span>
+                </label>
+                <input
+                  required
+                  type="time"
+                  value={manualEndTime}
+                  onChange={(e) => setManualEndTime(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono focus:border-[#9E1B21] focus:outline-none bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Live Calculation Preview Card */}
+            <div
+              className={`p-4 rounded-2xl border transition ${
+                manualDurationCalc.isValid
+                  ? 'bg-emerald-50/60 border-emerald-200'
+                  : 'bg-amber-50/60 border-amber-200'
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    {manualDurationCalc.isValid ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-amber-600" />
+                    )}
+                    <span className="text-xs font-bold text-slate-800">
+                      {manualDurationCalc.isValid ? 'Hasil Kalkulasi Durasi Sesi Duty' : 'Perhatian Validasi Waktu'}
+                    </span>
+                  </div>
+                  {manualDurationCalc.isValid ? (
+                    <p className="text-xs text-slate-600">
+                      Sesi: <span className="font-mono font-semibold">{manualStartDate} {manualStartTime}</span> s/d{' '}
+                      <span className="font-mono font-semibold">{manualEndDate} {manualEndTime}</span>
+                    </p>
+                  ) : (
+                    <p className="text-xs text-amber-800 font-semibold">
+                      {manualDurationCalc.error}
+                    </p>
+                  )}
+                </div>
+
+                {manualDurationCalc.isValid && (
+                  <div className="text-left sm:text-right">
+                    <span className="text-xl sm:text-2xl font-black font-mono text-emerald-700 block tabular-nums">
+                      {manualDurationCalc.formatted}
+                    </span>
+                    <span className="text-[11px] font-mono text-emerald-600">
+                      {manualDurationCalc.minutes} Menit (~{manualDurationCalc.hoursNum} Jam)
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setManualStaffId('');
+                  setManualStartDate(todayStr);
+                  setManualStartTime('08:00');
+                  setManualEndDate(todayStr);
+                  setManualEndTime('12:00');
+                }}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+              >
+                Reset Formulir
+              </button>
+              <button
+                type="submit"
+                disabled={!manualStaffId || !manualDurationCalc.isValid || isSubmittingManual}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold shadow-xs hover:opacity-95 disabled:opacity-40 flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Simpan Log Duty ke Rekap</span>
+              </button>
+            </div>
+          </form>
         )}
       </div>
 
@@ -529,28 +839,20 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
   const { staffAccounts, dutyLogs, roleSalaryConfigs, addToast } = useApp();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('Semua');
-  const [weekStartStr, setWeekStartStr] = useState('2026-10-05'); // Senin 05
+  // Realtime default: Senin dari minggu yang sedang berjalan saat ini
+  const [weekStartStr, setWeekStartStr] = useState<string>(() => getMondayOfDate(new Date()));
+
+  // Deduplicated list of available weeks detected from logs & current calendar
+  const availableWeeks = useMemo(() => {
+    return getAvailableWeeksList(dutyLogs.map((l) => l.startDate));
+  }, [dutyLogs]);
 
   // Generate 7 days from selected Monday (SEN, SEL, RAB, KAM, JUM, SAB, MIN)
-  const weekDays = React.useMemo(() => {
-    const dayLabels = ['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB', 'MIN'];
-    const base = new Date(`${weekStartStr}T00:00:00`);
-    return dayLabels.map((label, idx) => {
-      const d = new Date(base);
-      d.setDate(base.getDate() + idx);
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return {
-        label,
-        dateNum: dd,
-        fullDate: `${yyyy}-${mm}-${dd}`,
-        dayOfWeekIndex: idx, // 0 = Senin .. 6 = Minggu
-      };
-    });
+  const weekDays = useMemo(() => {
+    return get7DaysOfWeek(weekStartStr);
   }, [weekStartStr]);
 
-  const weeklyRows = React.useMemo(() => {
+  const weeklyRows = useMemo(() => {
     const activeStaff = staffAccounts
       .filter((s) => s.status === 'Active')
       .sort((a, b) => b.level - a.level);
@@ -558,22 +860,15 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
     return activeStaff
       .map((st) => {
         const dayMinutes = [0, 0, 0, 0, 0, 0, 0]; // SEN..MIN
-        const staffLogs = dutyLogs.filter((l) => l.staffId === st.id);
+        const staffLogs = dutyLogs.filter(
+          (l) => l.staffId === st.id || l.staffName.toLowerCase().trim() === st.name.toLowerCase().trim()
+        );
 
         staffLogs.forEach((l) => {
-          const norm = parseDiscordDutyDate(l.startDate);
-          const exactDayIdx = weekDays.findIndex((wd) => wd.fullDate === norm.dateOnly);
-          if (exactDayIdx !== -1) {
-            dayMinutes[exactDayIdx] += l.durationMinutes;
-          } else {
-            const parsed = new Date(norm.normalized.replace(' ', 'T'));
-            if (!isNaN(parsed.getTime())) {
-              const jsDay = parsed.getDay(); // 0=Sun, 1=Mon...
-              const monBasedIdx = jsDay === 0 ? 6 : jsDay - 1;
-              if (monBasedIdx >= 0 && monBasedIdx <= 6) {
-                dayMinutes[monBasedIdx] += l.durationMinutes;
-              }
-            }
+          // Strictly map duty sessions that fall inside the selected 7-day week
+          const dayIdx = getDayIndexInWeek(l.startDate, weekStartStr);
+          if (dayIdx >= 0 && dayIdx <= 6) {
+            dayMinutes[dayIdx] += l.durationMinutes;
           }
         });
 
@@ -593,7 +888,7 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
       })
       .filter((r) => (roleFilter === 'Semua' ? true : r.role === roleFilter))
       .filter((r) => r.staffName.toLowerCase().includes(search.toLowerCase()));
-  }, [staffAccounts, dutyLogs, weekDays, weekStartStr, roleSalaryConfigs, roleFilter, search]);
+  }, [staffAccounts, dutyLogs, weekStartStr, roleSalaryConfigs, roleFilter, search]);
 
   const handleExportWeeklyExcel = () => {
     const xmlRows = weeklyRows
@@ -637,7 +932,7 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Rekap_Absensi_Mingguan_${weekStartStr}.xlsx`;
+    a.download = `Rekap_Absensi_Mingguan_${weekStartStr}_sd_${getSundayOfMonday(weekStartStr)}.xlsx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -645,53 +940,97 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
     addToast('success', 'Export Excel Berhasil', 'File Rekap Absensi Mingguan telah diunduh.');
   };
 
+  const isCurrentWeek = weekStartStr === getMondayOfDate(new Date());
+
   return (
     <div className="space-y-6">
       {/* Control Header */}
       <div className="bg-white rounded-2xl border border-red-100 p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">
-            Rekap Absensi Mingguan Tenaga Medis
-          </h2>
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <h2 className="text-lg font-bold text-slate-900">
+              Rekap Absensi Mingguan Tenaga Medis
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#9E1B21]/10 text-[#9E1B21] border border-[#9E1B21]/20">
+              {formatWeekRangeDisplay(weekStartStr)}
+            </span>
+            {isCurrentWeek ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                ● Realtime Minggu Berjalan
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                Riwayat Minggu Lampau
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500">
             Rekapitulasi jam duty harian (Senin s/d Minggu) beserta status pencapaian target jam mingguan
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1.5 bg-red-50/40 px-3 py-1.5 rounded-xl border border-red-100">
-            <span className="text-[11px] font-bold text-slate-600">Mulai Senin:</span>
+          {/* Quick Dropdown Week Selection */}
+          <div className="flex items-center gap-1.5 bg-red-50/50 px-3 py-1.5 rounded-xl border border-red-100">
+            <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
+            <span className="text-[11px] font-bold text-slate-700">Pilih Minggu:</span>
+            <select
+              value={weekStartStr}
+              onChange={(e) => setWeekStartStr(e.target.value)}
+              className="text-xs font-bold text-[#7F1D1D] bg-transparent focus:outline-none cursor-pointer"
+            >
+              {availableWeeks.map((w) => (
+                <option key={w.mondayStr} value={w.mondayStr}>
+                  {w.isCurrent ? `★ Minggu Ini (${w.label})` : w.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Stepper Buttons */}
+          <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setWeekStartStr((prev) => shiftWeekMonday(prev, -1))}
+              title="Minggu Sebelumnya"
+              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white cursor-pointer transition"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setWeekStartStr(getMondayOfDate(new Date()))}
+              title="Kembali ke Minggu Ini"
+              className={`px-2 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                isCurrentWeek
+                  ? 'bg-[#9E1B21] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-white'
+              }`}
+            >
+              Minggu Ini
+            </button>
+            <button
+              type="button"
+              onClick={() => setWeekStartStr((prev) => shiftWeekMonday(prev, 1))}
+              title="Minggu Berikutnya"
+              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white cursor-pointer transition"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Date Picker fallback */}
+          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Pilih Tgl:</span>
             <input
               type="date"
               value={weekStartStr}
-              onChange={(e) => setWeekStartStr(e.target.value)}
-              className="text-xs font-mono font-bold text-[#7F1D1D] bg-transparent focus:outline-none cursor-pointer"
+              onChange={(e) => {
+                if (e.target.value) setWeekStartStr(getMondayOfDate(e.target.value));
+              }}
+              className="text-xs font-mono font-bold text-slate-700 bg-transparent focus:outline-none cursor-pointer"
+              title="Pilih tanggal apapun untuk otomatis melompat ke minggu tersebut"
             />
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setWeekStartStr('2026-10-05')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition ${
-                weekStartStr === '2026-10-05'
-                  ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              05–11 Okt
-            </button>
-            <button
-              type="button"
-              onClick={() => setWeekStartStr('2026-10-12')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition ${
-                weekStartStr === '2026-10-12'
-                  ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              12–18 Okt (Terbaru)
-            </button>
           </div>
 
           <div className="relative">
@@ -831,7 +1170,8 @@ export const WeeklyAttendanceRecapView: React.FC = () => {
 // 3. MENU TERPISAH: REKAP ABSENSI BULANAN (Format Tabel Seragam Dark Navy Header: MG 1 .. MG 4/5 | TOTAL JAM)
 export const MonthlyAttendanceRecapView: React.FC = () => {
   const { staffAccounts, dutyLogs, roleSalaryConfigs, addToast } = useApp();
-  const [selectedMonth, setSelectedMonth] = useState('2026-10');
+  // Realtime default: Bulan saat ini (YYYY-MM)
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => getCurrentMonthKey());
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('Semua');
 
@@ -840,7 +1180,7 @@ export const MonthlyAttendanceRecapView: React.FC = () => {
     { label: 'MG 2', sub: '08–14' },
     { label: 'MG 3', sub: '15–21' },
     { label: 'MG 4', sub: '22–28' },
-    { label: 'MG 5', sub: '29–31' },
+    { label: 'MG 5', sub: '29–Akhir' },
   ];
 
   const monthlyRows = React.useMemo(() => {
@@ -854,14 +1194,18 @@ export const MonthlyAttendanceRecapView: React.FC = () => {
         let sessionsCount = 0;
 
         dutyLogs
-          .filter(
-            (l) =>
-              l.staffId === st.id &&
-              (l.monthKey === selectedMonth || parseDiscordDutyDate(l.startDate).monthKey === selectedMonth)
-          )
+          .filter((l) => {
+            const isStaff =
+              l.staffId === st.id ||
+              l.staffName.toLowerCase().trim() === st.name.toLowerCase().trim();
+            if (!isStaff) return false;
+            const logMonth = normalizeDateOnly(l.startDate).slice(0, 7);
+            return logMonth === selectedMonth || l.monthKey === selectedMonth;
+          })
           .forEach((l) => {
             sessionsCount += 1;
-            const dayNum = parseDiscordDutyDate(l.startDate).dayNum;
+            const parsed = parseDiscordDutyDate(l.startDate);
+            const dayNum = parsed.dayNum;
             if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31) {
               const bucketIdx = Math.min(4, Math.floor((dayNum - 1) / 7));
               weekBuckets[bucketIdx] += l.durationMinutes;
@@ -938,13 +1282,29 @@ export const MonthlyAttendanceRecapView: React.FC = () => {
     addToast('success', 'Export Excel Bulanan Berhasil', 'File Rekap Absensi Bulanan telah diunduh.');
   };
 
+  const isCurrentMonth = selectedMonth === getCurrentMonthKey();
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl border border-red-100 p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">
-            Rekap Absensi Bulanan Tenaga Medis
-          </h2>
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <h2 className="text-lg font-bold text-slate-900">
+              Rekap Absensi Bulanan Tenaga Medis
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#9E1B21]/10 text-[#9E1B21] border border-[#9E1B21]/20">
+              {formatMonthDisplay(selectedMonth)}
+            </span>
+            {isCurrentMonth ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                ● Realtime Bulan Berjalan
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                Riwayat Bulan Lampau
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500">
             Akumulasi jam duty mingguan (Minggu 1 s/d Minggu 5) dalam periode satu bulan penuh
           </p>
@@ -952,13 +1312,28 @@ export const MonthlyAttendanceRecapView: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-1.5 bg-red-50/40 px-3 py-1.5 rounded-xl border border-red-100">
-            <span className="text-[11px] font-bold text-slate-600">Bulan:</span>
+            <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
+            <span className="text-[11px] font-bold text-slate-600">Pilih Bulan:</span>
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="text-xs font-mono font-bold text-[#7F1D1D] bg-transparent focus:outline-none cursor-pointer"
             />
+          </div>
+
+          <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setSelectedMonth(getCurrentMonthKey())}
+              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                isCurrentMonth
+                  ? 'bg-[#9E1B21] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-white'
+              }`}
+            >
+              Bulan Berjalan
+            </button>
           </div>
 
           <div className="relative">
@@ -1103,6 +1478,17 @@ export const PayrollManagementView: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
+  // Realtime default: Senin dari minggu yang sedang berjalan saat ini
+  const [selectedWeekMonday, setSelectedWeekMonday] = useState<string>(() => getMondayOfDate(new Date()));
+  const periodLabel = useMemo(() => formatWeekRangeDisplay(selectedWeekMonday), [selectedWeekMonday]);
+
+  // Deduplicated list of available weeks detected from logs, payrolls & current calendar
+  const availableWeeks = useMemo(() => {
+    const dutyDates = dutyLogs.map((l) => l.startDate);
+    const payMondays = payrollRecords.map((p) => p.weekKey || '').filter(Boolean);
+    return getAvailableWeeksList(dutyDates, payMondays);
+  }, [dutyLogs, payrollRecords]);
+
   // Printable Slip Modal State
   const [previewSlip, setPreviewSlip] = useState<{
     staffName: string;
@@ -1144,19 +1530,26 @@ export const PayrollManagementView: React.FC = () => {
       .sort((a, b) => b.level - a.level);
 
     return activeStaff.map((st) => {
-      // Aggregates weekly logs by ID or by Staff Name for robust Discord parser matching
+      // Aggregates weekly logs strictly for the selected week
       const weeklyMins = dutyLogs
-        .filter(
-          (l) =>
-            (l.staffId === st.id ||
-              l.staffName.toLowerCase().trim() === st.name.toLowerCase().trim()) &&
-            l.weekKey === 'current-week'
-        )
+        .filter((l) => {
+          const isStaff =
+            l.staffId === st.id ||
+            l.staffName.toLowerCase().trim() === st.name.toLowerCase().trim();
+          if (!isStaff) return false;
+          return isDateInWeek(l.startDate, selectedWeekMonday);
+        })
         .reduce((acc, l) => acc + l.durationMinutes, 0);
 
       const roleCfg = roleSalaryConfigs.find((c) => c.role === st.role);
       const calc = computeStaffWeeklySalary(weeklyMins, roleCfg);
-      const savedPay = payrollRecords.find((p) => p.staffId === st.id);
+      
+      // Match saved payroll record for this staff and this exact week
+      const savedPay = payrollRecords.find(
+        (p) =>
+          (p.staffId === st.id || p.staffName.toLowerCase().trim() === st.name.toLowerCase().trim()) &&
+          (p.weekKey === selectedWeekMonday || p.period === periodLabel || p.period.includes(selectedWeekMonday))
+      );
 
       const allowance = savedPay?.allowance ?? 0;
       const deduction = savedPay?.deduction ?? 0;
@@ -1173,7 +1566,7 @@ export const PayrollManagementView: React.FC = () => {
         paymentStatus: savedPay?.paymentStatus ?? ('Pending' as const),
       };
     });
-  }, [staffAccounts, dutyLogs, roleSalaryConfigs, payrollRecords]);
+  }, [staffAccounts, dutyLogs, roleSalaryConfigs, payrollRecords, selectedWeekMonday, periodLabel]);
 
   // Filtered rows for UI
   const filteredStaffPayrollRows = React.useMemo(() => {
@@ -1209,12 +1602,14 @@ export const PayrollManagementView: React.FC = () => {
 
   const handleSyncAllCalculatedToPayroll = () => {
     allStaffPayrollRows.forEach((row) => {
+      const targetPayId = row.savedPay?.id || `pay-${row.staff.id}-${selectedWeekMonday}`;
       addOrUpdatePayroll(
         {
           staffId: row.staff.id,
           staffName: row.staff.name,
           role: row.staff.role,
-          period: 'Minggu Ini (Okt 2026)',
+          period: periodLabel,
+          weekKey: selectedWeekMonday,
           basicSalary: row.calc.baseEarned,
           dutyHours: row.calc.dutyHours,
           dutyBonus: row.calc.dutyBonus,
@@ -1222,15 +1617,15 @@ export const PayrollManagementView: React.FC = () => {
           deduction: row.deduction,
           totalSalary: row.finalTotal,
           paymentStatus: row.paymentStatus,
-          paidAt: row.paymentStatus === 'Paid' ? new Date().toISOString().slice(0, 10) : undefined,
+          paidAt: row.paymentStatus === 'Paid' ? (row.savedPay?.paidAt || new Date().toISOString().slice(0, 10)) : undefined,
         },
-        row.savedPay?.id
+        targetPayId
       );
     });
     addToast(
       'success',
       'Kalkulasi Gaji Mingguan Disinkronkan',
-      'Seluruh slip gaji staff telah diperbarui berdasarkan jam duty mingguan & skema jabatan ke Database Cloud.'
+      `Seluruh slip gaji staff periode ${periodLabel} telah diperbarui ke Database Cloud.`
     );
   };
 
@@ -1465,8 +1860,88 @@ export const PayrollManagementView: React.FC = () => {
                     className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer flex items-center gap-1.5"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Terbitkan / Update Semua Slip Gaji ke Cloud</span>
+                    <span>Terbitkan / Update Slip Gaji Periode Ini ke Cloud</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Week Navigation & Selector Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-red-200 shadow-2xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-1.5 bg-red-50/70 px-3 py-1.5 rounded-xl border border-red-100">
+                    <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
+                    <span className="text-[11px] font-bold text-slate-700">Pilih Periode Minggu:</span>
+                    <select
+                      value={selectedWeekMonday}
+                      onChange={(e) => setSelectedWeekMonday(e.target.value)}
+                      className="text-xs font-bold text-[#7F1D1D] bg-transparent focus:outline-none cursor-pointer"
+                    >
+                      {availableWeeks.map((w) => (
+                        <option key={w.mondayStr} value={w.mondayStr}>
+                          {w.isCurrent ? `★ Minggu Ini (${w.label})` : w.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedWeekMonday((prev) => shiftWeekMonday(prev, -1))}
+                      title="Minggu Sebelumnya"
+                      className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white cursor-pointer transition"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedWeekMonday(getMondayOfDate(new Date()))}
+                      title="Kembali ke Minggu Berjalan"
+                      className={`px-2 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                        selectedWeekMonday === getMondayOfDate(new Date())
+                          ? 'bg-[#9E1B21] text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-white'
+                      }`}
+                    >
+                      Minggu Berjalan
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedWeekMonday((prev) => shiftWeekMonday(prev, 1))}
+                      title="Minggu Berikutnya"
+                      className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white cursor-pointer transition"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">Pilih Tgl:</span>
+                    <input
+                      type="date"
+                      value={selectedWeekMonday}
+                      onChange={(e) => {
+                        if (e.target.value) setSelectedWeekMonday(getMondayOfDate(e.target.value));
+                      }}
+                      className="text-xs font-mono font-bold text-slate-700 bg-transparent focus:outline-none cursor-pointer"
+                      title="Pilih tanggal apapun untuk melihat rekap gaji minggu tersebut"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#9E1B21]/10 text-[#9E1B21] border border-[#9E1B21]/20">
+                    Periode: {periodLabel}
+                  </span>
+                  {selectedWeekMonday === getMondayOfDate(new Date()) ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      ● Realtime Minggu Berjalan
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                      Riwayat Minggu Lampau
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -1610,7 +2085,7 @@ export const PayrollManagementView: React.FC = () => {
                                 setPreviewSlip({
                                   staffName: row.staff.name,
                                   role: row.staff.role,
-                                  period: 'Minggu Ini (Okt 2026)',
+                                  period: periodLabel,
                                   dutyHours: row.calc.dutyHours,
                                   basicSalary: row.calc.baseEarned,
                                   dutyBonus: row.calc.dutyBonus,
@@ -1963,7 +2438,8 @@ export const PayrollManagementView: React.FC = () => {
                       staffId: editingStaffPay.staffId,
                       staffName: editingStaffPay.staffName,
                       role: editingStaffPay.role,
-                      period: 'Minggu Ini (Okt 2026)',
+                      period: periodLabel,
+                      weekKey: selectedWeekMonday,
                       basicSalary: editingStaffPay.baseEarned,
                       dutyHours: editingStaffPay.dutyHours,
                       dutyBonus: editingStaffPay.dutyBonus,
@@ -1973,10 +2449,10 @@ export const PayrollManagementView: React.FC = () => {
                       paymentStatus: editingStaffPay.paymentStatus,
                       paidAt:
                         editingStaffPay.paymentStatus === 'Paid'
-                          ? new Date().toISOString().slice(0, 10)
+                          ? (editingStaffPay.paidAt || new Date().toISOString().slice(0, 10))
                           : undefined,
                     },
-                    editingStaffPay.existingPayId
+                    editingStaffPay.existingPayId || `pay-${editingStaffPay.staffId}-${selectedWeekMonday}`
                   );
                   setEditingStaffPay(null);
                 }}

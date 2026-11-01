@@ -20,10 +20,19 @@ import {
   Printer,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   X,
   ShieldCheck,
 } from 'lucide-react';
 import { LogoRSKotaBaru, LogoKotaBaruRoleplay } from '../BrandAssets';
+import {
+  getMondayOfDate,
+  formatWeekRangeDisplay,
+  isDateInWeek,
+  getAvailableWeeksList,
+  shiftWeekMonday,
+} from '../../utils/dateUtils';
 
 // Helper to get real-time current week's Monday and Sunday (YYYY-MM-DD)
 export function getCurrentWeekMondaySunday(nowDate: Date) {
@@ -886,16 +895,33 @@ export const MySalaryView: React.FC = () => {
   const [selectedSlipToPrint, setSelectedSlipToPrint] = useState<(typeof payrollRecords)[0] | null>(null);
   const [showDutyLogsList, setShowDutyLogsList] = useState(false);
 
+  // Realtime default: Senin dari minggu yang sedang berjalan saat ini
+  const [selectedWeekMonday, setSelectedWeekMonday] = useState<string>(() => getMondayOfDate(new Date()));
+  const [slipFilterMode, setSlipFilterMode] = useState<'selected' | 'all'>('selected');
+
   if (!currentUser) return null;
 
   const myRoleConfig = roleSalaryConfigs.find((c) => c.role === currentUser.role);
-  
-  // Filter contributing logs for the current week matching by ID or by Staff Name
+  const periodLabel = formatWeekRangeDisplay(selectedWeekMonday);
+  const isCurrentWeek = selectedWeekMonday === getMondayOfDate(new Date());
+
+  const myPayrolls = payrollRecords.filter(
+    (p) => p.staffId === currentUser.id || p.staffName.toLowerCase().trim() === currentUser.name.toLowerCase().trim()
+  );
+
+  const availableWeeks = getAvailableWeeksList(
+    dutyLogs
+      .filter((l) => l.staffId === currentUser.id || l.staffName.toLowerCase().trim() === currentUser.name.toLowerCase().trim())
+      .map((l) => l.startDate),
+    myPayrolls.map((p) => p.weekKey || '')
+  );
+
+  // Filter contributing logs strictly for the selected week
   const myWeeklyDutyLogs = dutyLogs.filter(
     (l) =>
       (l.staffId === currentUser.id ||
         l.staffName.toLowerCase().trim() === currentUser.name.toLowerCase().trim()) &&
-      l.weekKey === 'current-week'
+      isDateInWeek(l.startDate, selectedWeekMonday)
   );
 
   const myWeeklyMinutes = myWeeklyDutyLogs.reduce((acc, l) => acc + l.durationMinutes, 0);
@@ -921,7 +947,20 @@ export const MySalaryView: React.FC = () => {
 
   const progressPercent = Math.min(100, Math.round((dutyHours / targetHours) * 100));
 
-  const myPayrolls = payrollRecords.filter((p) => p.staffId === currentUser.id);
+  // Slip matching the selected week
+  const selectedWeekSlip = myPayrolls.find(
+    (p) =>
+      p.weekKey === selectedWeekMonday ||
+      p.period === periodLabel ||
+      p.period.includes(selectedWeekMonday)
+  );
+
+  const displayedPayrolls =
+    slipFilterMode === 'all'
+      ? myPayrolls
+      : selectedWeekSlip
+      ? [selectedWeekSlip]
+      : [];
 
   return (
     <div className="space-y-6">
@@ -968,13 +1007,91 @@ export const MySalaryView: React.FC = () => {
         )}
       </div>
 
+      {/* Week Selection & Navigation Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-red-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-red-50/70 px-3 py-1.5 rounded-xl border border-red-100">
+            <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
+            <span className="text-[11px] font-bold text-slate-700">Pilih Periode Minggu:</span>
+            <select
+              value={selectedWeekMonday}
+              onChange={(e) => setSelectedWeekMonday(e.target.value)}
+              className="text-xs font-bold text-[#7F1D1D] bg-transparent focus:outline-none cursor-pointer"
+            >
+              {availableWeeks.map((w) => (
+                <option key={w.mondayStr} value={w.mondayStr}>
+                  {w.isCurrent ? `★ Minggu Ini (${w.label})` : w.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setSelectedWeekMonday((prev) => shiftWeekMonday(prev, -1))}
+              title="Minggu Sebelumnya"
+              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white cursor-pointer transition"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedWeekMonday(getMondayOfDate(new Date()))}
+              title="Kembali ke Minggu Berjalan"
+              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                isCurrentWeek ? 'bg-[#9E1B21] text-white shadow-xs' : 'text-slate-600 hover:bg-white'
+              }`}
+            >
+              Minggu Berjalan
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedWeekMonday((prev) => shiftWeekMonday(prev, 1))}
+              title="Minggu Berikutnya"
+              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white cursor-pointer transition"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Pilih Tgl:</span>
+            <input
+              type="date"
+              value={selectedWeekMonday}
+              onChange={(e) => {
+                if (e.target.value) setSelectedWeekMonday(getMondayOfDate(e.target.value));
+              }}
+              className="text-xs font-mono font-bold text-slate-700 bg-transparent focus:outline-none cursor-pointer"
+              title="Pilih tanggal apapun untuk memantau slip gaji minggu tersebut"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#9E1B21]/10 text-[#9E1B21] border border-[#9E1B21]/20">
+            Periode: {periodLabel}
+          </span>
+          {isCurrentWeek ? (
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              ● Realtime Minggu Berjalan
+            </span>
+          ) : (
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+              Riwayat Minggu Lampau
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Kartu Kalkulasi Jam Duty Minggu Berjalan */}
       <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-100 pb-4">
           <div>
             <span className="text-[11px] font-bold text-[#9E1B21] uppercase tracking-wider flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              KALKULASI MINGGU BERJALAN (REAL-TIME DARI DISCORD / DUTY LOG)
+              STATUS JAM KERJA & KALKULASI GAJI ({periodLabel})
             </span>
             <h3 className="text-xl font-bold text-slate-900 mt-1">
               {dutyHours} Jam <span className="text-sm font-normal text-slate-500">/ target {targetHours} Jam</span>
@@ -1112,25 +1229,67 @@ export const MySalaryView: React.FC = () => {
 
       {/* Daftar Slip Gaji Resmi dari HRD/Database */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-bold text-slate-900">Riwayat Slip Gaji Resmi</h3>
             <p className="text-xs text-slate-500">
               Slip gaji yang telah diverifikasi dan diterbitkan resmi oleh Bagian Keuangan / HRD RS Kota Baru.
             </p>
           </div>
-          <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
-            {myPayrolls.length} Slip Tersedia
-          </span>
+
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs">
+              <button
+                type="button"
+                onClick={() => setSlipFilterMode('selected')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                  slipFilterMode === 'selected'
+                    ? 'bg-[#9E1B21] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Slip Periode Ini ({periodLabel})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSlipFilterMode('all')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                  slipFilterMode === 'all'
+                    ? 'bg-[#9E1B21] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Semua Riwayat ({myPayrolls.length})
+              </button>
+            </div>
+          </div>
         </div>
 
-        {myPayrolls.length === 0 ? (
-          <div className="bg-white p-8 rounded-2xl border border-red-100 text-center text-sm text-slate-500 shadow-xs">
-            Belum ada catatan slip gaji resmi yang diterbitkan untuk akun Anda pada periode ini.
+        {displayedPayrolls.length === 0 ? (
+          <div className="bg-white p-8 rounded-2xl border border-red-100 text-center space-y-3 shadow-xs">
+            <p className="text-sm font-semibold text-slate-700">
+              {slipFilterMode === 'selected'
+                ? `Slip gaji resmi untuk periode ${periodLabel} belum diterbitkan oleh HRD/Keuangan.`
+                : 'Belum ada catatan slip gaji resmi yang diterbitkan untuk akun Anda.'}
+            </p>
+            <p className="text-xs text-slate-500">
+              Estimasi take home pay Anda sebesar{' '}
+              <strong className="text-emerald-700 font-mono">${estimatedTakeHome.toLocaleString()}</strong>{' '}
+              telah terkalkulasi dari jam duty minggu ini di atas.
+            </p>
+            {slipFilterMode === 'selected' && myPayrolls.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSlipFilterMode('all')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+              >
+                <span>Lihat {myPayrolls.length} Slip Dari Minggu-Minggu Sebelumnya</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {myPayrolls.map((pay) => (
+            {displayedPayrolls.map((pay) => (
               <div
                 key={pay.id}
                 className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs space-y-4 hover:border-red-200 transition"

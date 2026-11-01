@@ -336,6 +336,7 @@ export interface PayrollRecord {
   staffName: string;
   role: RoleName;
   period: string;
+  weekKey?: string; // YYYY-MM-DD Monday key e.g. '2026-10-26'
   basicSalary: number;
   dutyHours: number;
   dutyBonus: number;

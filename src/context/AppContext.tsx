@@ -52,7 +52,6 @@ import { createStaffAvatarSvg } from '../components/BrandAssets';
 import { syncRecordToFirestore, deleteRecordFromFirestore, subscribeToPortalRecords, CloudPortalRecord } from '../firebase';
 import { formatDoctorNameWithTitleAndDegree } from '../utils/doctorFormatting';
 import { compressImageForFirestore } from '../utils/imageCompressor';
-import { bootstrapInitialPortalData } from '../utils/bootstrapDatabase';
 import { parseDutyDurationTextToMinutes } from '../utils/dutyParser';
 
 export interface ConfirmModalState {
@@ -189,7 +188,7 @@ function loadLocal<T>(key: string, fallback: T): T {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [staffAccounts, setStaffAccounts] = useState<StaffAccount[]>(() =>
-    loadLocal('staff_v1', INITIAL_STAFF_ACCOUNTS)
+    loadLocal('staff_v1', [])
   );
   const [currentUserId, setCurrentUserId] = useState<string | null>(() =>
     localStorage.getItem('kotabaru_current_user_id_v1')
@@ -234,7 +233,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadLocal('sops_v1', INITIAL_SOP_DOCUMENTS)
   );
   const [regulations, setRegulations] = useState<RegulationItem[]>(() =>
-    loadLocal('regs_v1', INITIAL_REGULATIONS)
+    loadLocal('regs_v1', [])
   );
   const [dutyLogs, setDutyLogs] = useState<DutyLog[]>(() =>
     loadLocal('duties_v1', INITIAL_DUTY_LOGS)
@@ -343,12 +342,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Real-time synchronization from Cloud Firestore across all public & internal staff modules
   useEffect(() => {
     const unsubscribe = subscribeToPortalRecords((cloudRecords) => {
-      // 1. Proactively bootstrap canonical foundation data if this is a fresh/unseeded database
-      void bootstrapInitialPortalData(cloudRecords);
-
       if (!cloudRecords || !cloudRecords.length) return;
 
-      // 2. Group all records currently in Cloud Firestore by module
+      // Group all records currently in Cloud Firestore by module
       const byModule = new Map<string, CloudPortalRecord[]>();
       cloudRecords.forEach((docItem) => {
         if (docItem.status === 'DELETED') return;
@@ -361,21 +357,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         (r) => r.module === 'system_metadata' || r.id === 'system_bootstrap_metadata'
       );
 
-      // 3. Atomically synchronize state per module directly from Cloud Firestore (single source of truth)
+      // Atomically synchronize state per module directly from Cloud Firestore (single source of truth)
       const staffDocs = byModule.get('staff_account');
-      if (staffDocs && staffDocs.length > 0) {
+      if (staffDocs) {
         const items = staffDocs
           .map((r) => r.payload as unknown as StaffAccount)
           .filter((x) => Boolean(x && x.id));
-        if (items.length > 0) setStaffAccounts(items);
+        setStaffAccounts(items);
       }
 
       const regDocs = byModule.get('regulation_item');
-      if (regDocs && regDocs.length > 0) {
+      if (regDocs) {
         const items = regDocs
           .map((r) => r.payload as unknown as RegulationItem)
           .filter((x) => Boolean(x && x.id));
-        if (items.length > 0) setRegulations(items);
+        setRegulations(items);
       }
 
       const schDocs = byModule.get('doctor_schedule');
@@ -1370,25 +1366,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addOrUpdatePayroll = (record: Omit<PayrollRecord, 'id'>, existingId?: string) => {
     if (!currentUser || currentUser.level < 8) return;
-    if (existingId) {
-      setPayrollRecords((prev) =>
-        prev.map((p) => {
-          if (p.id === existingId) {
-            const updated: PayrollRecord = { ...record, id: existingId };
-            void syncRecordToFirestore(existingId, 'payroll_record', updated.staffName, updated.paymentStatus, {
-              ...updated,
-            });
-            return updated;
-          }
-          return p;
-        })
-      );
-    } else {
-      const id = `pay-${Date.now()}`;
-      const newPay: PayrollRecord = { ...record, id };
-      setPayrollRecords((prev) => [newPay, ...prev]);
-      void syncRecordToFirestore(id, 'payroll_record', newPay.staffName, newPay.paymentStatus, { ...newPay });
-    }
+    const targetId = existingId || `pay-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const updated: PayrollRecord = { ...record, id: targetId };
+
+    setPayrollRecords((prev) => {
+      const idx = prev.findIndex((p) => p.id === targetId);
+      if (idx !== -1) {
+        return prev.map((p) => (p.id === targetId ? updated : p));
+      }
+      return [updated, ...prev];
+    });
+
+    void syncRecordToFirestore(targetId, 'payroll_record', updated.staffName, updated.paymentStatus, {
+      ...updated,
+    });
     addToast('success', 'Payroll Disimpan', `Skema gaji ${record.staffName} berhasil disimpan ke Database.`);
   };
 
