@@ -1340,9 +1340,9 @@ export const INITIAL_PAYROLL_RECORDS: PayrollRecord[] = [
 export const SAMPLE_DISCORD_DUTY_LOG = `Ambulance
 Nama: Deandra Aditya (deandra)
 Pekerjaan: ambulance
-Durasi Bekerja: 51 Minutes
+Durasi Bekerja: 1 Hours, 1.783333333333 menit
 Tanggal Mulai: 17/10/2026 09:24:46
-Tanggal Berakhir: 17/10/2026 10:15:46
+Tanggal Berakhir: 17/10/2026 10:26:33
 
 KOTABARU ROLEPLAY
 Ambulance
@@ -1351,9 +1351,9 @@ APP
 Ambulance
 Nama: Deandra Aditya (deandra)
 Pekerjaan: ambulance
-Durasi Bekerja: 1 Minutes
+Durasi Bekerja: 51 Minutes
 Tanggal Mulai: 17/10/2026 16:38:37
-Tanggal Berakhir: 17/10/2026 16:39:38
+Tanggal Berakhir: 17/10/2026 17:29:38
 
 KOTABARU ROLEPLAY
 Ambulance

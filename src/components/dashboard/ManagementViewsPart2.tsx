@@ -3,6 +3,10 @@ import { useApp } from '../../context/AppContext';
 import { SAMPLE_DISCORD_DUTY_LOG } from '../../data/initialData';
 import { DutyLog, RoleName, RoleSalaryConfig, ROLE_LIST, ROLE_LEVELS } from '../../types';
 import { compressImageForFirestore } from '../../utils/imageCompressor';
+import {
+  parseDutyDurationTextToMinutes,
+  formatMinutesToCleanDuration,
+} from '../../utils/dutyParser';
 import { LogoRSKotaBaru, LogoKotaBaruRoleplay } from '../BrandAssets';
 import {
   FileSpreadsheet,
@@ -41,14 +45,16 @@ interface ParsedDutyPreview {
 
 const formatHoursCompact = (mins: number) => {
   if (mins <= 0) return '-';
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
+  const totalMins = Math.round(mins);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
   return m > 0 ? `${h}j ${m}m` : `${h}j`;
 };
 
 const formatHoursFull = (mins: number) => {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
+  const totalMins = Math.round(mins);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
   return `${h} Jam ${m} Menit`;
 };
 
@@ -172,16 +178,7 @@ export const DutyManagementView: React.FC = () => {
       const startDate = getField('Tanggal Mulai');
       const endDate = getField('Tanggal Berakhir');
 
-      let durationMinutes = 0;
-      const hMatch = durationText.match(/(\d+)\s*(?:jam|hours?|hrs?|h)\b/i);
-      const mMatch = durationText.match(/(\d+)\s*(?:menit|minutes?|mins?|m)\b/i);
-      if (hMatch) durationMinutes += parseInt(hMatch[1], 10) * 60;
-      if (mMatch) durationMinutes += parseInt(mMatch[1], 10);
-
-      if (durationMinutes === 0) {
-        const numOnly = durationText.match(/^\s*(\d+)\s*$/);
-        if (numOnly) durationMinutes = parseInt(numOnly[1], 10);
-      }
+      let durationMinutes = parseDutyDurationTextToMinutes(durationText);
 
       // Fallback: calculate from start & end date if duration string couldn't be parsed
       if (durationMinutes === 0 && startDate && endDate) {
@@ -191,7 +188,7 @@ export const DutyManagementView: React.FC = () => {
           const sMs = new Date(s.normalized.replace(' ', 'T')).getTime();
           const eMs = new Date(e.normalized.replace(' ', 'T')).getTime();
           if (!isNaN(sMs) && !isNaN(eMs) && eMs > sMs) {
-            durationMinutes = Math.round((eMs - sMs) / 60000);
+            durationMinutes = Math.max(1, Math.round((eMs - sMs) / 60000));
           }
         } catch {
           // ignore
@@ -302,7 +299,7 @@ export const DutyManagementView: React.FC = () => {
           role: p.matchedRole!,
           jobTitleInLog: p.jobTitle,
           durationMinutes: p.durationMinutes,
-          durationFormatted: p.durationText,
+          durationFormatted: formatMinutesToCleanDuration(p.durationMinutes),
           startDate: startParsed.normalized,
           endDate: endParsed.normalized,
           weekKey: 'current-week',
@@ -391,7 +388,10 @@ export const DutyManagementView: React.FC = () => {
                       <td className="py-2.5 px-3 font-semibold text-slate-900">{item.rawName}</td>
                       <td className="py-2.5 px-3 text-slate-600">{item.jobTitle}</td>
                       <td className="py-2.5 px-3 font-mono font-bold text-[#7F1D1D]">
-                        {item.durationText} ({item.durationMinutes} mnt)
+                        <div>{item.durationText}</div>
+                        <div className="text-[11px] font-normal text-slate-500">
+                          = {item.durationMinutes} mnt ({formatHoursCompact(item.durationMinutes)})
+                        </div>
                       </td>
                       <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500">
                         {item.startDate} → {item.endDate}

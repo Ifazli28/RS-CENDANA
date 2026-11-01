@@ -53,6 +53,7 @@ import { syncRecordToFirestore, deleteRecordFromFirestore, subscribeToPortalReco
 import { formatDoctorNameWithTitleAndDegree } from '../utils/doctorFormatting';
 import { compressImageForFirestore } from '../utils/imageCompressor';
 import { bootstrapInitialPortalData } from '../utils/bootstrapDatabase';
+import { parseDutyDurationTextToMinutes } from '../utils/dutyParser';
 
 export interface ConfirmModalState {
   isOpen: boolean;
@@ -391,7 +392,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (dutyDocs && dutyDocs.length > 0) {
         const items = dutyDocs
           .map((r) => r.payload as unknown as DutyLog)
-          .filter((x) => Boolean(x && x.id));
+          .filter((x) => Boolean(x && x.id))
+          .map((item) => {
+            // Defensive sanitization: if durationMinutes is abnormally large (> 1 week) or NaN, re-parse
+            if (!item.durationMinutes || isNaN(item.durationMinutes) || item.durationMinutes > 10080) {
+              const reparsed = parseDutyDurationTextToMinutes(item.durationFormatted || '');
+              if (reparsed > 0 && reparsed <= 10080) {
+                return { ...item, durationMinutes: reparsed };
+              }
+            }
+            return item;
+          });
         if (items.length > 0) setDutyLogs(items);
       }
 
