@@ -57,6 +57,8 @@ interface ParsedDutyPreview {
   matchedRole: RoleName | null;
   durationMinutes: number;
   isValid: boolean;
+  isDuplicate?: boolean;
+  duplicateReason?: string;
   errorReason?: string;
 }
 
@@ -215,10 +217,33 @@ export const DutyManagementView: React.FC = () => {
       return;
     }
 
+    const startNormalized = `${manualStartDate} ${manualStartTime}:00`;
+    const endNormalized = `${manualEndDate} ${manualEndTime}:00`;
+
+    // Deduplication check: check whether this staff already has a duty log at identical start & end times
+    const startPrefix = startNormalized.slice(0, 16);
+    const endPrefix = endNormalized.slice(0, 16);
+    const alreadyExists = dutyLogs.some((l) => {
+      const isStaff =
+        l.staffId === selectedStaff.id ||
+        l.staffName.toLowerCase().trim() === selectedStaff.name.toLowerCase().trim();
+      if (!isStaff) return false;
+      const lStart = (l.startDate || '').slice(0, 16);
+      const lEnd = (l.endDate || '').slice(0, 16);
+      return lStart === startPrefix && lEnd === endPrefix;
+    });
+
+    if (alreadyExists) {
+      addToast(
+        'warning',
+        'Data Sesi Duty Sudah Terdaftar',
+        `Sesi duty untuk ${selectedStaff.name} pada ${manualStartDate} (${manualStartTime} - ${manualEndTime}) sudah pernah diinput sebelumnya. Sistem otomatis melewati data duplikat.`
+      );
+      return;
+    }
+
     setIsSubmittingManual(true);
     try {
-      const startNormalized = `${manualStartDate} ${manualStartTime}:00`;
-      const endNormalized = `${manualEndDate} ${manualEndTime}:00`;
       const monthKey = manualStartDate.slice(0, 7);
 
       const newLog: Omit<DutyLog, 'id'> = {
@@ -257,6 +282,8 @@ export const DutyManagementView: React.FC = () => {
     const blocks = rawBlocks.length > 0
       ? rawBlocks
       : rawLogText.trim().split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+
+    const seenBatchSignatures = new Set<string>();
 
     const results: ParsedDutyPreview[] = blocks.map((block) => {
       const getField = (label: string) => {
@@ -355,6 +382,60 @@ export const DutyManagementView: React.FC = () => {
         };
       }
 
+      // Check for duplication against existing dutyLogs in database
+      const startParsed = parseDiscordDutyDate(startDate);
+      const endParsed = parseDiscordDutyDate(endDate);
+      const startPrefix = startParsed.normalized.slice(0, 16);
+      const endPrefix = endParsed.normalized.slice(0, 16);
+      const staffKey = matched.id || matched.name.toLowerCase().trim();
+      const sig = `${staffKey}_${startPrefix}_${endPrefix}`;
+
+      const alreadyInDb = dutyLogs.some((l) => {
+        const isStaff =
+          l.staffId === matched.id ||
+          l.staffName.toLowerCase().trim() === matched.name.toLowerCase().trim();
+        if (!isStaff) return false;
+        const lStart = (l.startDate || '').slice(0, 16);
+        const lEnd = (l.endDate || '').slice(0, 16);
+        return lStart === startPrefix && lEnd === endPrefix;
+      });
+
+      if (alreadyInDb) {
+        return {
+          rawName,
+          jobTitle,
+          durationText,
+          startDate,
+          endDate,
+          matchedStaffId: matched.id,
+          matchedStaffName: matched.name,
+          matchedRole: matched.role,
+          durationMinutes,
+          isValid: true,
+          isDuplicate: true,
+          duplicateReason: 'Sesi duty sudah pernah diinput sebelumnya (otomatis dilewati)',
+        };
+      }
+
+      if (seenBatchSignatures.has(sig)) {
+        return {
+          rawName,
+          jobTitle,
+          durationText,
+          startDate,
+          endDate,
+          matchedStaffId: matched.id,
+          matchedStaffName: matched.name,
+          matchedRole: matched.role,
+          durationMinutes,
+          isValid: true,
+          isDuplicate: true,
+          duplicateReason: 'Duplikat dengan log lain dalam teks input ini (otomatis dilewati)',
+        };
+      }
+
+      seenBatchSignatures.add(sig);
+
       return {
         rawName,
         jobTitle,
@@ -366,44 +447,58 @@ export const DutyManagementView: React.FC = () => {
         matchedRole: matched.role,
         durationMinutes,
         isValid: true,
+        isDuplicate: false,
       };
     });
 
     setParsedPreview(results);
+    const newCount = results.filter((r) => r.isValid && !r.isDuplicate).length;
+    const dupCount = results.filter((r) => r.isDuplicate).length;
+    const failCount = results.filter((r) => !r.isValid).length;
+
     addToast(
       'info',
       'Preview Log Duty Selesai Diproses',
-      `Ditemukan ${results.filter((r) => r.isValid).length} log valid dan ${
-        results.filter((r) => !r.isValid).length
-      } data gagal.`
+      `Ditemukan ${newCount} sesi baru siap disimpan, ${dupCount} sesi duplikat (otomatis dilewati), dan ${failCount} format data gagal.`
     );
   };
 
   const handleConfirmSaveLogs = () => {
     if (!parsedPreview) return;
-    const validLogs: Omit<DutyLog, 'id'>[] = parsedPreview
-      .filter((p) => p.isValid && p.matchedStaffId && p.matchedRole)
-      .map((p) => {
-        const startParsed = parseDiscordDutyDate(p.startDate);
-        const endParsed = parseDiscordDutyDate(p.endDate);
-        return {
-          staffId: p.matchedStaffId!,
-          staffName: p.matchedStaffName!,
-          role: p.matchedRole!,
-          jobTitleInLog: p.jobTitle,
-          durationMinutes: p.durationMinutes,
-          durationFormatted: formatMinutesToCleanDuration(p.durationMinutes),
-          startDate: startParsed.normalized,
-          endDate: endParsed.normalized,
-          weekKey: getMondayOfDate(startParsed.dateOnly),
-          monthKey: startParsed.monthKey,
-        };
-      });
+    const candidateLogs = parsedPreview.filter(
+      (p) => p.isValid && !p.isDuplicate && p.matchedStaffId && p.matchedRole
+    );
+    const duplicatesCount = parsedPreview.filter((p) => p.isDuplicate).length;
 
-    if (validLogs.length === 0) {
-      addToast('error', 'Tidak Ada Log Valid', 'Periksa kembali format log Discord Anda atau sesuaikan nama staff.');
+    if (candidateLogs.length === 0) {
+      if (duplicatesCount > 0) {
+        addToast(
+          'info',
+          'Semua Data Sudah Pernah Diinput',
+          `Semua ${duplicatesCount} sesi duty dalam log ini sudah terdaftar di database sebelumnya. Sistem otomatis melewati data duplikat.`
+        );
+      } else {
+        addToast('error', 'Tidak Ada Log Valid', 'Periksa kembali format log Discord Anda atau sesuaikan nama staff.');
+      }
       return;
     }
+
+    const validLogs: Omit<DutyLog, 'id'>[] = candidateLogs.map((p) => {
+      const startParsed = parseDiscordDutyDate(p.startDate);
+      const endParsed = parseDiscordDutyDate(p.endDate);
+      return {
+        staffId: p.matchedStaffId!,
+        staffName: p.matchedStaffName!,
+        role: p.matchedRole!,
+        jobTitleInLog: p.jobTitle,
+        durationMinutes: p.durationMinutes,
+        durationFormatted: formatMinutesToCleanDuration(p.durationMinutes),
+        startDate: startParsed.normalized,
+        endDate: endParsed.normalized,
+        weekKey: getMondayOfDate(startParsed.dateOnly),
+        monthKey: startParsed.monthKey,
+      };
+    });
 
     addDutyLogsBatch(validLogs);
     setParsedPreview(null);
@@ -487,14 +582,26 @@ export const DutyManagementView: React.FC = () => {
 
             {parsedPreview && (
               <div className="p-5 rounded-2xl bg-red-50/40 border border-red-200 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Hasil Preview & Pencocokan Database Staff (Wajib Konfirmasi Sebelum Simpan)
-                  </h3>
-                  <span className="text-xs font-semibold text-slate-600">
-                    Valid: {parsedPreview.filter((p) => p.isValid).length} · Gagal:{' '}
-                    {parsedPreview.filter((p) => !p.isValid).length}
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      Hasil Preview & Pencocokan Database Staff
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Sistem otomatis mendeteksi sesi yang sudah terdaftar di database agar tidak terjadi duplikasi. Sesi duplikat akan otomatis dilewati saat disimpan.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      Baru: {parsedPreview.filter((p) => p.isValid && !p.isDuplicate).length}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 border border-amber-300">
+                      Duplikat (Dilewati): {parsedPreview.filter((p) => p.isDuplicate).length}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 border border-rose-300">
+                      Format Gagal: {parsedPreview.filter((p) => !p.isValid).length}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto bg-white rounded-xl border border-red-100">
@@ -505,12 +612,12 @@ export const DutyManagementView: React.FC = () => {
                         <th className="py-2.5 px-3">Pekerjaan</th>
                         <th className="py-2.5 px-3">Durasi</th>
                         <th className="py-2.5 px-3">Mulai — Berakhir</th>
-                        <th className="py-2.5 px-3">Status Validasi</th>
+                        <th className="py-2.5 px-3">Status Validasi & Duplikasi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-red-50">
                       {parsedPreview.map((item, idx) => (
-                        <tr key={idx}>
+                        <tr key={idx} className={item.isDuplicate ? 'bg-amber-50/30' : undefined}>
                           <td className="py-2.5 px-3 font-semibold text-slate-900">{item.rawName}</td>
                           <td className="py-2.5 px-3 text-slate-600">{item.jobTitle}</td>
                           <td className="py-2.5 px-3 font-mono font-bold text-[#7F1D1D]">
@@ -523,9 +630,20 @@ export const DutyManagementView: React.FC = () => {
                             {item.startDate} → {item.endDate}
                           </td>
                           <td className="py-2.5 px-3">
-                            {item.isValid ? (
-                              <span className="text-[#20C997] font-bold">
-                                ✓ Cocok ({item.matchedStaffName} · {item.matchedRole})
+                            {item.isDuplicate ? (
+                              <div className="space-y-0.5">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 font-bold text-[11px] border border-amber-300">
+                                  <AlertCircle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                                  Sudah Diinput (Dilewati)
+                                </span>
+                                <p className="text-[10px] text-amber-800 leading-tight">
+                                  {item.duplicateReason}
+                                </p>
+                              </div>
+                            ) : item.isValid ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                Siap Simpan ({item.matchedStaffName} · {item.matchedRole})
                               </span>
                             ) : (
                               <div className="space-y-1">
@@ -574,7 +692,7 @@ export const DutyManagementView: React.FC = () => {
                   </table>
                 </div>
 
-                <div className="flex justify-end gap-3">
+                <div className="flex flex-wrap items-center justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setParsedPreview(null)}
@@ -585,9 +703,14 @@ export const DutyManagementView: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleConfirmSaveLogs}
-                    className="px-6 py-2 rounded-xl bg-[#20C997] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer"
+                    className="px-6 py-2 rounded-xl bg-[#20C997] text-white text-xs font-bold shadow-xs hover:opacity-95 cursor-pointer flex items-center gap-2"
                   >
-                    Confirm & Simpan ke Database Duty
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>
+                      Confirm & Simpan ({parsedPreview.filter((p) => p.isValid && !p.isDuplicate).length} Sesi Baru)
+                      {parsedPreview.filter((p) => p.isDuplicate).length > 0 &&
+                        ` — ${parsedPreview.filter((p) => p.isDuplicate).length} Duplikat Dilewati`}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1521,6 +1644,7 @@ export const PayrollManagementView: React.FC = () => {
     allowance: number;
     deduction: number;
     paymentStatus: 'Paid' | 'Pending' | 'Processing';
+    paidAt?: string;
   } | null>(null);
 
   // Compute live weekly payroll rows for all active staff based strictly on their role config & weekly duty logs
@@ -2119,6 +2243,7 @@ export const PayrollManagementView: React.FC = () => {
                                   allowance: row.allowance,
                                   deduction: row.deduction,
                                   paymentStatus: row.paymentStatus,
+                                  paidAt: row.savedPay?.paidAt,
                                 })
                               }
                               className="px-3 py-1.5 rounded-lg bg-red-50/60 hover:bg-red-100 text-[#7F1D1D] text-xs font-bold cursor-pointer transition border border-red-200/60"

@@ -1356,12 +1356,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addDutyLogsBatch = (logs: Omit<DutyLog, 'id'>[]) => {
     if (!currentUser || currentUser.level < 8) return;
-    const created: DutyLog[] = logs.map((l, idx) => ({ ...l, id: `duty-${Date.now()}-${idx}` }));
-    setDutyLogs((prev) => [...created, ...prev]);
-    created.forEach((dutyItem) => {
+
+    // Helper to generate a normalized unique signature for any duty log session
+    const getSig = (item: { staffId?: string; staffName: string; startDate: string; endDate: string }) => {
+      const cleanName = item.staffName.toLowerCase().replace(/^(dr\.|apt\.|drg\.)\s*/i, '').trim();
+      const s = item.startDate.slice(0, 16);
+      const e = item.endDate.slice(0, 16);
+      return `${item.staffId || cleanName}_${s}_${e}`;
+    };
+
+    const existingSignatures = new Set(
+      dutyLogs.map((l) => getSig(l))
+    );
+
+    const uniqueToInsert: DutyLog[] = [];
+    const nowTs = Date.now();
+
+    for (let i = 0; i < logs.length; i++) {
+      const item = logs[i];
+      const sig = getSig(item);
+      if (!existingSignatures.has(sig)) {
+        existingSignatures.add(sig);
+        uniqueToInsert.push({
+          ...item,
+          id: `duty-${nowTs}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+        });
+      }
+    }
+
+    if (uniqueToInsert.length === 0) {
+      addToast(
+        'info',
+        'Data Sudah Terdaftar',
+        'Seluruh data sesi duty yang diinput sudah ada di database. Duplikasi data otomatis dilewati.'
+      );
+      return;
+    }
+
+    setDutyLogs((prev) => [...uniqueToInsert, ...prev]);
+    uniqueToInsert.forEach((dutyItem) => {
       void syncRecordToFirestore(dutyItem.id, 'duty_log', dutyItem.staffName, dutyItem.weekKey, { ...dutyItem });
     });
-    addToast('success', 'Log Duty Disimpan', `${created.length} sesi duty disimpan ke Database, Rekap & Leaderboard.`);
+
+    const skippedCount = logs.length - uniqueToInsert.length;
+    const toastMsg =
+      skippedCount > 0
+        ? `${uniqueToInsert.length} sesi duty baru disimpan ke Database (${skippedCount} data yang sudah ada dilewati).`
+        : `${uniqueToInsert.length} sesi duty disimpan ke Database, Rekap & Leaderboard.`;
+
+    addToast('success', 'Log Duty Disimpan', toastMsg);
   };
 
   const addOrUpdatePayroll = (record: Omit<PayrollRecord, 'id'>, existingId?: string) => {

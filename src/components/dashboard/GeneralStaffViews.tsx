@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Trophy,
@@ -24,14 +24,29 @@ import {
   ChevronRight,
   X,
   ShieldCheck,
+  Stethoscope,
+  ArrowRight,
+  Sparkles,
+  Award,
+  Bell,
+  HeartPulse,
+  ExternalLink,
+  Zap,
+  TrendingUp,
+  Activity,
 } from 'lucide-react';
 import { LogoRSKotaBaru, LogoKotaBaruRoleplay } from '../BrandAssets';
 import {
   getMondayOfDate,
+  getSundayOfMonday,
   formatWeekRangeDisplay,
+  formatMonthDisplay,
+  getCurrentMonthKey,
+  getCurrentDateStr,
+  shiftWeekMonday,
   isDateInWeek,
   getAvailableWeeksList,
-  shiftWeekMonday,
+  normalizeDateOnly,
 } from '../../utils/dateUtils';
 
 // Helper to get real-time current week's Monday and Sunday (YYYY-MM-DD)
@@ -68,24 +83,122 @@ export function getCurrentWeekMondaySunday(nowDate: Date) {
   };
 }
 
-// 1. DASHBOARD HOME & LEADERBOARD DUTY (Sec 38 & 39)
-export const DashboardLeaderboardView: React.FC = () => {
-  const { dutyLogs, staffAccounts, currentUser } = useApp();
-  const [periodFilter, setPeriodFilter] = useState<'week' | 'month'>('week');
-  const [nowTime, setNowTime] = useState<Date>(() => new Date());
+// 1. DASHBOARD PRIBADI, INFORMASI-INFORMASI & LEADERBOARD MINGGUAN & BULANAN
+interface DashboardLeaderboardViewProps {
+  onNavigateRoute?: (route: any) => void;
+}
 
-  // Live real-time clock refresh so Monday-Sunday boundaries & time stay accurate
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNowTime(new Date());
-    }, 15000);
-    return () => clearInterval(timer);
-  }, []);
+export const DashboardLeaderboardView: React.FC<DashboardLeaderboardViewProps> = ({ onNavigateRoute }) => {
+  const {
+    dutyLogs,
+    staffAccounts,
+    currentUser,
+    roleSalaryConfigs,
+    payrollRecords,
+    doctorSchedules,
+    regulations,
+    recruitmentStatus,
+  } = useApp();
 
-  const weekBounds = React.useMemo(() => getCurrentWeekMondaySunday(nowTime), [nowTime]);
+  // Leaderboard Period Toggle: 'weekly' vs 'monthly'
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<'weekly' | 'monthly'>('weekly');
+  const [selectedWeekMonday, setSelectedWeekMonday] = useState<string>(() => getMondayOfDate(new Date()));
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => getCurrentMonthKey());
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Aggregate total duty hours & session count ONLY for currently Active medical staff
-  const leaderboardData = React.useMemo(() => {
+  const currentRunningMonday = useMemo(() => getMondayOfDate(new Date()), []);
+  const currentRunningMonth = useMemo(() => getCurrentMonthKey(), []);
+  const availableWeeks = useMemo(() => getAvailableWeeksList(dutyLogs.map((l) => l.startDate)), [dutyLogs]);
+
+  // Current user's role salary configuration
+  const userRoleCfg = useMemo(() => {
+    if (!currentUser) return undefined;
+    return roleSalaryConfigs.find((c) => c.role === currentUser.role);
+  }, [roleSalaryConfigs, currentUser]);
+
+  // 1. PERSONAL METRICS: Weekly logs for current running week
+  const myCurrentWeekLogs = useMemo(() => {
+    if (!currentUser) return [];
+    return dutyLogs.filter((l) => {
+      const isStaff =
+        l.staffId === currentUser.id ||
+        l.staffName.toLowerCase().trim() === currentUser.name.toLowerCase().trim();
+      if (!isStaff) return false;
+      return isDateInWeek(l.startDate, currentRunningMonday);
+    });
+  }, [dutyLogs, currentUser, currentRunningMonday]);
+
+  const myWeeklyMinutes = useMemo(() => {
+    return myCurrentWeekLogs.reduce((acc, l) => acc + l.durationMinutes, 0);
+  }, [myCurrentWeekLogs]);
+
+  const myWeeklyHoursNum = Number((myWeeklyMinutes / 60).toFixed(2));
+
+  // 2. PERSONAL METRICS: Monthly logs for current running month
+  const myCurrentMonthLogs = useMemo(() => {
+    if (!currentUser) return [];
+    return dutyLogs.filter((l) => {
+      const isStaff =
+        l.staffId === currentUser.id ||
+        l.staffName.toLowerCase().trim() === currentUser.name.toLowerCase().trim();
+      if (!isStaff) return false;
+      const mKey = normalizeDateOnly(l.startDate).slice(0, 7);
+      return mKey === currentRunningMonth || l.monthKey === currentRunningMonth;
+    });
+  }, [dutyLogs, currentUser, currentRunningMonth]);
+
+  const myMonthlyMinutes = useMemo(() => {
+    return myCurrentMonthLogs.reduce((acc, l) => acc + l.durationMinutes, 0);
+  }, [myCurrentMonthLogs]);
+
+  const myMonthlyHoursNum = Number((myMonthlyMinutes / 60).toFixed(2));
+
+  // 3. PERSONAL SALARY & TARGET CALCULATIONS
+  const targetWeeklyHours = userRoleCfg?.targetWeeklyHours ?? 18;
+  const hourlyRate = userRoleCfg?.hourlyRate ?? 350;
+  const fullSalary = userRoleCfg?.fullSalary ?? 6300;
+  const meetsTarget = myWeeklyHoursNum >= targetWeeklyHours;
+  const targetPercent = Math.min(100, Math.round((myWeeklyHoursNum / (targetWeeklyHours || 1)) * 100));
+
+  const baseEarned = meetsTarget ? fullSalary : Math.round(myWeeklyHoursNum * hourlyRate);
+  let excessHours = 0;
+  let bonusMultiples = 0;
+  let dutyBonus = 0;
+  if (myWeeklyHoursNum > targetWeeklyHours && (userRoleCfg?.bonusStepHours ?? 0) > 0) {
+    excessHours = Number((myWeeklyHoursNum - targetWeeklyHours).toFixed(2));
+    bonusMultiples = Math.floor(excessHours / (userRoleCfg?.bonusStepHours ?? 1));
+    dutyBonus = bonusMultiples * (userRoleCfg?.bonusPerStepAmount ?? 0);
+  }
+  const estimatedWeeklyTotal = baseEarned + dutyBonus;
+
+  // Check saved payroll for the current running week
+  const myCurrentWeekPayroll = useMemo(() => {
+    if (!currentUser) return null;
+    return (
+      payrollRecords.find(
+        (p) =>
+          p.staffId === currentUser.id &&
+          (p.weekKey === currentRunningMonday || (p.period && p.period.includes(currentRunningMonday)))
+      ) || null
+    );
+  }, [payrollRecords, currentUser, currentRunningMonday]);
+
+  // 4. PERSONAL RECENT SESSIONS (Last 4 sessions)
+  const myRecentSessions = useMemo(() => {
+    if (!currentUser) return [];
+    return dutyLogs
+      .filter((l) => {
+        return (
+          l.staffId === currentUser.id ||
+          l.staffName.toLowerCase().trim() === currentUser.name.toLowerCase().trim()
+        );
+      })
+      .sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''))
+      .slice(0, 4);
+  }, [dutyLogs, currentUser]);
+
+  // 5. AGGREGATE LEADERBOARD DATA: WEEKLY
+  const weeklyLeaderboardData = useMemo(() => {
     const activeStaffList = staffAccounts.filter((s) => s.status === 'Active');
     const activeStaffIds = new Set(activeStaffList.map((s) => s.id));
 
@@ -95,47 +208,120 @@ export const DashboardLeaderboardView: React.FC = () => {
         staffId: string;
         name: string;
         role: string;
+        level: number;
         avatarUrl: string;
         totalMinutes: number;
         sessions: number;
+        targetHours: number;
       }
     >();
 
-    // Seed ONLY with active staff (inactive or deleted staff are immediately excluded)
     activeStaffList.forEach((s) => {
+      const cfg = roleSalaryConfigs.find((c) => c.role === s.role);
       map.set(s.id, {
         staffId: s.id,
         name: s.name,
         role: s.role,
+        level: s.level,
         avatarUrl: s.avatarUrl,
         totalMinutes: 0,
         sessions: 0,
+        targetHours: cfg?.targetWeeklyHours ?? 18,
       });
     });
 
     dutyLogs.forEach((log) => {
-      // If staff is Inactive or deleted (not in activeStaffIds), skip immediately!
       if (!activeStaffIds.has(log.staffId)) return;
-
-      const logDateStr = (log.startDate || '').slice(0, 10);
-      const isInCurrentWeek =
-        (logDateStr >= weekBounds.mondayStr && logDateStr <= weekBounds.sundayStr) ||
-        log.weekKey === 'current-week';
-      const isInCurrentMonth =
-        logDateStr.startsWith(weekBounds.monthPrefix) || log.monthKey === weekBounds.monthPrefix;
-
-      const matchesPeriod = periodFilter === 'week' ? isInCurrentWeek : isInCurrentMonth;
-      if (!matchesPeriod) return;
-
-      const existing = map.get(log.staffId);
-      if (existing) {
-        existing.totalMinutes += log.durationMinutes;
-        existing.sessions += 1;
+      if (isDateInWeek(log.startDate, selectedWeekMonday)) {
+        const entry = map.get(log.staffId);
+        if (entry) {
+          entry.totalMinutes += log.durationMinutes;
+          entry.sessions += 1;
+        }
       }
     });
 
     return Array.from(map.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
-  }, [dutyLogs, staffAccounts, periodFilter, weekBounds]);
+  }, [dutyLogs, staffAccounts, roleSalaryConfigs, selectedWeekMonday]);
+
+  // 6. AGGREGATE LEADERBOARD DATA: MONTHLY
+  const monthlyLeaderboardData = useMemo(() => {
+    const activeStaffList = staffAccounts.filter((s) => s.status === 'Active');
+    const activeStaffIds = new Set(activeStaffList.map((s) => s.id));
+
+    const map = new Map<
+      string,
+      {
+        staffId: string;
+        name: string;
+        role: string;
+        level: number;
+        avatarUrl: string;
+        totalMinutes: number;
+        sessions: number;
+        targetHours: number;
+      }
+    >();
+
+    activeStaffList.forEach((s) => {
+      const cfg = roleSalaryConfigs.find((c) => c.role === s.role);
+      map.set(s.id, {
+        staffId: s.id,
+        name: s.name,
+        role: s.role,
+        level: s.level,
+        avatarUrl: s.avatarUrl,
+        totalMinutes: 0,
+        sessions: 0,
+        targetHours: (cfg?.targetWeeklyHours ?? 18) * 4,
+      });
+    });
+
+    dutyLogs.forEach((log) => {
+      if (!activeStaffIds.has(log.staffId)) return;
+      const mKey = normalizeDateOnly(log.startDate).slice(0, 7);
+      if (mKey === selectedMonth || log.monthKey === selectedMonth) {
+        const entry = map.get(log.staffId);
+        if (entry) {
+          entry.totalMinutes += log.durationMinutes;
+          entry.sessions += 1;
+        }
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
+  }, [dutyLogs, staffAccounts, roleSalaryConfigs, selectedMonth]);
+
+  // Active dataset
+  const activeLeaderboard = leaderboardPeriod === 'weekly' ? weeklyLeaderboardData : monthlyLeaderboardData;
+
+  // Filtered leaderboard by search query
+  const filteredLeaderboard = useMemo(() => {
+    if (!searchQuery.trim()) return activeLeaderboard;
+    const q = searchQuery.toLowerCase().trim();
+    return activeLeaderboard.filter(
+      (item) => item.name.toLowerCase().includes(q) || item.role.toLowerCase().includes(q)
+    );
+  }, [activeLeaderboard, searchQuery]);
+
+  const topThree = filteredLeaderboard.slice(0, 3);
+  const restRanking = filteredLeaderboard.slice(3);
+
+  // My Ranks
+  const myWeeklyRankIndex = weeklyLeaderboardData.findIndex((item) => item.staffId === currentUser?.id);
+  const myWeeklyRank = myWeeklyRankIndex >= 0 ? myWeeklyRankIndex + 1 : null;
+
+  const myMonthlyRankIndex = monthlyLeaderboardData.findIndex((item) => item.staffId === currentUser?.id);
+  const myMonthlyRank = myMonthlyRankIndex >= 0 ? myMonthlyRankIndex + 1 : null;
+
+  // Available Doctors
+  const availableDoctors = useMemo(() => {
+    return doctorSchedules.filter((d) => d.status === 'Available');
+  }, [doctorSchedules]);
+
+  const activeStaffCount = useMemo(() => {
+    return staffAccounts.filter((s) => s.status === 'Active').length;
+  }, [staffAccounts]);
 
   const formatHoursMinutes = (mins: number) => {
     const totalMins = Math.round(mins);
@@ -144,176 +330,812 @@ export const DashboardLeaderboardView: React.FC = () => {
     return `${h}j ${m}m`;
   };
 
-  const topThree = leaderboardData.slice(0, 3);
-  const restRanking = leaderboardData.slice(3);
+  if (!currentUser) return null;
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="p-6 rounded-2xl bg-white border border-red-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold text-[#9E1B21]">
-            PORTAL INTERNAL STAFF · LEVEL {currentUser?.level} ({currentUser?.role})
-          </p>
-          <h2 className="text-2xl font-bold text-slate-900 mt-0.5">
-            Selamat Bertugas, {currentUser?.name}
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Pantau jam duty aktif, pengumuman medis, serta layanan sesuai hak akses jabatan Anda.
-          </p>
-        </div>
-
-        {/* Period Filter (Sec 38: Default Minggu berjalan Senin-Minggu, Filter Minggu / Bulan) */}
-        <div className="flex flex-col items-start sm:items-end gap-1.5">
-          <div className="flex items-center gap-1.5 p-1 bg-red-50/40 rounded-xl border border-red-100">
-            <button
-              onClick={() => setPeriodFilter('week')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-                periodFilter === 'week'
-                  ? 'bg-[#9E1B21] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-[#7F1D1D]'
-              }`}
-            >
-              Minggu Ini (Sen–Min)
-            </button>
-            <button
-              onClick={() => setPeriodFilter('month')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-                periodFilter === 'month'
-                  ? 'bg-[#9E1B21] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-[#7F1D1D]'
-              }`}
-            >
-              Bulan Ini ({weekBounds.monthLabel})
-            </button>
+    <div className="space-y-8">
+      {/* ============================================================== */}
+      {/* 1. BAGIAN DASHBOARD PRIBADI (PERSONAL DASHBOARD & IDENTITY)   */}
+      {/* ============================================================== */}
+      <section className="space-y-4">
+        {/* Hero Card Pribadi */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#7F1D1D] via-[#9E1B21] to-[#5A0C10] text-white p-6 sm:p-8 shadow-xl border border-red-900/40">
+          {/* Subtle medical background pattern */}
+          <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+            <HeartPulse className="w-80 h-80 text-white" />
           </div>
-          <span className="text-[11px] font-mono text-slate-500">
-            {periodFilter === 'week' ? weekBounds.rangeLabel : `Periode: ${weekBounds.monthLabel}`} · Live Sync Aktif
-          </span>
-        </div>
-      </div>
 
-      {/* Leaderboard Podium Top 1-3 (Sec 39: #1, #2, #3 lebih menonjol, modern medical premium) */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Trophy className="w-5 h-5 text-[#9E1B21]" />
-            <h3 className="text-lg font-bold text-slate-900">
-              Leaderboard Jam Duty Paramedic Kota Baru
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {/* Foto & Identitas Pribadi */}
+            <div className="flex items-center gap-4 sm:gap-5 min-w-0">
+              <div className="relative shrink-0">
+                <img
+                  src={currentUser.avatarUrl}
+                  alt={currentUser.name}
+                  referrerPolicy="no-referrer"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-3 border-white/80 shadow-md bg-white/10"
+                />
+                <span className="absolute -bottom-1.5 -right-1.5 px-2 py-0.5 rounded-md bg-[#20C997] text-white text-[10px] font-extrabold shadow-xs flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  Aktif
+                </span>
+              </div>
+
+              <div className="min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-[11px] font-bold tracking-wider uppercase text-red-100 border border-white/20">
+                    Level {currentUser.level} · {currentUser.role}
+                  </span>
+                  {currentUser.specialty && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-200 text-[11px] font-semibold border border-amber-400/30">
+                      {currentUser.specialty}
+                    </span>
+                  )}
+                </div>
+
+                <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight truncate">
+                  Selamat Bertugas, {currentUser.name}
+                </h1>
+
+                <p className="text-xs sm:text-sm text-red-100/90 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span>NIP / Staff ID: <strong className="font-mono text-white">RSKB-{currentUser.id.slice(0, 5).toUpperCase()}</strong></span>
+                  <span>•</span>
+                  <span>Bergabung: <strong className="text-white">{currentUser.joinDate || '2026-01-01'}</strong></span>
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Actions & Profile Link */}
+            <div className="flex flex-wrap items-center gap-2 self-start lg:self-center">
+              {onNavigateRoute && (
+                <>
+                  <button
+                    onClick={() => onNavigateRoute('my-salary')}
+                    className="px-4 py-2.5 rounded-xl bg-white text-[#9E1B21] text-xs font-bold hover:bg-red-50 transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <DollarSign className="w-4 h-4 text-[#9E1B21]" />
+                    <span>Slip Gaji Saya</span>
+                  </button>
+                  <button
+                    onClick={() => onNavigateRoute('leave-request')}
+                    className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold backdrop-blur-xs transition border border-white/20 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Umbrella className="w-4 h-4" />
+                    <span>Pengajuan Cuti</span>
+                  </button>
+                  <button
+                    onClick={() => onNavigateRoute('profile')}
+                    className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-medium backdrop-blur-xs transition border border-white/20 cursor-pointer"
+                    title="Buka Pengaturan Profil & Keamanan"
+                  >
+                    Profil
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 4 Kartu KPI Kinerja & Status Pribadi */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Jam Duty Minggu Ini */}
+          <div className="p-5 rounded-2xl bg-white border border-red-100 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#9E1B21]" />
+                Duty Minggu Ini
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                {myCurrentWeekLogs.length} Sesi
+              </span>
+            </div>
+
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold font-mono text-slate-900 tabular-nums">
+                  {formatHoursMinutes(myWeeklyMinutes)}
+                </span>
+                <span className="text-xs text-slate-500 font-semibold">
+                  / {targetWeeklyHours}j Target
+                </span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden mt-2">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    meetsTarget ? 'bg-[#20C997]' : 'bg-[#9E1B21]'
+                  }`}
+                  style={{ width: `${targetPercent}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="pt-1 flex items-center justify-between text-[11px]">
+              {meetsTarget ? (
+                <span className="text-[#20C997] font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  Target Tercapai (Gaji Utuh)
+                </span>
+              ) : (
+                <span className="text-amber-700 font-semibold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  Kurang {(targetWeeklyHours - myWeeklyHoursNum).toFixed(1)}j lagi
+                </span>
+              )}
+              <span className="font-mono font-bold text-slate-600">{targetPercent}%</span>
+            </div>
+          </div>
+
+          {/* Card 2: Estimasi Gaji Minggu Ini */}
+          <div className="p-5 rounded-2xl bg-white border border-red-100 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-[#20C997]" />
+                Estimasi Gaji Minggu Ini
+              </span>
+              <span
+                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                  myCurrentWeekPayroll?.paymentStatus === 'Paid'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : myCurrentWeekPayroll?.paymentStatus === 'Processing'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-amber-100 text-amber-800'
+                }`}
+              >
+                {myCurrentWeekPayroll ? myCurrentWeekPayroll.paymentStatus : 'Berjalan'}
+              </span>
+            </div>
+
+            <div>
+              <div className="text-2xl font-extrabold font-mono text-[#7F1D1D] tabular-nums">
+                ${estimatedWeeklyTotal.toLocaleString()}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Pokok: ${baseEarned.toLocaleString()} {dutyBonus > 0 && `· Bonus: +$${dutyBonus.toLocaleString()}`}
+              </p>
+            </div>
+
+            <div className="pt-1">
+              {onNavigateRoute ? (
+                <button
+                  onClick={() => onNavigateRoute('my-salary')}
+                  className="text-[11px] font-bold text-[#9E1B21] hover:text-[#7F1D1D] flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Lihat Rincian Slip Gaji</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              ) : (
+                <span className="text-[11px] text-slate-400">Periode: Minggu Berjalan</span>
+              )}
+            </div>
+          </div>
+
+          {/* Card 3: Jam Duty Bulan Ini */}
+          <div className="p-5 rounded-2xl bg-white border border-red-100 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                Duty Bulan Ini
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                {formatMonthDisplay(currentRunningMonth)}
+              </span>
+            </div>
+
+            <div>
+              <div className="text-2xl font-extrabold font-mono text-slate-900 tabular-nums">
+                {formatHoursMinutes(myMonthlyMinutes)}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Total {myCurrentMonthLogs.length} sesi tugas pada bulan ini
+              </p>
+            </div>
+
+            <div className="pt-1 text-[11px] font-medium text-slate-600 flex items-center gap-1">
+              <Activity className="w-3.5 h-3.5 text-[#20C997]" />
+              <span>Rata-rata: {myCurrentMonthLogs.length > 0 ? (myMonthlyHoursNum / myCurrentMonthLogs.length).toFixed(1) : 0}j per sesi</span>
+            </div>
+          </div>
+
+          {/* Card 4: Peringkat Leaderboard Saya */}
+          <div className="p-5 rounded-2xl bg-white border border-red-100 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                Peringkat Saya
+              </span>
+              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                Staff Medis
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-3">
+              <div>
+                <span className="text-2xl font-extrabold font-mono text-amber-600 tabular-nums">
+                  #{myWeeklyRank || '-'}
+                </span>
+                <span className="text-xs text-slate-400 ml-1">Minggu Ini</span>
+              </div>
+              <span className="text-slate-300">/</span>
+              <div>
+                <span className="text-xl font-bold font-mono text-slate-700 tabular-nums">
+                  #{myMonthlyRank || '-'}
+                </span>
+                <span className="text-xs text-slate-400 ml-1">Bulan Ini</span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-500 pt-1">
+              Dari total <strong>{activeStaffCount}</strong> tenaga medis aktif di database
+            </p>
+          </div>
+        </div>
+
+        {/* Riwayat 4 Sesi Duty Terakhir Saya */}
+        <div className="bg-white rounded-2xl border border-red-100 p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#9E1B21]" />
+              <span>Riwayat Sesi Duty Terakhir Saya</span>
             </h3>
+            <span className="text-xs text-slate-400">
+              Menampilkan {myRecentSessions.length} sesi terbaru
+            </span>
           </div>
-          <span className="text-xs text-slate-500">
-            Sumber: Discord Duty Parser Terintegrasi
-          </span>
+
+          {myRecentSessions.length === 0 ? (
+            <p className="text-xs text-slate-400 italic py-3 text-center">
+              Belum ada riwayat sesi duty tercatat untuk akun Anda. Mulai bertugas untuk merekam jam duty.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {myRecentSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className="p-3.5 rounded-xl border border-red-50 bg-red-50/20 hover:bg-red-50/40 transition space-y-1.5"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-800">
+                      {normalizeDateOnly(session.startDate)}
+                    </span>
+                    <span className="font-mono font-bold text-[#7F1D1D] text-xs">
+                      {session.durationFormatted}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-mono text-slate-500 truncate">
+                    {session.startDate.slice(11, 16) || '00:00'} – {session.endDate.slice(11, 16) || '00:00'}
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate">
+                    Sebagai: <strong className="text-slate-600">{session.role}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ============================================================== */}
+      {/* 2. BAGIAN INFORMASI-INFORMASI & STATUS OPERASIONAL RUMAH SAKIT */}
+      {/* ============================================================== */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Bell className="w-5 h-5 text-[#9E1B21]" />
+          <h2 className="text-lg font-bold text-slate-900">
+            Informasi, Pengumuman & Operasional Medis
+          </h2>
         </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Kolom 1 & 2: Papan Pengumuman & Regulasi Medis */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Kartu Bulletin Penting */}
+            <div className="p-5 rounded-2xl bg-white border border-red-100 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-red-50 pb-3">
+                <span className="px-2.5 py-1 rounded-md bg-red-100 text-[#7F1D1D] text-[11px] font-bold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#9E1B21]" />
+                  Pengumuman Resmi Paramedic
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Update: {getCurrentDateStr()}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-slate-900">
+                  Kebijakan Target Jam Duty & Sistem Penggajian Terintegrasi
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Seluruh staf medis diharapkan memenuhi target jam kerja mingguan sesuai jenjang jabatan masing-masing. Staf yang mencapai target jam duty berhak mendapatkan <strong>Gaji Utuh</strong> serta <strong>Bonus Tambahan</strong> untuk setiap kelebihan jam duty. Sistem rekapitulasi absensi dan slip gaji kini tersinkronisasi secara real-time.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <span className="text-[11px] font-bold text-slate-700 block">
+                    Target Jam Duty Mingguan:
+                  </span>
+                  <p className="text-xs text-slate-500">
+                    Jabatan Anda ({currentUser.role}): <strong>{targetWeeklyHours} Jam/Minggu</strong>
+                  </p>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <span className="text-[11px] font-bold text-slate-700 block">
+                    Sistem Bonus Kelebihan Jam:
+                  </span>
+                  <p className="text-xs text-slate-500">
+                    Setiap kelipatan <strong>{userRoleCfg?.bonusStepHours ?? 2} Jam</strong> di atas target: bonus <strong>${userRoleCfg?.bonusPerStepAmount ?? 500}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Regulasi Terkini Rumah Sakit dari Database */}
+            {regulations && regulations.length > 0 && (
+              <div className="p-5 rounded-2xl bg-white border border-red-100 shadow-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-[#9E1B21]" />
+                    Regulasi & SOP Aktif Rumah Sakit
+                  </h3>
+                  {onNavigateRoute && (
+                    <button
+                      onClick={() => onNavigateRoute('sop-medis')}
+                      className="text-xs font-bold text-[#9E1B21] hover:underline cursor-pointer"
+                    >
+                      Buka Semua SOP →
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {regulations.slice(0, 2).map((reg) => (
+                    <div
+                      key={reg.id}
+                      className="p-3.5 rounded-xl border border-red-50 bg-slate-50/50 space-y-2 flex flex-col justify-between"
+                    >
+                      <div className="space-y-1">
+                        <span className="px-2 py-0.5 rounded bg-red-100 text-[#7F1D1D] text-[10px] font-bold">
+                          {reg.category}
+                        </span>
+                        <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{reg.title}</h4>
+                        <p className="text-[11px] text-slate-500 line-clamp-2">{reg.description}</p>
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        Oleh: {reg.updatedBy} · {reg.updatedAt.slice(0, 10)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Kolom 3: Status Operasional Hari Ini & Jadwal Dokter */}
+          <div className="space-y-4">
+            <div className="p-5 rounded-2xl bg-white border border-red-100 shadow-xs space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Stethoscope className="w-3.5 h-3.5 text-[#9E1B21]" />
+                Status Operasional Medis
+              </h3>
+
+              <div className="space-y-3">
+                <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Users className="w-4 h-4 text-[#9E1B21]" />
+                    <span className="text-xs font-semibold text-slate-700">Tenaga Medis Aktif</span>
+                  </div>
+                  <span className="font-mono font-bold text-slate-900 text-sm">
+                    {activeStaffCount} Orang
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#20C997]" />
+                    <span className="text-xs font-semibold text-slate-700">Dokter Siaga Bertugas</span>
+                  </div>
+                  <span className="font-mono font-bold text-emerald-800 text-sm">
+                    {availableDoctors.length} Dokter
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    <span className="text-xs font-semibold text-slate-700">Status Rekrutmen</span>
+                  </div>
+                  <span
+                    className={`text-xs font-extrabold px-2 py-0.5 rounded ${
+                      recruitmentStatus === 'OPEN'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {recruitmentStatus === 'OPEN' ? 'DIBUKA' : 'DITUTUP'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Daftar Dokter Jaga Hari Ini */}
+              <div className="border-t border-red-50 pt-3 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Dokter Jaga Tersedia:
+                </span>
+                {availableDoctors.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic">
+                    Belum ada jadwal dokter jaga berstatus available.
+                  </p>
+                ) : (
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    {availableDoctors.slice(0, 4).map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="p-2 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between text-xs"
+                      >
+                        <div className="min-w-0 pr-2">
+                          <p className="font-bold text-slate-900 truncate">{doc.doctorName}</p>
+                          <p className="text-[10px] text-slate-500 truncate">{doc.specialty}</p>
+                        </div>
+                        <span className="font-mono text-[10px] text-slate-600 shrink-0">
+                          {doc.startTime} - {doc.endTime}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================== */}
+      {/* 3. BAGIAN LEADERBOARD MINGGUAN DAN BULANAN                     */}
+      {/* ============================================================== */}
+      <section className="space-y-5">
+        {/* Header Leaderboard & Switcher Tab */}
+        <div className="p-6 rounded-2xl bg-white border border-red-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <Trophy className="w-6 h-6 text-[#9E1B21]" />
+              <h2 className="text-xl font-bold text-slate-900">
+                Leaderboard Jam Duty Paramedic Kota Baru
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500">
+              Peringkat jam kerja & keaktifan tenaga medis. Terintegrasi penuh dengan log absensi realtime.
+            </p>
+          </div>
+
+          {/* Toggle Tab: Mingguan vs Bulanan */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center p-1 bg-red-50/50 rounded-2xl border border-red-100">
+              <button
+                type="button"
+                onClick={() => setLeaderboardPeriod('weekly')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                  leaderboardPeriod === 'weekly'
+                    ? 'bg-[#9E1B21] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Leaderboard Mingguan</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLeaderboardPeriod('monthly')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                  leaderboardPeriod === 'monthly'
+                    ? 'bg-[#9E1B21] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Leaderboard Bulanan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Navigation Bar (Minggu / Bulan Selector & Search) */}
+        <div className="p-4 rounded-2xl bg-white border border-red-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {leaderboardPeriod === 'weekly' ? (
+            /* Weekly Controls */
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-slate-700">Periode Minggu:</span>
+              <button
+                type="button"
+                onClick={() => setSelectedWeekMonday((cur) => shiftWeekMonday(cur, -1))}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 cursor-pointer"
+                title="Minggu Sebelumnya"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedWeekMonday(currentRunningMonday)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                  selectedWeekMonday === currentRunningMonday
+                    ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Minggu Berjalan
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedWeekMonday((cur) => shiftWeekMonday(cur, 1))}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 cursor-pointer"
+                title="Minggu Berikutnya"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <select
+                value={selectedWeekMonday}
+                onChange={(e) => setSelectedWeekMonday(e.target.value)}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#9E1B21]"
+              >
+                {availableWeeks.map((w) => (
+                  <option key={w.mondayStr} value={w.mondayStr}>
+                    {w.label} {w.isCurrent ? '(Berjalan)' : ''}
+                  </option>
+                ))}
+              </select>
+
+              <span className="text-xs text-slate-500 font-mono hidden md:inline">
+                {formatWeekRangeDisplay(selectedWeekMonday)}
+              </span>
+            </div>
+          ) : (
+            /* Monthly Controls */
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-slate-700">Periode Bulan:</span>
+              <button
+                type="button"
+                onClick={() => setSelectedMonth(currentRunningMonth)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                  selectedMonth === currentRunningMonth
+                    ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Bulan Ini ({formatMonthDisplay(currentRunningMonth)})
+              </button>
+
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#9E1B21]"
+              />
+
+              <span className="text-xs text-slate-500 font-semibold hidden md:inline">
+                {formatMonthDisplay(selectedMonth)}
+              </span>
+            </div>
+          )}
+
+          {/* Search Bar */}
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari nama staff / jabatan..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#9E1B21]"
+            />
+          </div>
+        </div>
+
+        {/* Podium Top 3 Juara (#1, #2, #3) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {topThree.map((item, idx) => {
             const rank = idx + 1;
             const isFirst = rank === 1;
+            const isMe = item.staffId === currentUser.id;
+
             return (
               <div
                 key={item.staffId}
-                className={`p-6 rounded-2xl border transition relative overflow-hidden ${
+                className={`p-6 rounded-3xl border transition relative overflow-hidden flex flex-col justify-between ${
                   isFirst
-                    ? 'bg-gradient-to-br from-[#FFF5F8] via-white to-red-50/50/70 border-[#9E1B21] shadow-md'
+                    ? 'bg-gradient-to-br from-amber-500/10 via-red-50/40 to-white border-[#9E1B21] shadow-lg ring-1 ring-[#9E1B21]/20'
+                    : isMe
+                    ? 'bg-gradient-to-br from-red-50 to-white border-red-300 shadow-md ring-1 ring-red-200'
                     : 'bg-white border-red-100 shadow-xs'
                 }`}
               >
+                {/* Ribbon Juara */}
                 <div className="flex items-center justify-between mb-4">
-                  <span
-                    className={`text-2xl font-extrabold font-mono tabular-nums ${
-                      isFirst
-                        ? 'text-[#9E1B21]'
-                        : rank === 2
-                        ? 'text-[#20C997]'
-                        : 'text-amber-600'
-                    }`}
-                  >
-                    #{rank}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`text-2xl font-black font-mono tabular-nums ${
+                        isFirst
+                          ? 'text-[#9E1B21]'
+                          : rank === 2
+                          ? 'text-[#20C997]'
+                          : 'text-amber-600'
+                      }`}
+                    >
+                      #{rank}
+                    </span>
+                    {isFirst && (
+                      <span className="px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-800 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border border-amber-300/40">
+                        <Award className="w-3 h-3 text-amber-600" />
+                        Juara 1
+                      </span>
+                    )}
+                    {isMe && (
+                      <span className="px-2 py-0.5 rounded-md bg-[#9E1B21] text-white text-[10px] font-bold">
+                        Akun Anda
+                      </span>
+                    )}
+                  </div>
+
                   <span className="text-xs font-semibold text-slate-500 tabular-nums">
                     {item.sessions} Sesi Duty
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <img
-                    src={item.avatarUrl}
-                    alt={item.name}
-                    referrerPolicy="no-referrer"
-                    className={`${
-                      isFirst ? 'w-16 h-16' : 'w-14 h-14'
-                    } rounded-2xl object-cover border-2 border-red-200 shrink-0`}
-                  />
+                {/* Info Staff */}
+                <div className="flex items-center gap-4 my-2">
+                  <div className="relative shrink-0">
+                    <img
+                      src={item.avatarUrl}
+                      alt={item.name}
+                      referrerPolicy="no-referrer"
+                      className={`${
+                        isFirst ? 'w-16 h-16 sm:w-18 sm:h-18' : 'w-14 h-14'
+                      } rounded-2xl object-cover border-2 ${
+                        isFirst ? 'border-[#9E1B21]' : isMe ? 'border-red-300' : 'border-slate-200'
+                      } shrink-0 bg-white shadow-xs`}
+                    />
+                    {isFirst && (
+                      <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-bold text-xs shadow-xs border border-white">
+                        👑
+                      </span>
+                    )}
+                  </div>
+
                   <div className="min-w-0">
-                    <h4 className="text-base font-bold text-slate-900 truncate">{item.name}</h4>
-                    <p className="text-xs text-slate-500 truncate">{item.role}</p>
+                    <h4 className="text-base font-extrabold text-slate-900 truncate flex items-center gap-1">
+                      <span>{item.name}</span>
+                      {isMe && <span className="text-[#9E1B21] text-xs font-bold shrink-0">(Anda)</span>}
+                    </h4>
+                    <p className="text-xs text-slate-500 truncate">
+                      {item.role} (Lv.{item.level})
+                    </p>
                     <div className="mt-2 flex items-baseline gap-1.5">
-                      <span className="text-xl sm:text-2xl font-extrabold font-mono text-[#7F1D1D] tabular-nums">
+                      <span className="text-xl sm:text-2xl font-black font-mono text-[#7F1D1D] tabular-nums">
                         {formatHoursMinutes(item.totalMinutes)}
                       </span>
-                      <span className="text-[11px] text-slate-400">total durasi</span>
+                      <span className="text-[11px] text-slate-400">total jam</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Progress terhadap Target */}
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-500 text-[11px]">
+                    Target: {item.targetHours} Jam
+                  </span>
+                  {item.totalMinutes / 60 >= item.targetHours ? (
+                    <span className="text-[#20C997] font-bold text-[11px] flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Tercapai
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-[11px]">
+                      {((item.totalMinutes / 60 / (item.targetHours || 1)) * 100).toFixed(0)}%
+                    </span>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Ranking #4+ Compact Table (Sec 39) */}
-        <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-red-100 flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Peringkat #4 dan Seterusnya
-            </h4>
-            <span className="text-xs text-slate-400 tabular-nums">
-              Total {leaderboardData.length} Staff Aktif
+        {/* Tabel Lengkap Peringkat #4 dan Seterusnya (Dengan Highlight Akun Anda) */}
+        <div className="bg-white rounded-3xl border border-red-100 shadow-xs overflow-hidden">
+          <div className="px-6 py-4 border-b border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                Peringkat Lengkap Seluruh Tenaga Medis Aktif
+              </h3>
+              <p className="text-xs text-slate-500">
+                Baris akun Anda di-highlight secara khusus agar posisi kerja mudah dipantau.
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-slate-500">
+              Total: {filteredLeaderboard.length} Anggota Medis
             </span>
           </div>
+
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-red-50/50 text-[11px] font-semibold text-slate-500 bg-red-50/40/60">
-                  <th className="py-3 px-4 w-16">Rank</th>
-                  <th className="py-3 px-4">Staff Medis</th>
-                  <th className="py-3 px-4">Jabatan</th>
-                  <th className="py-3 px-4 text-right">Jumlah Sesi</th>
-                  <th className="py-3 px-4 text-right">Total Jam Duty</th>
+                <tr className="border-b border-red-100 text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50">
+                  <th className="py-3.5 px-4 w-16 text-center">Rank</th>
+                  <th className="py-3.5 px-4">Staff Medis</th>
+                  <th className="py-3.5 px-4">Jabatan</th>
+                  <th className="py-3.5 px-4 text-center">Jumlah Sesi</th>
+                  <th className="py-3.5 px-4 text-right">Total Jam Duty</th>
+                  <th className="py-3.5 px-4 text-center">Status Target</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-red-50 text-sm">
-                {restRanking.map((item, idx) => (
-                  <tr key={item.staffId} className="hover:bg-red-50/60/30 transition">
-                    <td className="py-3 px-4 font-mono font-bold text-slate-500 tabular-nums">
-                      #{idx + 4}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={item.avatarUrl}
-                          alt={item.name}
-                          referrerPolicy="no-referrer"
-                          className="w-8 h-8 rounded-xl object-cover"
-                        />
-                        <span className="font-semibold text-slate-900">{item.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-xs text-slate-600">{item.role}</td>
-                    <td className="py-3 px-4 text-right font-mono text-xs text-slate-600 tabular-nums">
-                      {item.sessions} sesi
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-[#7F1D1D] tabular-nums">
-                      {formatHoursMinutes(item.totalMinutes)}
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-red-50 text-xs">
+                {restRanking.map((item, idx) => {
+                  const rank = idx + 4;
+                  const isMe = item.staffId === currentUser.id;
+                  const hours = Number((item.totalMinutes / 60).toFixed(2));
+                  const isTargetMet = hours >= item.targetHours;
+
+                  return (
+                    <tr
+                      key={item.staffId}
+                      className={`transition ${
+                        isMe
+                          ? 'bg-red-50/80 font-semibold border-l-4 border-l-[#9E1B21]'
+                          : 'hover:bg-red-50/30'
+                      }`}
+                    >
+                      <td className="py-3 px-4 text-center font-mono font-bold text-slate-500 tabular-nums">
+                        #{rank}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={item.avatarUrl}
+                            alt={item.name}
+                            referrerPolicy="no-referrer"
+                            className="w-8 h-8 rounded-xl object-cover shrink-0 border border-slate-200"
+                          />
+                          <div className="min-w-0">
+                            <span className="font-bold text-slate-900 block truncate">
+                              {item.name}
+                            </span>
+                            {isMe && (
+                              <span className="inline-block px-1.5 py-0.2 rounded bg-[#9E1B21] text-white text-[9px] font-extrabold uppercase">
+                                Anda
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-slate-600">
+                        {item.role} (Lv.{item.level})
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono tabular-nums text-slate-600">
+                        {item.sessions} sesi
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-bold text-[#7F1D1D] tabular-nums text-sm">
+                        {formatHoursMinutes(item.totalMinutes)}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {isTargetMet ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Target Terpenuhi
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-medium">
+                            {((hours / (item.targetHours || 1)) * 100).toFixed(0)}% ({hours}/{item.targetHours}j)
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

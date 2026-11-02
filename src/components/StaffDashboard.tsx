@@ -283,8 +283,9 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         return <PayrollManagementView />;
       case 'regulation-management':
         return <RegulationManagementView />;
+      case 'dashboard':
       default:
-        return <DashboardLeaderboardView />;
+        return <DashboardLeaderboardView onNavigateRoute={onNavigateRoute} />;
     }
   };
 
