@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { DoctorSchedule, SKSRecord } from '../types';
+import {
+  DoctorSchedule,
+  SKSRecord,
+  PHARMACY_PACKAGES,
+  PharmacyPackageType,
+  PharmacyOrder,
+} from '../types';
+import { compressImageForFirestore } from '../utils/imageCompressor';
 import { IshiharaTestSection } from './IshiharaTest';
 import {
   GHQ12_QUESTIONS,
@@ -23,6 +30,10 @@ import {
   RotateCcw,
   Lock,
   HeartPulse,
+  Pill,
+  AlertCircle,
+  ShoppingBag,
+  Check,
 } from 'lucide-react';
 
 export type PublicModalType =
@@ -36,7 +47,8 @@ export type PublicModalType =
   | 'regulation'
   | 'recruitment'
   | 'skwb_claim'
-  | 'character_kill';
+  | 'character_kill'
+  | 'pharmacy';
 
 interface PublicModalsProps {
   activeModal: PublicModalType;
@@ -64,7 +76,89 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     submitRecruitment,
     submitSKWBClaim,
     submitCharacterKill,
+    submitPharmacyOrder,
   } = useApp();
+
+  // Layanan Loket Farmasi Form State
+  const [pharmacyName, setPharmacyName] = useState('');
+  const [pharmacyPocket, setPharmacyPocket] = useState('');
+  const [pharmacyPackageCode, setPharmacyPackageCode] = useState<'a' | 'b' | 'c' | 'd'>('a');
+  const [pharmacyQuantity, setPharmacyQuantity] = useState<1 | 2 | 3>(1);
+  const [pharmacyKtpPhoto, setPharmacyKtpPhoto] = useState<string>('');
+  const [pharmacyKtaPhoto, setPharmacyKtaPhoto] = useState<string>('');
+  const [pharmacyKtpLoading, setPharmacyKtpLoading] = useState(false);
+  const [pharmacyKtaLoading, setPharmacyKtaLoading] = useState(false);
+  const [pharmacyError, setPharmacyError] = useState('');
+  const [pharmacySuccessOrder, setPharmacySuccessOrder] = useState<PharmacyOrder | null>(null);
+  const [pharmacySubmitting, setPharmacySubmitting] = useState(false);
+
+  const selectedPharmacyPackage =
+    PHARMACY_PACKAGES.find((p) => p.code === pharmacyPackageCode) || PHARMACY_PACKAGES[0];
+
+  const handlePharmacyKtpUpload = async (file: File) => {
+    setPharmacyError('');
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      setPharmacyError('Format foto KTP/Kartu Pasien tidak didukung (gunakan JPG, PNG, atau WEBP).');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setPharmacyError('Ukuran file terlalu besar (maksimal 8 MB).');
+      return;
+    }
+    setPharmacyKtpLoading(true);
+    try {
+      const res = await compressImageForFirestore(file, {
+        maxWidth: 1000,
+        maxHeight: 1000,
+        quality: 0.78,
+        targetMaxBytes: 250 * 1024,
+      });
+      setPharmacyKtpPhoto(res.dataUrl);
+    } catch (err: any) {
+      setPharmacyError('Gagal memproses foto KTP/Kartu Pasien: ' + (err?.message || ''));
+    } finally {
+      setPharmacyKtpLoading(false);
+    }
+  };
+
+  const handlePharmacyKtaUpload = async (file: File) => {
+    setPharmacyError('');
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      setPharmacyError('Format foto KTA tidak didukung (gunakan JPG, PNG, atau WEBP).');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setPharmacyError('Ukuran file terlalu besar (maksimal 8 MB).');
+      return;
+    }
+    setPharmacyKtaLoading(true);
+    try {
+      const res = await compressImageForFirestore(file, {
+        maxWidth: 1000,
+        maxHeight: 1000,
+        quality: 0.78,
+        targetMaxBytes: 250 * 1024,
+      });
+      setPharmacyKtaPhoto(res.dataUrl);
+    } catch (err: any) {
+      setPharmacyError('Gagal memproses foto KTA: ' + (err?.message || ''));
+    } finally {
+      setPharmacyKtaLoading(false);
+    }
+  };
+
+  const resetPharmacyForm = () => {
+    setPharmacyName('');
+    setPharmacyPocket('');
+    setPharmacyPackageCode('a');
+    setPharmacyQuantity(1);
+    setPharmacyKtpPhoto('');
+    setPharmacyKtaPhoto('');
+    setPharmacyError('');
+    setPharmacySuccessOrder(null);
+  };
 
   // Karakter Kill Form State
   const [ckForm, setCkForm] = useState({
@@ -2879,6 +2973,405 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </button>
                 </div>
               </form>
+            )}
+          </div>
+        )}
+
+        {/* 11. MODAL LAYANAN FARMASI RS KOTA BARU */}
+        {activeModal === 'pharmacy' && (
+          <div className="space-y-6">
+            {pharmacySuccessOrder ? (
+              <div className="space-y-6 text-center py-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center ring-8 ring-emerald-50">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                  <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
+                    Status: Menunggu Proses Farmasi
+                  </span>
+                  <h2 className="text-2xl font-bold text-slate-900 mt-2">Pesanan Farmasi Berhasil Diterima!</h2>
+                  <p className="text-sm text-slate-600 max-w-lg mx-auto">
+                    Pesanan Anda telah tercatat pada sistem antrean farmasi RS Kota Baru. Petugas medis (Co-Ass ke atas) akan segera menyiapkan pesanan obat/perban Anda.
+                  </p>
+                </div>
+
+                <div className="max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                    <span className="text-xs text-slate-500 font-medium">No. Pesanan</span>
+                    <span className="text-xs font-mono font-bold text-[#9E1B21]">#{pharmacySuccessOrder.id.slice(-8).toUpperCase()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Nama Pasien:</span>
+                    <span className="font-semibold text-slate-800">{pharmacySuccessOrder.fullName}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">No. Kantong saat ini:</span>
+                    <span className="font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">
+                      Kantong #{pharmacySuccessOrder.pocketNumber}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Paket Obat/Perban:</span>
+                    <span className="font-semibold text-slate-800 text-right">
+                      {pharmacySuccessOrder.packageType}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Jumlah:</span>
+                    <span className="font-bold text-slate-800">{pharmacySuccessOrder.quantity} Paket</span>
+                  </div>
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-sm">
+                    <span className="font-bold text-slate-700">Total Biaya:</span>
+                    <span className="font-mono font-extrabold text-base text-emerald-700">
+                      ${pharmacySuccessOrder.totalPrice.toLocaleString()} KBRP
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={resetPharmacyForm}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 cursor-pointer"
+                  >
+                    Beli Lagi / Pesanan Baru
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetPharmacyForm();
+                      onClose();
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 cursor-pointer"
+                  >
+                    Selesai & Tutup
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-3 border-b border-red-100 pb-4">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#9E1B21] to-[#7F1D1D] text-white flex items-center justify-center shadow-xs">
+                    <Pill className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Layanan Farmasi RS KOTA BARU</h2>
+                    <p className="text-xs text-slate-500">
+                      Isi Form berikut ini untuk membeliperban dan obat-obatan di farmasi RS Kota Baru
+                    </p>
+                  </div>
+                </div>
+
+                {pharmacyError && (
+                  <div className="mt-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                    <span>{pharmacyError}</span>
+                  </div>
+                )}
+
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setPharmacyError('');
+                    if (!pharmacyName.trim()) {
+                      setPharmacyError('Nama pemesan wajib diisi.');
+                      return;
+                    }
+                    if (!pharmacyPocket.trim()) {
+                      setPharmacyError('No. Kantong saat ini wajib diisi.');
+                      return;
+                    }
+                    if (!pharmacyKtpPhoto) {
+                      setPharmacyError('Upload foto KTP / Kartu Pasien wajib disertakan.');
+                      return;
+                    }
+                    setPharmacySubmitting(true);
+                    try {
+                      const unitPrice = selectedPharmacyPackage.price;
+                      const totalPrice = unitPrice * pharmacyQuantity;
+                      const res = await submitPharmacyOrder({
+                        fullName: pharmacyName.trim(),
+                        pocketNumber: pharmacyPocket.trim(),
+                        packageType: selectedPharmacyPackage.name,
+                        quantity: pharmacyQuantity,
+                        unitPrice,
+                        totalPrice,
+                        ktpOrCardPhotoUrl: pharmacyKtpPhoto,
+                        ktpOrCardFileName: 'ktp_pasien.jpg',
+                        ktaPhotoUrl: pharmacyKtaPhoto || undefined,
+                        ktaFileName: pharmacyKtaPhoto ? 'kta_pasien.jpg' : undefined,
+                      });
+                      if (res.success) {
+                        setPharmacySuccessOrder({
+                          id: res.id,
+                          fullName: pharmacyName.trim(),
+                          pocketNumber: pharmacyPocket.trim(),
+                          packageType: selectedPharmacyPackage.name,
+                          quantity: pharmacyQuantity,
+                          unitPrice,
+                          totalPrice,
+                          ktpOrCardPhotoUrl: pharmacyKtpPhoto,
+                          ktpOrCardFileName: 'ktp_pasien.jpg',
+                          ktaPhotoUrl: pharmacyKtaPhoto || undefined,
+                          ktaFileName: pharmacyKtaPhoto ? 'kta_pasien.jpg' : undefined,
+                          status: 'Menunggu',
+                          createdAt: new Date().toISOString(),
+                        });
+                      } else {
+                        setPharmacyError(res.message || 'Gagal mengirim pesanan farmasi.');
+                      }
+                    } catch (err: any) {
+                      setPharmacyError(err?.message || 'Gagal mengirim pesanan farmasi.');
+                    } finally {
+                      setPharmacySubmitting(false);
+                    }
+                  }}
+                  className="mt-6 space-y-6"
+                >
+                  {/* DATA PEMESAN */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Nama : <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={pharmacyName}
+                        onChange={(e) => setPharmacyName(e.target.value)}
+                        placeholder="Contoh: Alex Pratama"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        No. Kantong saat ini : <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={pharmacyPocket}
+                        onChange={(e) => setPharmacyPocket(e.target.value)}
+                        placeholder="Contoh: 142"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-red-600 focus:outline-none text-sm tabular-nums"
+                      />
+                    </div>
+                  </div>
+
+                  {/* PILIH PAKET */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Pilih Paket : <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {PHARMACY_PACKAGES.map((pkg) => {
+                        const isSelected = pharmacyPackageCode === pkg.code;
+                        return (
+                          <div
+                            key={pkg.id}
+                            onClick={() => setPharmacyPackageCode(pkg.code)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setPharmacyPackageCode(pkg.code);
+                              }
+                            }}
+                            className={`p-4 rounded-xl border-2 transition text-left cursor-pointer flex flex-col justify-between gap-3 ${
+                              isSelected
+                                ? 'border-[#9E1B21] bg-red-50/50 shadow-xs'
+                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                                  isSelected ? 'bg-[#9E1B21] text-white' : 'bg-slate-200 text-slate-600'
+                                }`}>
+                                  {pkg.code}
+                                </span>
+                                <span className="text-xs font-bold text-slate-900 leading-snug">
+                                  {pkg.name}
+                                </span>
+                              </div>
+                              <input
+                                type="radio"
+                                name="pharmacy_package"
+                                checked={isSelected}
+                                onChange={() => setPharmacyPackageCode(pkg.code)}
+                                className="mt-0.5 w-4 h-4 accent-[#9E1B21] cursor-pointer"
+                              />
+                            </div>
+                            <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                              <span className="text-[11px] text-slate-500">Harga Satuan</span>
+                              <span className="font-mono font-extrabold text-sm text-[#9E1B21]">
+                                {pkg.priceFormatted}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* JUMLAH (1, 2, 3) */}
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-800">
+                          jumlah: buat 1,2,3 <span className="text-red-500">*</span>
+                        </label>
+                        <p className="text-[11px] text-slate-500">Pilih kuantiti paket yang ingin dibeli</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {([1, 2, 3] as const).map((qty) => (
+                          <button
+                            key={qty}
+                            type="button"
+                            onClick={() => setPharmacyQuantity(qty)}
+                            className={`w-12 h-10 rounded-xl font-bold text-sm transition cursor-pointer border ${
+                              pharmacyQuantity === qty
+                                ? 'bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white border-transparent shadow-xs'
+                                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                            }`}
+                          >
+                            {qty}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs sm:text-sm">
+                      <span className="text-slate-600 font-medium">
+                        Kalkulasi Biaya: ({pharmacyQuantity}x @ ${selectedPharmacyPackage.price.toLocaleString()} KBRP)
+                      </span>
+                      <span className="font-mono font-extrabold text-base text-emerald-700">
+                        Total: ${(selectedPharmacyPackage.price * pharmacyQuantity).toLocaleString()} KBRP
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* UPLOAD FOTO KTP / KARTU PASIEN (REQUIRED) */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      upload foto KTP/Kartu Pasien <span className="text-red-500">* (Wajib)</span>
+                    </label>
+                    {pharmacyKtpPhoto ? (
+                      <div className="relative rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={pharmacyKtpPhoto}
+                            alt="KTP Pasien"
+                            className="w-14 h-14 object-cover rounded-lg border border-emerald-300 shrink-0 bg-white"
+                          />
+                          <div className="min-w-0">
+                            <span className="block text-xs font-bold text-emerald-900 truncate">Foto KTP / Kartu Pasien Terunggah</span>
+                            <span className="text-[11px] text-emerald-700">Telah terkompresi dan siap dikirim</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPharmacyKtpPhoto('')}
+                          className="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 text-xs font-semibold hover:bg-red-50 transition cursor-pointer shrink-0"
+                        >
+                          Ganti Foto
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="border-2 border-dashed border-slate-300 hover:border-[#9E1B21] rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition bg-white group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePharmacyKtpUpload(file);
+                          }}
+                        />
+                        <div className="w-10 h-10 rounded-full bg-red-50 text-[#9E1B21] flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
+                          <Upload className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">
+                          {pharmacyKtpLoading ? 'Memproses dan Mengompres Gambar...' : 'Klik untuk Unggah Foto KTP / Kartu Pasien'}
+                        </span>
+                        <span className="text-[11px] text-slate-400 mt-0.5">Mendukung format JPG, PNG, WEBP (Otomatis Dioptimalkan)</span>
+                      </label>
+                    )}
+                  </div>
+
+                  {/* UPLOAD FOTO KTA (OPSIONAL) */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Upload foto KTA (Opsional)
+                    </label>
+                    {pharmacyKtaPhoto ? (
+                      <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={pharmacyKtaPhoto}
+                            alt="KTA"
+                            className="w-14 h-14 object-cover rounded-lg border border-slate-300 shrink-0 bg-white"
+                          />
+                          <div className="min-w-0">
+                            <span className="block text-xs font-bold text-slate-800 truncate">Foto KTA Terunggah</span>
+                            <span className="text-[11px] text-slate-500">Telah terkompresi untuk verifikasi staf</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPharmacyKtaPhoto('')}
+                          className="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 text-xs font-semibold hover:bg-red-50 transition cursor-pointer shrink-0"
+                        >
+                          Hapus / Ganti
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="border-2 border-dashed border-slate-200 hover:border-slate-400 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition bg-white/60 group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePharmacyKtaUpload(file);
+                          }}
+                        />
+                        <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-1.5">
+                          <Upload className="w-4 h-4" />
+                        </div>
+                        <span className="text-xs font-medium text-slate-700">
+                          {pharmacyKtaLoading ? 'Memproses Gambar...' : 'Klik jika ingin menyertakan Foto KTA (Opsional)'}
+                        </span>
+                        <span className="text-[11px] text-slate-400">Boleh dikosongkan jika tidak memiliki KTA</span>
+                      </label>
+                    )}
+                  </div>
+
+                  {/* TOMBOL AKSI */}
+                  <div className="pt-3 flex justify-end gap-3 border-t border-red-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetPharmacyForm();
+                        onClose();
+                      }}
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={pharmacySubmitting || pharmacyKtpLoading || pharmacyKtaLoading || !pharmacyKtpPhoto}
+                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      {pharmacySubmitting ? 'Memproses Pesanan...' : 'Kirim Pesanan Farmasi'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             )}
           </div>
         )}

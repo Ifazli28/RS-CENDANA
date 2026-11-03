@@ -27,6 +27,9 @@ import {
   SKWBOplasClaim,
   CharacterKillRecord,
   ToastMessage,
+  PharmacyOrder,
+  PharmacyOrderStatus,
+  PHARMACY_PACKAGES,
 } from '../types';
 import {
   INITIAL_STAFF_ACCOUNTS,
@@ -94,6 +97,10 @@ interface AppContextType {
   skwbPatientCardClaims: SKWBPatientCardClaim[];
   skwbOplasClaims: SKWBOplasClaim[];
   characterKillRecords: CharacterKillRecord[];
+  pharmacyOrders: PharmacyOrder[];
+  submitPharmacyOrder: (data: Omit<PharmacyOrder, 'id' | 'createdAt' | 'status'>) => Promise<{ success: boolean; id: string; message: string }>;
+  updatePharmacyOrderStatus: (id: string, status: PharmacyOrderStatus, notes?: string) => void;
+  deletePharmacyOrder: (id: string) => void;
   toasts: ToastMessage[];
   addToast: (type: ToastMessage['type'], title: string, message: string) => void;
   removeToast: (id: string) => void;
@@ -252,6 +259,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [characterKillRecords, setCharacterKillRecords] = useState<CharacterKillRecord[]>(() =>
     loadLocal('ck_v1', INITIAL_CHARACTER_KILL_RECORDS)
   );
+  const [pharmacyOrders, setPharmacyOrders] = useState<PharmacyOrder[]>(() =>
+    loadLocal('pharmacy_v1', [])
+  );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState | null>(null);
 
@@ -333,6 +343,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('kotabaru_ck_v1', JSON.stringify(characterKillRecords));
   }, [characterKillRecords]);
+  useEffect(() => {
+    localStorage.setItem('kotabaru_pharmacy_v1', JSON.stringify(pharmacyOrders));
+  }, [pharmacyOrders]);
 
   useEffect(() => {
     if (currentUserId) localStorage.setItem('kotabaru_current_user_id_v1', currentUserId);
@@ -560,6 +573,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCharacterKillRecords(items);
       } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
         setCharacterKillRecords([]);
+      }
+
+      const pharmDocs = byModule.get('pharmacy_order');
+      if (pharmDocs && pharmDocs.length > 0) {
+        const items = pharmDocs
+          .map((r) => r.payload as unknown as PharmacyOrder)
+          .filter((x) => Boolean(x && x.id));
+        setPharmacyOrders(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setPharmacyOrders([]);
       }
 
       const skwbDocs = byModule.get('skwb_claim');
@@ -799,6 +822,99 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       `Pengajuan kematian telah ditetapkan ${status} oleh ${currentUser.name} (${currentUser.role}).`
     );
     return { success: true, message: `Status berhasil diubah menjadi ${status}.` };
+  };
+
+  const submitPharmacyOrder = async (
+    data: Omit<PharmacyOrder, 'id' | 'createdAt' | 'status'>
+  ): Promise<{ success: boolean; id: string; message: string }> => {
+    try {
+      const id = `pharm-${Date.now()}`;
+      const createdAt = new Date().toISOString();
+      const newOrder: PharmacyOrder = {
+        ...data,
+        id,
+        status: 'Menunggu',
+        createdAt,
+      };
+
+      setPharmacyOrders((prev) => [newOrder, ...prev]);
+
+      await syncRecordToFirestore(
+        id,
+        'pharmacy_order',
+        `${data.fullName} - ${data.packageType} (${data.quantity}x)`,
+        'Menunggu',
+        { ...newOrder }
+      );
+
+      addToast(
+        'success',
+        'Pesanan Farmasi Terkirim',
+        `Pesanan ${data.packageType} (${data.quantity}x) atas nama ${data.fullName} telah masuk ke antrean Loket Farmasi RS Kota Baru.`
+      );
+
+      return { success: true, id, message: 'Pesanan berhasil dikirim ke Loket Farmasi.' };
+    } catch (err: unknown) {
+      console.error('Failed to submit pharmacy order:', err);
+      addToast('error', 'Gagal Mengirim Pesanan', 'Terjadi kesalahan saat memproses pesanan farmasi.');
+      return { success: false, id: '', message: 'Gagal mengirim pesanan farmasi.' };
+    }
+  };
+
+  const updatePharmacyOrderStatus = (
+    id: string,
+    status: PharmacyOrderStatus,
+    notes?: string
+  ) => {
+    if (!currentUser || currentUser.level < 4) {
+      addToast('error', 'Akses Ditolak', 'Hanya staf Co-Ass ke atas yang dapat memproses pesanan farmasi.');
+      return;
+    }
+
+    setPharmacyOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== id) return order;
+        const updated: PharmacyOrder = {
+          ...order,
+          status,
+          notes: notes !== undefined ? notes : order.notes,
+          handledByStaffName: currentUser.name,
+          handledByStaffRole: currentUser.role,
+          handledAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        void syncRecordToFirestore(
+          id,
+          'pharmacy_order',
+          `${updated.fullName} - ${updated.packageType} (${updated.quantity}x)`,
+          status,
+          { ...updated }
+        );
+
+        return updated;
+      })
+    );
+
+    addToast(
+      'success',
+      'Status Pesanan Diperbarui',
+      `Status pesanan farmasi berhasil diubah menjadi "${status}".`
+    );
+  };
+
+  const deletePharmacyOrder = (id: string) => {
+    if (!currentUser || currentUser.level < 4) return;
+    const target = pharmacyOrders.find((o) => o.id === id);
+    setPharmacyOrders((prev) => prev.filter((o) => o.id !== id));
+    void syncRecordToFirestore(
+      id,
+      'pharmacy_order',
+      target?.fullName ? `${target.fullName} - ${target.packageType}` : id,
+      'DELETED',
+      { id }
+    );
+    addToast('info', 'Pesanan Dihapus', 'Data pesanan farmasi telah dihapus dari sistem.');
   };
 
   const updateProfileAvatar = (avatarUrl: string) => {
@@ -1883,6 +1999,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         skwbPatientCardClaims,
         skwbOplasClaims,
         characterKillRecords,
+        pharmacyOrders,
+        submitPharmacyOrder,
+        updatePharmacyOrderStatus,
+        deletePharmacyOrder,
         toasts,
         addToast,
         removeToast,

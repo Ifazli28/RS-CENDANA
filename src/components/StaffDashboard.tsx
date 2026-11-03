@@ -34,6 +34,7 @@ import {
   RegulationManagementView,
 } from './dashboard/ManagementViewsPart2';
 import { SKWBBenefitView } from './dashboard/SKWBBenefitView';
+import { PharmacyManagementView } from './dashboard/PharmacyManagementView';
 import {
   LayoutDashboard,
   User,
@@ -64,6 +65,7 @@ import {
   ShieldAlert,
   Sparkles,
   HeartPulse,
+  Pill,
 } from 'lucide-react';
 
 export type StaffRouteId =
@@ -94,7 +96,8 @@ export type StaffRouteId =
   | 'weekly-attendance-recap'
   | 'monthly-attendance-recap'
   | 'payroll-management'
-  | 'regulation-management';
+  | 'regulation-management'
+  | 'pharmacy-management';
 
 interface MenuItemConfig {
   id: StaffRouteId;
@@ -123,6 +126,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     leaveRequests,
     resignRequests,
     switchDemoRole,
+    pharmacyOrders,
   } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -131,6 +135,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   const pendingAccountsCount = staffAccounts.filter((s) => s.status === 'Pending Approval').length;
   const pendingLeavesCount = leaveRequests.filter((l) => l.status === 'Pending').length;
   const pendingResignsCount = resignRequests.filter((r) => r.status === 'Pending').length;
+  const pendingPharmacyOrdersCount = (pharmacyOrders || []).filter((o) => o.status === 'Menunggu').length;
 
   const ALL_MENU_ITEMS: MenuItemConfig[] = [
     // Level 1+: Semua Staff Aktif
@@ -148,7 +153,15 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     // Level 3+ (Nurse+): Benefit SKWB & SKS
     { id: 'benefit-skwb', label: 'Benefit SKWB', minLevel: 3, category: 'Rekam & Layanan Medis', icon: ShieldCheck },
     { id: 'sks-results', label: 'Hasil Surat Keterangan Sehat', minLevel: 3, category: 'Rekam & Layanan Medis', icon: FileText },
-    // Level 4+ (Co-ass+): Psikologi
+    // Level 4+ (Co-ass ke atas): Loket & Pesanan Farmasi, Psikologi
+    {
+      id: 'pharmacy-management',
+      label: 'Loket & Pesanan Farmasi',
+      minLevel: 4,
+      category: 'Rekam & Layanan Medis',
+      icon: Pill,
+      badgeCount: pendingPharmacyOrdersCount,
+    },
     { id: 'psychology-results', label: 'Hasil Tes Psikologi', minLevel: 4, category: 'Rekam & Layanan Medis', icon: Brain },
     // Level 5+ (Pharmacist+): Buta Warna, Janji Temu
     { id: 'color-blind-results', label: 'Hasil Tes Buta Warna', minLevel: 5, category: 'Rekam & Layanan Medis', icon: Eye },
@@ -257,6 +270,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         return <ColorBlindResultsView />;
       case 'appointments-data':
         return <AppointmentsDataView />;
+      case 'pharmacy-management':
+        return <PharmacyManagementView />;
       case 'doctor-schedules':
         return <DoctorScheduleManageView />;
       case 'staff-management':

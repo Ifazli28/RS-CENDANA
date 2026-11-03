@@ -435,3 +435,76 @@ export interface ToastMessage {
   title: string;
   message: string;
 }
+
+export type PharmacyPackageType =
+  | 'Paket Perban (10 Pcs)'
+  | 'Paket obat Antidepresan (5 Pcs)'
+  | 'Paket Bundle Pengobatan (10 Perban, 5 Obat Antidepresan)'
+  | 'Paket Bundle Penyembuhan (15 Perban, 5 Antidepresan)';
+
+export interface PharmacyPackageConfig {
+  id: string;
+  code: 'a' | 'b' | 'c' | 'd';
+  name: PharmacyPackageType;
+  description: string;
+  price: number;
+  priceFormatted: string;
+}
+
+export const PHARMACY_PACKAGES: PharmacyPackageConfig[] = [
+  {
+    id: 'pkg-perban',
+    code: 'a',
+    name: 'Paket Perban (10 Pcs)',
+    description: '10 Pcs Perban Steril Standar Medis RSKB',
+    price: 25000,
+    priceFormatted: '$25.000 KBRP',
+  },
+  {
+    id: 'pkg-antidepresan',
+    code: 'b',
+    name: 'Paket obat Antidepresan (5 Pcs)',
+    description: '5 Pcs Obat Antidepresan Farmasi RSKB',
+    price: 25000,
+    priceFormatted: '$25.000 KBRP',
+  },
+  {
+    id: 'pkg-bundle-pengobatan',
+    code: 'c',
+    name: 'Paket Bundle Pengobatan (10 Perban, 5 Obat Antidepresan)',
+    description: '10 Perban + 5 Obat Antidepresan',
+    price: 40000,
+    priceFormatted: '$40.000 KBRP',
+  },
+  {
+    id: 'pkg-bundle-penyembuhan',
+    code: 'd',
+    name: 'Paket Bundle Penyembuhan (15 Perban, 5 Antidepresan)',
+    description: '15 Perban + 5 Antidepresan',
+    price: 45000,
+    priceFormatted: '$45.000 KBRP',
+  },
+];
+
+export type PharmacyOrderStatus = 'Menunggu' | 'Diproses' | 'Selesai' | 'Ditolak';
+
+export interface PharmacyOrder {
+  id: string;
+  fullName: string;
+  pocketNumber: string;
+  packageType: PharmacyPackageType;
+  quantity: 1 | 2 | 3;
+  unitPrice: number;
+  totalPrice: number;
+  ktpOrCardPhotoUrl: string;
+  ktpOrCardFileName: string;
+  ktaPhotoUrl?: string;
+  ktaFileName?: string;
+  status: PharmacyOrderStatus;
+  notes?: string;
+  handledByStaffName?: string;
+  handledByStaffRole?: RoleName;
+  handledAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+}

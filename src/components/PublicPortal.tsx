@@ -25,6 +25,7 @@ import {
   UserPlus,
   LogIn,
   HeartPulse,
+  Pill,
 } from 'lucide-react';
 
 interface PublicPortalProps {
@@ -269,7 +270,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
 
       {/* 3. QUICK ACCESS (Sec 15) */}
       <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
           <button
             onClick={() => setActiveModal('sks')}
             className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
@@ -307,6 +308,17 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveModal('pharmacy')}
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
+          >
+            <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#9E1B21] group-hover:text-white flex items-center justify-center transition mb-3">
+              <Pill className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900">Loket Farmasi</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Beli Obat & Perban</p>
+          </button>
+
+          <button
             onClick={() => setActiveModal('regulation')}
             className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
           >
@@ -319,7 +331,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
 
           <button
             onClick={() => scrollToSection('keluhan-warga')}
-            className="col-span-2 sm:col-span-1 p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition text-left group cursor-pointer"
           >
             <div className="w-10 h-10 rounded-xl bg-red-50/50 text-[#9E1B21] group-hover:bg-[#9E1B21] group-hover:text-white flex items-center justify-center transition mb-3">
               <MessageSquareWarning className="w-5 h-5" />
@@ -562,6 +574,48 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
               className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
             >
               Ajukan Karakter Kill
+            </button>
+          </div>
+
+          {/* 08 — Loket Farmasi RS Kota Baru */}
+          <div
+            onClick={() => setActiveModal('pharmacy')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setActiveModal('pharmacy');
+              }
+            }}
+            className="p-6 rounded-2xl bg-white border border-red-100 hover:border-[#9E1B21] shadow-xs hover:shadow-md transition flex flex-col justify-between space-y-5 lg:col-span-1 cursor-pointer group"
+          >
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-[#9E1B21]">08. Farmasi & Logistik Medis</span>
+                <Pill className="w-5 h-5 text-[#9E1B21] group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">Loket Farmasi RS Kota Baru</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Isi form untuk membeli perban dan obat-obatan resmi di farmasi RS Kota Baru:
+              </p>
+              <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4">
+                <li>Paket Perban (10 Pcs) — $25.000 KBRP</li>
+                <li>Paket obat Antidepresan (5 Pcs) — $25.000 KBRP</li>
+                <li>Bundle Pengobatan (10 Perban, 5 Antidepresan) — $40.000 KBRP</li>
+                <li>Bundle Penyembuhan (15 Perban, 5 Antidepresan) — $45.000 KBRP</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveModal('pharmacy');
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Pill className="w-4 h-4" />
+              Buka Layanan Farmasi
             </button>
           </div>
         </div>
