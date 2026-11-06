@@ -24,6 +24,8 @@ import {
   SKWBClaim,
   SKWBPaketSedangClaim,
   SKWBPatientCardClaim,
+  SKWBTreatmentClaim,
+  SKWBPaketPerbanClaim,
   SKWBOplasClaim,
   CharacterKillRecord,
   ToastMessage,
@@ -95,6 +97,8 @@ interface AppContextType {
   skwbClaims: SKWBClaim[];
   skwbPaketSedangClaims: SKWBPaketSedangClaim[];
   skwbPatientCardClaims: SKWBPatientCardClaim[];
+  skwbTreatmentClaims: SKWBTreatmentClaim[];
+  skwbPaketPerbanClaims: SKWBPaketPerbanClaim[];
   skwbOplasClaims: SKWBOplasClaim[];
   characterKillRecords: CharacterKillRecord[];
   pharmacyOrders: PharmacyOrder[];
@@ -161,6 +165,8 @@ interface AppContextType {
   }) => { success: boolean; claim?: SKWBClaim; message: string };
   claimSKWBPaketSedang: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
   claimSKWBPatientCard: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
+  claimSKWBTreatment: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
+  claimSKWBPaketPerban: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
   claimSKWBOplas: (skwbClaimId: string, handlingStaffId: string) => { success: boolean; message: string };
   deleteSKSRecord: (id: string) => void;
   deletePsychologyRecord: (id: string) => void;
@@ -171,6 +177,8 @@ interface AppContextType {
   deleteSKWBClaim: (id: string) => void;
   deleteSKWBPaketSedangClaim: (id: string) => void;
   deleteSKWBPatientCardClaim: (id: string) => void;
+  deleteSKWBTreatmentClaim: (id: string) => void;
+  deleteSKWBPaketPerbanClaim: (id: string) => void;
   deleteSKWBOplasClaim: (id: string) => void;
   deleteLeaveRequest: (id: string) => void;
   deleteResignRequest: (id: string) => void;
@@ -1708,8 +1716,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, claim: newClaim, message: 'Pengajuan Benefit SKWB berhasil disimpan.' };
   };
 
-  // Benefit 1: Paket Sedang (Obat dan Perban) — 1x per hari selama aktif, Staff minimal Co-ass (Level >= 4)
-  const claimSKWBPaketSedang = (skwbClaimId: string, handlingStaffId: string) => {
+  // Benefit: Gratis 1x Paket Perban — 1x klaim selama masa berlaku SKWB aktif, Staff minimal Co-ass (Level >= 4)
+  const claimSKWBPaketPerban = (skwbClaimId: string, handlingStaffId: string) => {
     if (!currentUser || currentUser.level < 3) {
       addToast('error', 'Akses Ditolak', 'Anda tidak memiliki hak akses untuk memproses Benefit SKWB.');
       return { success: false, message: 'Anda tidak memiliki hak akses.' };
@@ -1734,23 +1742,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    // 2. Cek apakah warga sudah melakukan klaim Paket Sedang hari ini
-    const now = new Date();
-    const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
-      now.getDate()
-    ).padStart(2, '0')}`;
-    const alreadyClaimedToday = skwbPaketSedangClaims.some(
-      (c) => c.skwbClaimId === skwbClaimId && c.claimDate === todayDate
-    );
-    if (alreadyClaimedToday) {
-      addToast('warning', 'Sudah Diklaim Hari Ini', 'Paket Sedang sudah diklaim untuk hari ini.');
-      return { success: false, message: 'Paket Sedang sudah diklaim untuk hari ini.' };
+    // 2. Cek apakah sudah pernah klaim Gratis 1x Paket Perban
+    const alreadyClaimed = skwbPaketSedangClaims.some((c) => c.skwbClaimId === skwbClaimId);
+    if (alreadyClaimed) {
+      addToast('warning', 'Sudah Pernah Diklaim', 'Gratis 1x Paket Perban sudah pernah diklaim.');
+      return { success: false, message: 'Gratis 1x Paket Perban sudah pernah diklaim.' };
     }
 
     // 3. Cek apakah staff yang menangani sudah dipilih
     if (!handlingStaffId) {
-      addToast('error', 'Staff Wajib Dipilih', 'Staff yang menangani wajib dipilih.');
-      return { success: false, message: 'Staff yang menangani wajib dipilih.' };
+      addToast('error', 'Staff Wajib Dipilih', 'Staff yang menyerahkan paket perban wajib dipilih.');
+      return { success: false, message: 'Staff yang menyerahkan paket perban wajib dipilih.' };
     }
 
     // 4. Cek apakah staff aktif dan memiliki role Co-ass ke atas (Level >= 4)
@@ -1759,19 +1761,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addToast(
         'error',
         'Kewenangan Tidak Sesuai',
-        'Staff tersebut tidak memiliki kewenangan untuk menangani klaim ini.'
+        'Staff tersebut tidak memiliki kewenangan untuk menangani klaim ini (minimal Co-ass).'
       );
       return {
         success: false,
-        message: 'Staff tersebut tidak memiliki kewenangan untuk menangani klaim ini.',
+        message: 'Staff tersebut tidak memiliki kewenangan untuk menangani klaim ini (minimal Co-ass).',
       };
     }
 
+    const now = new Date();
+    const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
     const claimTime = `${String(now.getHours()).padStart(2, '0')}:${String(
       now.getMinutes()
     ).padStart(2, '0')}`;
-    const id = `skwb_pkt_${Date.now()}`;
-    const record: SKWBPaketSedangClaim = {
+    const id = `skwb_perban_${Date.now()}`;
+    const record: SKWBPaketPerbanClaim = {
       id,
       skwbClaimId,
       claimDate: todayDate,
@@ -1786,21 +1792,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSkwbPaketSedangClaims((prev) => [record, ...prev]);
     void syncRecordToFirestore(
       id,
-      'skwb_paket_sedang_claim',
-      `Paket Sedang - ${skwb.icName} (${todayDate})`,
+      'skwb_paket_perban_claim',
+      `Gratis 1x Paket Perban - ${skwb.icName}`,
       'Claimed',
       { ...record }
     );
     addToast(
       'success',
-      'Klaim Paket Sedang Berhasil',
-      `Paket Sedang (${skwb.icName}) berhasil diklaim dan ditangani oleh ${staff.name} (${staff.role}).`
+      'Klaim Gratis 1x Paket Perban Berhasil',
+      `Gratis 1x Paket Perban untuk ${skwb.icName} berhasil diserahkan oleh ${staff.name} (${staff.role}).`
     );
-    return { success: true, message: 'Klaim Paket Sedang berhasil disimpan.' };
+    return { success: true, message: 'Klaim Gratis 1x Paket Perban berhasil disimpan.' };
   };
 
-  // Benefit 2: Diskon 50% Pembuatan Kartu Pasien — 1x sepanjang SKWB, Staff minimal Paramedic (Level >= 3)
-  const claimSKWBPatientCard = (skwbClaimId: string, handlingStaffId: string) => {
+  const claimSKWBPaketSedang = claimSKWBPaketPerban;
+
+  // Benefit: Diskon 50% Layanan Treatment — 1x sepanjang SKWB, Staff minimal Paramedic/Nurse (Level >= 3)
+  const claimSKWBTreatment = (skwbClaimId: string, handlingStaffId: string) => {
     if (!currentUser || currentUser.level < 3) {
       addToast('error', 'Akses Ditolak', 'Anda tidak memiliki hak akses untuk memproses Benefit SKWB.');
       return { success: false, message: 'Anda tidak memiliki hak akses.' };
@@ -1824,18 +1832,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addToast(
         'warning',
         'Sudah Pernah Digunakan',
-        'Diskon 50% pembuatan kartu pasien sudah pernah digunakan.'
+        'Diskon 50% Layanan Treatment sudah pernah digunakan.'
       );
       return {
         success: false,
-        message: 'Diskon 50% pembuatan kartu pasien sudah pernah digunakan.',
+        message: 'Diskon 50% Layanan Treatment sudah pernah digunakan.',
       };
     }
 
-    // 3. Cek staff yang menangani (Paramedic ke atas, Level >= 3)
+    // 3. Cek staff yang menangani (Nurse/Paramedic ke atas, Level >= 3)
     if (!handlingStaffId) {
-      addToast('error', 'Staff Wajib Dipilih', 'Staff yang membuatkan kartu pasien wajib dipilih.');
-      return { success: false, message: 'Staff yang membuatkan kartu pasien wajib dipilih.' };
+      addToast('error', 'Staff Wajib Dipilih', 'Staff yang menangani layanan treatment wajib dipilih.');
+      return { success: false, message: 'Staff yang menangani layanan treatment wajib dipilih.' };
     }
 
     const staff = staffAccounts.find((s) => s.id === handlingStaffId && s.status === 'Active');
@@ -1843,11 +1851,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addToast(
         'error',
         'Kewenangan Tidak Sesuai',
-        'Staff harus memiliki jabatan minimal Nurse ke atas.'
+        'Staff harus memiliki jabatan minimal Nurse / Paramedic ke atas.'
       );
       return {
         success: false,
-        message: 'Staff harus memiliki jabatan minimal Nurse ke atas.',
+        message: 'Staff harus memiliki jabatan minimal Nurse / Paramedic ke atas.',
       };
     }
 
@@ -1858,8 +1866,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const claimTime = `${String(now.getHours()).padStart(2, '0')}:${String(
       now.getMinutes()
     ).padStart(2, '0')}`;
-    const id = `skwb_kp_${Date.now()}`;
-    const record: SKWBPatientCardClaim = {
+    const id = `skwb_tr_${Date.now()}`;
+    const record: SKWBTreatmentClaim = {
       id,
       skwbClaimId,
       claimDate: todayDate,
@@ -1874,18 +1882,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSkwbPatientCardClaims((prev) => [record, ...prev]);
     void syncRecordToFirestore(
       id,
-      'skwb_kartu_pasien_claim',
-      `Diskon 50% Kartu Pasien - ${skwb.icName}`,
+      'skwb_treatment_claim',
+      `Diskon 50% Layanan Treatment - ${skwb.icName}`,
       'Claimed',
       { ...record }
     );
     addToast(
       'success',
-      'Klaim Diskon 50% Kartu Pasien Berhasil',
-      `Benefit Kartu Pasien (${skwb.icName}) berhasil diklaim oleh ${staff.name} (${staff.role}).`
+      'Klaim Diskon 50% Layanan Treatment Berhasil',
+      `Benefit Diskon 50% Layanan Treatment (${skwb.icName}) berhasil diproses oleh ${staff.name} (${staff.role}).`
     );
-    return { success: true, message: 'Klaim Diskon 50% Kartu Pasien berhasil disimpan.' };
+    return { success: true, message: 'Klaim Diskon 50% Layanan Treatment berhasil disimpan.' };
   };
+
+  const claimSKWBPatientCard = claimSKWBTreatment;
 
   // Benefit 3: Free 1x Oplas — 1x sepanjang SKWB, Staff minimal Doctor (Level >= 5)
   const claimSKWBOplas = (skwbClaimId: string, handlingStaffId: string) => {
@@ -1997,6 +2007,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         skwbClaims,
         skwbPaketSedangClaims,
         skwbPatientCardClaims,
+        skwbTreatmentClaims: skwbPatientCardClaims,
+        skwbPaketPerbanClaims: skwbPaketSedangClaims,
         skwbOplasClaims,
         characterKillRecords,
         pharmacyOrders,
@@ -2052,6 +2064,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         submitSKWBClaim,
         claimSKWBPaketSedang,
         claimSKWBPatientCard,
+        claimSKWBTreatment,
+        claimSKWBPaketPerban,
         claimSKWBOplas,
         deleteSKSRecord,
         deletePsychologyRecord,
@@ -2062,6 +2076,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteSKWBClaim,
         deleteSKWBPaketSedangClaim,
         deleteSKWBPatientCardClaim,
+        deleteSKWBTreatmentClaim: deleteSKWBPatientCardClaim,
+        deleteSKWBPaketPerbanClaim: deleteSKWBPaketSedangClaim,
         deleteSKWBOplasClaim,
         deleteLeaveRequest,
         deleteResignRequest,

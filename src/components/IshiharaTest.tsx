@@ -7,157 +7,119 @@ const IshiharaCanvasPlate: React.FC<{ plate: IshiharaPlateData }> = ({ plate }) 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    if (plate.imageUrl) return; // Ditampilkan langsung via tag img untuk ketajaman maksimal
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const size = 320;
-    const radius = 144;
+    const radius = 146;
     const cx = size / 2;
     const cy = size / 2;
 
     // 1. Clear main canvas
     ctx.clearRect(0, 0, size, size);
 
-    // 2. White circular disc plate background with soft clinical border
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius + 10, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fill();
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    // Inner subtle disc base
+    // 2. White circular disc background
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#FAF5FF';
-    const discGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, radius);
-    discGrad.addColorStop(0, '#FFFFFF');
-    discGrad.addColorStop(1, '#F8FAFC');
-    ctx.fillStyle = discGrad;
+    ctx.fillStyle = '#FFFFFF';
     ctx.fill();
 
-    // 3. Determine solid number text & style
-    const isSingle = plate.expectedAnswer.length <= 1;
-    const fontSize = isSingle ? 144 : 124;
+    // 3. Create offscreen canvas to sample the number shape
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = size;
+    offCanvas.height = size;
+    const offCtx = offCanvas.getContext('2d');
+    if (!offCtx) return;
+
     const text = plate.expectedAnswer;
+    const isSingle = text.length <= 1;
+    const fontSize = isSingle ? 172 : 126;
 
-    // Measure text bounds to prevent background dots from obscuring the clear solid number
-    ctx.font = `900 ${fontSize}px "Arial Black", "Montserrat", "Poppins", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const metrics = ctx.measureText(text);
-    const textWidth = metrics.width;
-    const textHalfWidth = textWidth / 2 + 16;
-    const textHalfHeight = (fontSize * 0.42) + 16;
+    offCtx.font = `900 ${fontSize}px "Arial Black", "Montserrat", "Poppins", sans-serif`;
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.fillStyle = '#000000';
+    offCtx.fillText(text, cx, cy + (isSingle ? 4 : 2));
 
-    // Helper to check if a dot overlaps the central solid text area
-    const isInsideTextArea = (x: number, y: number, r: number) => {
-      return (
-        x >= cx - textHalfWidth - r &&
-        x <= cx + textHalfWidth + r &&
-        y >= cy - textHalfHeight - r &&
-        y <= cy + textHalfHeight - r
-      );
+    const imgData = offCtx.getImageData(0, 0, size, size).data;
+
+    const isInsideNumber = (x: number, y: number): boolean => {
+      const px = Math.round(x);
+      const py = Math.round(y);
+      if (px < 0 || px >= size || py < 0 || py >= size) return false;
+      return imgData[(py * size + px) * 4 + 3] > 80;
     };
 
-    // 4. Deterministic pseudo-random dot generation for the surrounding circles
-    let seed = plate.plateNumber * 14813;
+    // 4. Deterministic PRNG seeded by plateNumber for consistent, flicker-free rendering
+    let seed = plate.plateNumber * 7919 + 104729;
     const rand = () => {
       seed = (seed * 16807) % 2147483647;
       return (seed - 1) / 2147483646;
     };
 
+    // 5. Generate packed dots across the entire circular disc (setipe dengan gambar referensi)
     const dots: { x: number; y: number; r: number; color: string }[] = [];
-    const radii = [10.5, 8.5, 7.0, 5.5, 4.0, 3.2];
-    const colorPalette = [
-      ...plate.bgColors,
-      ...plate.fgColors,
-      '#F59E0B',
-      '#10B981',
-      '#EF4444',
-      '#3B82F6',
-      '#EC4899',
-      '#8B5CF6',
-      '#06B6D4',
-      '#84CC16',
-      '#F97316',
-    ];
+    const radii = [9.5, 8.0, 6.8, 5.5, 4.4, 3.4, 2.6];
 
     for (const r of radii) {
-      for (let attempt = 0; attempt < 900; attempt++) {
+      const attempts = r >= 6.8 ? 750 : 1300;
+      for (let attempt = 0; attempt < attempts; attempt++) {
         const angle = rand() * Math.PI * 2;
-        const dist = Math.sqrt(rand()) * (radius - r - 4);
+        const dist = Math.sqrt(rand()) * (radius - r - 2);
         const x = cx + Math.cos(angle) * dist;
         const y = cy + Math.sin(angle) * dist;
 
-        // Skip if inside the text area so the solid number remains 100% unobstructed & clear
-        if (isInsideTextArea(x, y, r)) continue;
-
         let overlaps = false;
-        for (const d of dots) {
+        for (let i = 0; i < dots.length; i++) {
+          const d = dots[i];
           const dx = d.x - x;
           const dy = d.y - y;
-          if (Math.sqrt(dx * dx + dy * dy) < d.r + r + 0.6) {
+          if (dx * dx + dy * dy < (d.r + r + 0.6) * (d.r + r + 0.6)) {
             overlaps = true;
             break;
           }
         }
+        if (overlaps) continue;
 
-        if (!overlaps) {
-          const color = colorPalette[Math.floor(rand() * colorPalette.length)];
-          dots.push({ x, y, r, color });
-        }
+        // Check if this dot is in the number or background
+        const inNum = isInsideNumber(x, y);
+        const palette = inNum ? plate.fgColors : plate.bgColors;
+        const color = palette[Math.floor(rand() * palette.length)];
+
+        dots.push({ x, y, r, color });
       }
     }
 
-    // 5. Draw all surrounding decorative circles
-    for (const d of dots) {
+    // 6. Draw all dots
+    for (let i = 0; i < dots.length; i++) {
+      const d = dots[i];
       ctx.beginPath();
       ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
       ctx.fillStyle = d.color;
       ctx.fill();
     }
-
-    // 6. Draw the SOLID, CLEAR, UNMISTAKABLE NUMBER in the center
-    // Solid color matching the plate's primary foreground color
-    const solidColor = plate.fgColors[0] || '#9E1B21';
-
-    // Drop shadow for solid readability
-    ctx.save();
-    ctx.shadowColor = 'rgba(15, 23, 42, 0.28)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 4;
-
-    // Solid Crisp Outline
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 7;
-    ctx.lineJoin = 'round';
-    ctx.strokeText(text, cx, cy + 4);
-
-    // Solid Vivid Fill
-    ctx.fillStyle = solidColor;
-    ctx.fillText(text, cx, cy + 4);
-
-    ctx.restore();
-
-    // Thin inner contrast border for extra high definition
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.lineWidth = 2;
-    ctx.strokeText(text, cx, cy + 4);
   }, [plate]);
 
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-[#F8FAFC] rounded-3xl border border-slate-200/80 shadow-2xs">
-      <div className="rounded-full bg-white p-2 shadow-md border border-slate-100">
-        <canvas
-          ref={canvasRef}
-          width={320}
-          height={320}
-          className="w-[240px] h-[240px] sm:w-[290px] sm:h-[290px] rounded-full"
-        />
+      <div className="rounded-full bg-white p-2 shadow-md border border-slate-100 flex items-center justify-center overflow-hidden">
+        {plate.imageUrl ? (
+          <img
+            src={plate.imageUrl}
+            alt={plate.plateDescription}
+            className="w-[240px] h-[240px] sm:w-[290px] sm:h-[290px] rounded-full object-cover"
+          />
+        ) : (
+          <canvas
+            ref={canvasRef}
+            width={320}
+            height={320}
+            className="w-[240px] h-[240px] sm:w-[290px] sm:h-[290px] rounded-full"
+          />
+        )}
       </div>
       <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
         <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-extrabold tracking-wide uppercase">

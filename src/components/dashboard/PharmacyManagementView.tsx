@@ -350,7 +350,7 @@ export const PharmacyManagementView: React.FC = () => {
                             type="button"
                             onClick={() =>
                               setLightboxImage({
-                                url: order.ktpOrCardPhotoUrl,
+                                url: order.ktpOrCardPhotoUrl!,
                                 title: `Foto KTP/Kartu Pasien - ${order.fullName}`,
                               })
                             }
@@ -360,7 +360,12 @@ export const PharmacyManagementView: React.FC = () => {
                             <Eye className="w-3.5 h-3.5" />
                           </button>
                         ) : (
-                          <span className="text-[10px] text-slate-400">-</span>
+                          <span
+                            className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200"
+                            title="Verifikasi fisik di loket: Wajib memperlihatkan KTP/Kartu Pasien/KTA kepada petugas farmasi"
+                          >
+                            Verifikasi Fisik
+                          </span>
                         )}
 
                         {order.ktaPhotoUrl && (

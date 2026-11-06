@@ -83,7 +83,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
   const [pharmacyName, setPharmacyName] = useState('');
   const [pharmacyPocket, setPharmacyPocket] = useState('');
   const [pharmacyPackageCode, setPharmacyPackageCode] = useState<'a' | 'b' | 'c' | 'd'>('a');
-  const [pharmacyQuantity, setPharmacyQuantity] = useState<1 | 2 | 3>(1);
+  const [pharmacyQuantity, setPharmacyQuantity] = useState<number>(1);
   const [pharmacyKtpPhoto, setPharmacyKtpPhoto] = useState<string>('');
   const [pharmacyKtaPhoto, setPharmacyKtaPhoto] = useState<string>('');
   const [pharmacyKtpLoading, setPharmacyKtpLoading] = useState(false);
@@ -94,6 +94,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
   const selectedPharmacyPackage =
     PHARMACY_PACKAGES.find((p) => p.code === pharmacyPackageCode) || PHARMACY_PACKAGES[0];
+  const maxPharmacyQuantity = pharmacyKtaPhoto ? 3 : 2;
 
   const handlePharmacyKtpUpload = async (file: File) => {
     setPharmacyError('');
@@ -2440,21 +2441,21 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                     <div className="p-2.5 rounded-lg bg-white border border-red-100">
-                      <p className="font-bold text-slate-900">1. Paket Sedang</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Obat & Perban · Dapat diklaim 1x setiap hari selama SKWB aktif (Oleh Co-ass+)
-                      </p>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-red-100">
-                      <p className="font-bold text-slate-900">2. Diskon 50% Kartu Pasien</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Berlaku 1x klaim selama periode SKWB aktif (Oleh Paramedic+)
-                      </p>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-red-100">
-                      <p className="font-bold text-slate-900">3. Free 1x Oplas</p>
+                      <p className="font-bold text-slate-900">1. Free Operasi Plastik 1x</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">
                         Gratis 1x Operasi Plastik selama periode SKWB aktif (Oleh Doctor+)
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-red-100">
+                      <p className="font-bold text-slate-900">2. Diskon 50% Layanan Treatment</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Potongan 50% layanan treatment selama periode SKWB aktif (Oleh Nurse/Paramedic+)
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-red-100">
+                      <p className="font-bold text-slate-900">3. Gratis 1x Paket Perban</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Gratis 1x paket perban steril selama periode SKWB aktif (Oleh Co-ass+)
                       </p>
                     </div>
                   </div>
@@ -3081,8 +3082,12 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       setPharmacyError('No. Kantong saat ini wajib diisi.');
                       return;
                     }
-                    if (!pharmacyKtpPhoto) {
-                      setPharmacyError('Upload foto KTP / Kartu Pasien wajib disertakan.');
+                    if (!pharmacyQuantity || pharmacyQuantity < 1) {
+                      setPharmacyError('Jumlah pesanan minimal 1 paket.');
+                      return;
+                    }
+                    if (pharmacyQuantity > 3) {
+                      setPharmacyError('Jumlah pesanan maksimal 3 paket.');
                       return;
                     }
                     setPharmacySubmitting(true);
@@ -3096,10 +3101,6 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                         quantity: pharmacyQuantity,
                         unitPrice,
                         totalPrice,
-                        ktpOrCardPhotoUrl: pharmacyKtpPhoto,
-                        ktpOrCardFileName: 'ktp_pasien.jpg',
-                        ktaPhotoUrl: pharmacyKtaPhoto || undefined,
-                        ktaFileName: pharmacyKtaPhoto ? 'kta_pasien.jpg' : undefined,
                       });
                       if (res.success) {
                         setPharmacySuccessOrder({
@@ -3110,10 +3111,6 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                           quantity: pharmacyQuantity,
                           unitPrice,
                           totalPrice,
-                          ktpOrCardPhotoUrl: pharmacyKtpPhoto,
-                          ktpOrCardFileName: 'ktp_pasien.jpg',
-                          ktaPhotoUrl: pharmacyKtaPhoto || undefined,
-                          ktaFileName: pharmacyKtaPhoto ? 'kta_pasien.jpg' : undefined,
                           status: 'Menunggu',
                           createdAt: new Date().toISOString(),
                         });
@@ -3128,6 +3125,20 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                   }}
                   className="mt-6 space-y-6"
                 >
+                  {/* KETERANGAN SYARAT PEMBELIAN OBAT */}
+                  <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 text-slate-800 space-y-1">
+                    <div className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+                      <span>Syarat Pembelian Obat:</span>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-900 pl-5 leading-relaxed">
+                      Wajib memperlihatkan KTP/Kartu Pasien/KTA kepada petugas farmasi
+                    </p>
+                    <p className="text-[11px] text-slate-600 pl-5">
+                      *Maksimal pembelian 2 paket jika tanpa KTA, dan maksimal 3 paket jika memperlihatkan KTA kepada petugas di loket farmasi.
+                    </p>
+                  </div>
+
                   {/* DATA PEMESAN */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -3216,137 +3227,67 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     </div>
                   </div>
 
-                  {/* JUMLAH (1, 2, 3) */}
+                  {/* JUMLAH DENGAN FORMAT ISIAN */}
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-slate-800">
-                          jumlah: buat 1,2,3 <span className="text-red-500">*</span>
+                          Jumlah : <span className="text-red-500">*</span>
                         </label>
-                        <p className="text-[11px] text-slate-500">Pilih kuantiti paket yang ingin dibeli</p>
+                        <p className="text-[11px] text-slate-500">
+                          Maksimal 2 paket jika tanpa KTA, atau maksimal 3 paket jika memperlihatkan KTA di loket.
+                        </p>
                       </div>
+
                       <div className="flex items-center gap-2">
-                        {([1, 2, 3] as const).map((qty) => (
-                          <button
-                            key={qty}
-                            type="button"
-                            onClick={() => setPharmacyQuantity(qty)}
-                            className={`w-12 h-10 rounded-xl font-bold text-sm transition cursor-pointer border ${
-                              pharmacyQuantity === qty
-                                ? 'bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white border-transparent shadow-xs'
-                                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-                            }`}
-                          >
-                            {qty}
-                          </button>
-                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setPharmacyQuantity((prev) => Math.max(1, prev - 1))}
+                          disabled={pharmacyQuantity <= 1}
+                          className="w-9 h-9 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-base flex items-center justify-center transition disabled:opacity-40 cursor-pointer shadow-2xs"
+                        >
+                          -
+                        </button>
+                        <input
+                          required
+                          type="number"
+                          min={1}
+                          max={3}
+                          value={pharmacyQuantity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (isNaN(val)) {
+                              setPharmacyQuantity(1);
+                            } else if (val > 3) {
+                              setPharmacyQuantity(3);
+                            } else if (val < 1) {
+                              setPharmacyQuantity(1);
+                            } else {
+                              setPharmacyQuantity(val);
+                            }
+                          }}
+                          className="w-16 h-9 rounded-xl border border-slate-300 bg-white text-center font-bold text-sm text-slate-900 focus:border-[#9E1B21] focus:outline-none tabular-nums"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPharmacyQuantity((prev) => Math.min(3, prev + 1))}
+                          disabled={pharmacyQuantity >= 3}
+                          className="w-9 h-9 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-base flex items-center justify-center transition disabled:opacity-40 cursor-pointer shadow-2xs"
+                        >
+                          +
+                        </button>
+                        <span className="text-xs font-semibold text-slate-500 ml-1">Paket</span>
                       </div>
                     </div>
 
                     <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs sm:text-sm">
                       <span className="text-slate-600 font-medium">
-                        Kalkulasi Biaya: ({pharmacyQuantity}x @ ${selectedPharmacyPackage.price.toLocaleString()} KBRP)
+                        Kalkulasi Biaya: ({pharmacyQuantity}x @ {selectedPharmacyPackage.priceFormatted})
                       </span>
                       <span className="font-mono font-extrabold text-base text-emerald-700">
                         Total: ${(selectedPharmacyPackage.price * pharmacyQuantity).toLocaleString()} KBRP
                       </span>
                     </div>
-                  </div>
-
-                  {/* UPLOAD FOTO KTP / KARTU PASIEN (REQUIRED) */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      upload foto KTP/Kartu Pasien <span className="text-red-500">* (Wajib)</span>
-                    </label>
-                    {pharmacyKtpPhoto ? (
-                      <div className="relative rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={pharmacyKtpPhoto}
-                            alt="KTP Pasien"
-                            className="w-14 h-14 object-cover rounded-lg border border-emerald-300 shrink-0 bg-white"
-                          />
-                          <div className="min-w-0">
-                            <span className="block text-xs font-bold text-emerald-900 truncate">Foto KTP / Kartu Pasien Terunggah</span>
-                            <span className="text-[11px] text-emerald-700">Telah terkompresi dan siap dikirim</span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setPharmacyKtpPhoto('')}
-                          className="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 text-xs font-semibold hover:bg-red-50 transition cursor-pointer shrink-0"
-                        >
-                          Ganti Foto
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="border-2 border-dashed border-slate-300 hover:border-[#9E1B21] rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition bg-white group">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handlePharmacyKtpUpload(file);
-                          }}
-                        />
-                        <div className="w-10 h-10 rounded-full bg-red-50 text-[#9E1B21] flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
-                          <Upload className="w-5 h-5" />
-                        </div>
-                        <span className="text-xs font-bold text-slate-800">
-                          {pharmacyKtpLoading ? 'Memproses dan Mengompres Gambar...' : 'Klik untuk Unggah Foto KTP / Kartu Pasien'}
-                        </span>
-                        <span className="text-[11px] text-slate-400 mt-0.5">Mendukung format JPG, PNG, WEBP (Otomatis Dioptimalkan)</span>
-                      </label>
-                    )}
-                  </div>
-
-                  {/* UPLOAD FOTO KTA (OPSIONAL) */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Upload foto KTA (Opsional)
-                    </label>
-                    {pharmacyKtaPhoto ? (
-                      <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={pharmacyKtaPhoto}
-                            alt="KTA"
-                            className="w-14 h-14 object-cover rounded-lg border border-slate-300 shrink-0 bg-white"
-                          />
-                          <div className="min-w-0">
-                            <span className="block text-xs font-bold text-slate-800 truncate">Foto KTA Terunggah</span>
-                            <span className="text-[11px] text-slate-500">Telah terkompresi untuk verifikasi staf</span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setPharmacyKtaPhoto('')}
-                          className="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 text-xs font-semibold hover:bg-red-50 transition cursor-pointer shrink-0"
-                        >
-                          Hapus / Ganti
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="border-2 border-dashed border-slate-200 hover:border-slate-400 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition bg-white/60 group">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handlePharmacyKtaUpload(file);
-                          }}
-                        />
-                        <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-1.5">
-                          <Upload className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs font-medium text-slate-700">
-                          {pharmacyKtaLoading ? 'Memproses Gambar...' : 'Klik jika ingin menyertakan Foto KTA (Opsional)'}
-                        </span>
-                        <span className="text-[11px] text-slate-400">Boleh dikosongkan jika tidak memiliki KTA</span>
-                      </label>
-                    )}
                   </div>
 
                   {/* TOMBOL AKSI */}
@@ -3363,7 +3304,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                     </button>
                     <button
                       type="submit"
-                      disabled={pharmacySubmitting || pharmacyKtpLoading || pharmacyKtaLoading || !pharmacyKtpPhoto}
+                      disabled={pharmacySubmitting}
                       className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-sm font-semibold shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer flex items-center gap-2"
                     >
                       <ShoppingBag className="w-4 h-4" />

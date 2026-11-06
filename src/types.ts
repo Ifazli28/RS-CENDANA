@@ -357,7 +357,7 @@ export interface RoleSalaryConfig {
   bonusPerStepAmount: number;  // Nominal Bonus per Kelipatan Jam ($)
 }
 
-export interface SKWBPaketSedangClaim {
+export interface SKWBTreatmentClaim {
   id: string;
   skwbClaimId: string;
   claimDate: string; // YYYY-MM-DD
@@ -369,7 +369,7 @@ export interface SKWBPaketSedangClaim {
   createdAt: string;
 }
 
-export interface SKWBPatientCardClaim {
+export interface SKWBPaketPerbanClaim {
   id: string;
   skwbClaimId: string;
   claimDate: string; // YYYY-MM-DD
@@ -392,6 +392,10 @@ export interface SKWBOplasClaim {
   status: 'Claimed';
   createdAt: string;
 }
+
+// Backward compatibility aliases
+export type SKWBPatientCardClaim = SKWBTreatmentClaim;
+export type SKWBPaketSedangClaim = SKWBPaketPerbanClaim;
 
 export interface SKWBClaim {
   id: string;
@@ -493,11 +497,11 @@ export interface PharmacyOrder {
   fullName: string;
   pocketNumber: string;
   packageType: PharmacyPackageType;
-  quantity: 1 | 2 | 3;
+  quantity: number;
   unitPrice: number;
   totalPrice: number;
-  ktpOrCardPhotoUrl: string;
-  ktpOrCardFileName: string;
+  ktpOrCardPhotoUrl?: string;
+  ktpOrCardFileName?: string;
   ktaPhotoUrl?: string;
   ktaFileName?: string;
   status: PharmacyOrderStatus;

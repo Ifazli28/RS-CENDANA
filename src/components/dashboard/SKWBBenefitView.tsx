@@ -66,9 +66,9 @@ export const SKWBBenefitView: React.FC = () => {
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const [previewPhotoClaim, setPreviewPhotoClaim] = useState<SKWBClaim | null>(null);
 
-  // Modal state untuk Klaim 3 Benefit
+  // Modal state untuk Klaim 3 Benefit SKWB: Free Oplas, Diskon 50% Treatment, Gratis 1x Paket Perban
   const [activeClaimModal, setActiveClaimModal] = useState<
-    null | 'paket_sedang' | 'kartu_pasien' | 'oplas'
+    null | 'oplas' | 'treatment' | 'perban'
   >(null);
   const [staffSearchQuery, setStaffSearchQuery] = useState('');
   const [selectedStaffId, setSelectedStaffId] = useState('');
@@ -99,21 +99,21 @@ export const SKWBBenefitView: React.FC = () => {
     return skwbClaims.map((claim) => {
       const isActive = isSKWBClaimCurrentlyActive(claim.issueDate, claim.endDate);
       const computedStatus: 'Aktif' | 'Kadaluarsa' = isActive ? 'Aktif' : 'Kadaluarsa';
+      const oplasRecord = skwbOplasClaims.find((o) => o.skwbClaimId === claim.id) || null;
+      const treatmentRecord = skwbPatientCardClaims.find((k) => k.skwbClaimId === claim.id) || null;
+      const perbanRecord = skwbPaketSedangClaims.find((p) => p.skwbClaimId === claim.id) || null;
       const paketHistory = skwbPaketSedangClaims
         .filter((p) => p.skwbClaimId === claim.id)
         .sort((a, b) => `${b.claimDate} ${b.claimTime}`.localeCompare(`${a.claimDate} ${a.claimTime}`));
-      const claimedPaketToday = paketHistory.some((p) => p.claimDate === todayStr);
-      const patientCardRecord = skwbPatientCardClaims.find((k) => k.skwbClaimId === claim.id) || null;
-      const oplasRecord = skwbOplasClaims.find((o) => o.skwbClaimId === claim.id) || null;
 
       return {
         ...claim,
         computedStatus,
         isActive,
-        paketHistory,
-        claimedPaketToday,
-        patientCardRecord,
         oplasRecord,
+        treatmentRecord,
+        perbanRecord,
+        paketHistory,
       };
     });
   }, [skwbClaims, skwbPaketSedangClaims, skwbPatientCardClaims, skwbOplasClaims, todayStr]);
@@ -135,13 +135,13 @@ export const SKWBBenefitView: React.FC = () => {
   );
 
   // Daftar Staff Aktif sesuai syarat Role masing-masing Benefit
-  // Benefit 1 (Paket Sedang): Role >= Co-ass (Level >= 4)
-  // Benefit 2 (Kartu Pasien): Role >= Paramedic (Level >= 3)
-  // Benefit 3 (Free 1x Oplas): Role >= Doctor (Level >= 5)
+  // Benefit 1 (Free 1x Oplas): Role >= Doctor (Level >= 6)
+  // Benefit 2 (Diskon 50% Layanan Treatment): Role >= Nurse (Level >= 3)
+  // Benefit 3 (Gratis 1x Paket Perban): Role >= Co-ass (Level >= 4)
   const eligibleStaffList = useMemo(() => {
     let minLevel = 4;
-    if (activeClaimModal === 'paket_sedang') minLevel = ROLE_LEVELS['Co-Ass']; // 4
-    if (activeClaimModal === 'kartu_pasien') minLevel = ROLE_LEVELS['Nurse']; // 3
+    if (activeClaimModal === 'perban') minLevel = ROLE_LEVELS['Co-Ass']; // 4
+    if (activeClaimModal === 'treatment') minLevel = ROLE_LEVELS['Nurse']; // 3
     if (activeClaimModal === 'oplas') minLevel = ROLE_LEVELS['Doctor']; // 6
 
     return staffAccounts
@@ -160,7 +160,7 @@ export const SKWBBenefitView: React.FC = () => {
     [staffAccounts, selectedStaffId]
   );
 
-  const openClaimModal = (type: 'paket_sedang' | 'kartu_pasien' | 'oplas') => {
+  const openClaimModal = (type: 'oplas' | 'treatment' | 'perban') => {
     setClaimErrorMsg('');
     setStaffSearchQuery('');
     setSelectedStaffId('');
@@ -182,9 +182,9 @@ export const SKWBBenefitView: React.FC = () => {
       message: 'Terjadi kesalahan.',
     };
 
-    if (activeClaimModal === 'paket_sedang') {
+    if (activeClaimModal === 'perban') {
       result = claimSKWBPaketSedang(selectedClaim.id, selectedStaffId);
-    } else if (activeClaimModal === 'kartu_pasien') {
+    } else if (activeClaimModal === 'treatment') {
       result = claimSKWBPatientCard(selectedClaim.id, selectedStaffId);
     } else if (activeClaimModal === 'oplas') {
       result = claimSKWBOplas(selectedClaim.id, selectedStaffId);
@@ -384,169 +384,7 @@ export const SKWBBenefitView: React.FC = () => {
           <h2 className="text-lg font-bold text-slate-900">Daftar Benefit SKWB</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* BENEFIT 1: PAKET SEDANG (Obat dan Perban - Harian 1x/hari, Co-ass+) */}
-            <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-red-50/60 text-[#9E1B21] flex items-center justify-center">
-                    <Package className="w-5 h-5" />
-                  </div>
-                  <span
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
-                      selectedClaim.claimedPaketToday
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : selectedClaim.isActive
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {selectedClaim.claimedPaketToday
-                      ? 'Sudah Diklaim Hari Ini'
-                      : selectedClaim.isActive
-                      ? 'Tersedia Hari Ini'
-                      : 'Masa Berlaku Berakhir'}
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">1. Paket Sedang</h3>
-                  <p className="text-xs font-semibold text-[#7F1D1D] mt-0.5">Isi: Obat dan Perban</p>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Dapat diklaim <strong>1 kali setiap hari</strong> selama masa berlaku SKWB masih aktif. Wajib ditangani oleh <strong>Co-ass ke atas</strong>.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Total Pengambilan:</span>
-                    <span className="font-mono font-bold text-slate-900">
-                      {selectedClaim.paketHistory.length} Kali
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Status Hari Ini ({todayStr}):</span>
-                    <span className="font-semibold text-slate-800">
-                      {selectedClaim.claimedPaketToday ? 'Claimed' : 'Belum Diklaim'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                {selectedClaim.isActive ? (
-                  <button
-                    onClick={() => openClaimModal('paket_sedang')}
-                    disabled={selectedClaim.claimedPaketToday}
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                      selectedClaim.claimedPaketToday
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white shadow-xs hover:opacity-95'
-                    }`}
-                  >
-                    {selectedClaim.claimedPaketToday
-                      ? 'Paket Sedang Sudah Diklaim Hari Ini'
-                      : 'Klaim Paket Sedang'}
-                  </button>
-                ) : (
-                  <div className="w-full py-2.5 px-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold text-center">
-                    Masa Berlaku SKWB Telah Berakhir
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* BENEFIT 2: DISKON 50% PEMBUATAN KARTU PASIEN (1x selama SKWB, Paramedic+) */}
-            <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#20C997] flex items-center justify-center">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <span
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
-                      selectedClaim.patientCardRecord
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : selectedClaim.isActive
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {selectedClaim.patientCardRecord
-                      ? 'Claimed'
-                      : selectedClaim.isActive
-                      ? 'Belum Diklaim'
-                      : 'Kadaluarsa'}
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    2. Diskon 50% Pembuatan Kartu Pasien
-                  </h3>
-                  <p className="text-xs font-semibold text-[#20C997] mt-0.5">
-                    Potongan 50% Biaya Administrasi Kartu Pasien
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Hanya dapat diklaim <strong>1 kali</strong> selama masa berlaku SKWB. Wajib ditangani oleh <strong>Paramedic ke atas</strong>.
-                  </p>
-                </div>
-
-                {selectedClaim.patientCardRecord ? (
-                  <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs space-y-1.5">
-                    <div className="flex items-center gap-1.5 font-bold text-emerald-800">
-                      <CheckCircle2 className="w-4 h-4 text-[#20C997]" />
-                      <span>Status: Claimed</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-500">Tanggal Klaim:</span>
-                      <span className="font-mono font-semibold text-slate-800">
-                        {selectedClaim.patientCardRecord.claimDate} ({selectedClaim.patientCardRecord.claimTime})
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-500">Staff Pembuat Kartu:</span>
-                      <span className="font-bold text-slate-900">
-                        {selectedClaim.patientCardRecord.staffName}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-500">Jabatan Staff:</span>
-                      <span className="font-semibold text-[#7F1D1D]">
-                        {selectedClaim.patientCardRecord.staffRole}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs text-slate-600">
-                    Belum pernah diklaim. Kuota tersedia: <strong>1x Klaim</strong>.
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-2">
-                {selectedClaim.patientCardRecord ? (
-                  <button
-                    disabled
-                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-bold cursor-not-allowed"
-                  >
-                    Sudah Diklaim (Claimed)
-                  </button>
-                ) : selectedClaim.isActive ? (
-                  <button
-                    onClick={() => openClaimModal('kartu_pasien')}
-                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-xs hover:opacity-95 transition cursor-pointer"
-                  >
-                    Klaim Diskon 50% Kartu Pasien
-                  </button>
-                ) : (
-                  <div className="w-full py-2.5 px-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold text-center">
-                    Masa Berlaku SKWB Telah Berakhir
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* BENEFIT 3: FREE 1x OPLAS (1x selama SKWB, Doctor+) */}
+            {/* BENEFIT 1: FREE 1x OPLAS (1x selama SKWB, Doctor+) */}
             <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -571,7 +409,7 @@ export const SKWBBenefitView: React.FC = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">3. Free 1x Oplas</h3>
+                  <h3 className="text-base font-bold text-slate-900">1. Free Operasi Plastik 1x</h3>
                   <p className="text-xs font-semibold text-[#7F1D1D] mt-0.5">
                     Gratis 1x Prosedur Operasi Plastik Warga Baru
                   </p>
@@ -634,6 +472,186 @@ export const SKWBBenefitView: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* BENEFIT 2: DISKON 50% LAYANAN TREATMENT (1x selama SKWB, Nurse+) */}
+            <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#20C997] flex items-center justify-center">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                      selectedClaim.treatmentRecord
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : selectedClaim.isActive
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {selectedClaim.treatmentRecord
+                      ? 'Claimed'
+                      : selectedClaim.isActive
+                      ? 'Belum Diklaim'
+                      : 'Kadaluarsa'}
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    2. Diskon 50% Layanan Treatment
+                  </h3>
+                  <p className="text-xs font-semibold text-[#20C997] mt-0.5">
+                    Potongan 50% Biaya Layanan Treatment Medis
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Hanya dapat diklaim <strong>1 kali</strong> selama masa berlaku SKWB. Wajib ditangani oleh <strong>Nurse / Paramedic ke atas</strong>.
+                  </p>
+                </div>
+
+                {selectedClaim.treatmentRecord ? (
+                  <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+                      <CheckCircle2 className="w-4 h-4 text-[#20C997]" />
+                      <span>Status: Claimed</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-500">Tanggal Klaim:</span>
+                      <span className="font-mono font-semibold text-slate-800">
+                        {selectedClaim.treatmentRecord.claimDate} ({selectedClaim.treatmentRecord.claimTime})
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-500">Staff yang Menangani:</span>
+                      <span className="font-bold text-slate-900">
+                        {selectedClaim.treatmentRecord.staffName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-500">Jabatan Staff:</span>
+                      <span className="font-semibold text-[#7F1D1D]">
+                        {selectedClaim.treatmentRecord.staffRole}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs text-slate-600">
+                    Belum pernah diklaim. Kuota tersedia: <strong>1x Klaim</strong>.
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2">
+                {selectedClaim.treatmentRecord ? (
+                  <button
+                    disabled
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-bold cursor-not-allowed"
+                  >
+                    Sudah Diklaim (Claimed)
+                  </button>
+                ) : selectedClaim.isActive ? (
+                  <button
+                    onClick={() => openClaimModal('treatment')}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-xs hover:opacity-95 transition cursor-pointer"
+                  >
+                    Klaim Diskon 50% Treatment
+                  </button>
+                ) : (
+                  <div className="w-full py-2.5 px-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold text-center">
+                    Masa Berlaku SKWB Telah Berakhir
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* BENEFIT 3: GRATIS 1x PAKET PERBAN (1x selama SKWB, Co-ass+) */}
+            <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-xs flex flex-col justify-between space-y-5">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-red-50/60 text-[#9E1B21] flex items-center justify-center">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                      selectedClaim.perbanRecord
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : selectedClaim.isActive
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {selectedClaim.perbanRecord
+                      ? 'Claimed'
+                      : selectedClaim.isActive
+                      ? 'Belum Diklaim'
+                      : 'Kadaluarsa'}
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">3. Gratis 1x Paket Perban</h3>
+                  <p className="text-xs font-semibold text-[#7F1D1D] mt-0.5">
+                    Gratis 1x Paket Perban Steril Standar Medis RSKB
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Hanya dapat diklaim <strong>1 kali</strong> selama masa berlaku SKWB. Wajib diserahkan oleh <strong>Co-ass ke atas</strong>.
+                  </p>
+                </div>
+
+                {selectedClaim.perbanRecord ? (
+                  <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+                      <CheckCircle2 className="w-4 h-4 text-[#20C997]" />
+                      <span>Status: Claimed</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-500">Tanggal Klaim:</span>
+                      <span className="font-mono font-semibold text-slate-800">
+                        {selectedClaim.perbanRecord.claimDate} ({selectedClaim.perbanRecord.claimTime})
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-500">Staff yang Menyerahkan:</span>
+                      <span className="font-bold text-slate-900">
+                        {selectedClaim.perbanRecord.staffName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-500">Jabatan Staff:</span>
+                      <span className="font-semibold text-[#7F1D1D]">
+                        {selectedClaim.perbanRecord.staffRole}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs text-slate-600">
+                    Belum pernah diklaim. Kuota tersedia: <strong>1x Klaim</strong>.
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2">
+                {selectedClaim.perbanRecord ? (
+                  <button
+                    disabled
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-bold cursor-not-allowed"
+                  >
+                    Sudah Diklaim (Claimed)
+                  </button>
+                ) : selectedClaim.isActive ? (
+                  <button
+                    onClick={() => openClaimModal('perban')}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold shadow-xs hover:opacity-95 transition cursor-pointer"
+                  >
+                    Klaim Gratis 1x Paket Perban
+                  </button>
+                ) : (
+                  <div className="w-full py-2.5 px-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold text-center">
+                    Masa Berlaku SKWB Telah Berakhir
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -642,10 +660,10 @@ export const SKWBBenefitView: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                Riwayat Klaim Paket Sedang (Obat & Perban)
+                Riwayat Klaim Gratis 1x Paket Perban
               </h2>
               <p className="text-xs text-slate-500">
-                Setiap pengambilan harian disimpan sebagai histori transaksi terpisah beserta snapshot nama & jabatan staff.
+                Setiap klaim penyerahan paket perban disimpan sebagai histori transaksi beserta snapshot nama & jabatan staff.
               </p>
             </div>
             <span className="px-3 py-1 rounded-xl bg-red-50/40 border border-red-200 text-xs font-mono font-bold text-[#7F1D1D] self-start sm:self-auto">
@@ -655,7 +673,7 @@ export const SKWBBenefitView: React.FC = () => {
 
           {selectedClaim.paketHistory.length === 0 ? (
             <div className="p-8 rounded-xl bg-red-50/40 border border-red-100 text-center text-xs text-slate-500">
-              Belum ada riwayat pengambilan Paket Sedang untuk warga ini.
+              Belum ada riwayat pengambilan paket perban untuk warga ini.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -722,10 +740,9 @@ export const SKWBBenefitView: React.FC = () => {
               <div className="flex items-center justify-between border-b border-red-100 pb-3">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">
-                    {activeClaimModal === 'paket_sedang' && 'Klaim Paket Sedang (Obat & Perban)'}
-                    {activeClaimModal === 'kartu_pasien' &&
-                      'Klaim Diskon 50% Pembuatan Kartu Pasien'}
                     {activeClaimModal === 'oplas' && 'Klaim Free 1x Operasi Plastik (Oplas)'}
+                    {activeClaimModal === 'treatment' && 'Klaim Diskon 50% Layanan Treatment'}
+                    {activeClaimModal === 'perban' && 'Klaim Gratis 1x Paket Perban'}
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Warga IC: <strong>{selectedClaim.icName}</strong>
@@ -747,22 +764,22 @@ export const SKWBBenefitView: React.FC = () => {
 
               <form onSubmit={handleConfirmBenefitClaim} className="space-y-4">
                 <div className="p-3 rounded-xl bg-red-50/40 border border-red-100 text-xs text-slate-700">
-                  {activeClaimModal === 'paket_sedang' && (
+                  {activeClaimModal === 'oplas' && (
+                    <span>
+                      Syarat Kewenangan: Hanya menampilkan dokter aktif dengan jabatan{' '}
+                      <strong className="text-[#7F1D1D]">Doctor ke atas</strong>.
+                    </span>
+                  )}
+                  {activeClaimModal === 'treatment' && (
+                    <span>
+                      Syarat Kewenangan: Hanya menampilkan anggota staff aktif dengan jabatan{' '}
+                      <strong className="text-[#7F1D1D]">Nurse / Paramedic ke atas</strong>.
+                    </span>
+                  )}
+                  {activeClaimModal === 'perban' && (
                     <span>
                       Syarat Kewenangan: Hanya menampilkan anggota staff aktif dengan jabatan{' '}
                       <strong className="text-[#7F1D1D]">Co-ass ke atas</strong>.
-                    </span>
-                  )}
-                  {activeClaimModal === 'kartu_pasien' && (
-                    <span>
-                      Syarat Kewenangan: Hanya menampilkan anggota staff aktif dengan jabatan{' '}
-                      <strong className="text-[#7F1D1D]">Paramedic ke atas</strong>.
-                    </span>
-                  )}
-                  {activeClaimModal === 'oplas' && (
-                    <span>
-                      Syarat Kewenangan: Hanya menampilkan anggota staff aktif dengan jabatan{' '}
-                      <strong className="text-[#7F1D1D]">Doctor ke atas</strong>.
                     </span>
                   )}
                 </div>
@@ -770,9 +787,9 @@ export const SKWBBenefitView: React.FC = () => {
                 {/* Search & Dropdown Staff */}
                 <div className="space-y-2">
                   <label className="block text-xs font-semibold text-slate-700">
-                    {activeClaimModal === 'paket_sedang' && 'Pilih Staff yang Menangani *'}
-                    {activeClaimModal === 'kartu_pasien' && 'Pilih Staff yang Membuatkan Kartu *'}
                     {activeClaimModal === 'oplas' && 'Pilih Dokter yang Menangani *'}
+                    {activeClaimModal === 'treatment' && 'Pilih Staff yang Menangani Tindakan Treatment *'}
+                    {activeClaimModal === 'perban' && 'Pilih Staff yang Menyerahkan Paket Perban *'}
                   </label>
 
                   <div className="relative">
@@ -899,7 +916,7 @@ export const SKWBBenefitView: React.FC = () => {
           <div>
             <h1 className="text-xl font-bold text-slate-900">Benefit SKWB (Warga Baru)</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Manajemen klaim Paket Sedang harian, Diskon 50% Kartu Pasien, dan Free 1x Oplas selama 7 hari masa berlaku SKWB.
+              Manajemen klaim Free Operasi Plastik 1x, Diskon 50% Layanan Treatment, dan Gratis 1x Paket Perban selama 7 hari masa berlaku SKWB.
             </p>
           </div>
         </div>
@@ -1015,26 +1032,6 @@ export const SKWBBenefitView: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="flex flex-wrap gap-1.5">
-                        {/* Status Paket Sedang */}
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            item.claimedPaketToday
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-slate-100 text-slate-700'
-                          }`}
-                        >
-                          Paket Sedang: {item.paketHistory.length}x ({item.claimedPaketToday ? 'Hari Ini ✓' : 'Hari Ini Belum'})
-                        </span>
-                        {/* Status Diskon 50% Kartu Pasien */}
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            item.patientCardRecord
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-amber-50 text-amber-800'
-                          }`}
-                        >
-                          Kartu Pasien: {item.patientCardRecord ? 'Claimed' : 'Belum'}
-                        </span>
                         {/* Status Free 1x Oplas */}
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -1044,6 +1041,26 @@ export const SKWBBenefitView: React.FC = () => {
                           }`}
                         >
                           Free Oplas: {item.oplasRecord ? 'Claimed' : 'Belum'}
+                        </span>
+                        {/* Status Diskon 50% Treatment */}
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            item.treatmentRecord
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-amber-50 text-amber-800'
+                          }`}
+                        >
+                          Diskon Treatment: {item.treatmentRecord ? 'Claimed' : 'Belum'}
+                        </span>
+                        {/* Status Gratis 1x Paket Perban */}
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            item.perbanRecord
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}
+                        >
+                          Gratis Perban: {item.perbanRecord ? 'Claimed' : 'Belum'}
                         </span>
                       </div>
                     </td>

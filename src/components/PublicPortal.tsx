@@ -520,9 +520,9 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                 Pendaftaran & klaim benefit kesehatan resmi 7 hari bagi pemegang Surat Keterangan Warga Baru (SKWB):
               </p>
               <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4">
-                <li>Paket Sedang harian (Obat & Perban)</li>
-                <li>Diskon 50% Pembuatan Kartu Pasien</li>
-                <li>Free 1x Operasi Plastik (Oplas)</li>
+                <li>Free Operasi Plastik 1x</li>
+                <li>Diskon 50% Layanan Treatment</li>
+                <li>Gratis 1x Paket Perban</li>
               </ul>
             </div>
             <button
