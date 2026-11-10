@@ -549,9 +549,9 @@ export const DEFAULT_REGULATION_POSTER_DATA_URL = `data:image/svg+xml;utf8,${enc
     <text x="385" y="78" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="21" fill="#1E293B">(Surat Keterangan Warga Baru)</text>
 
     <g font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#1E293B" text-anchor="middle">
-      <text x="385" y="118">- Mendapatkan Paket Claim, Perban &amp; Obat-obatan (Bisa di Claim/Hari)</text>
-      <text x="385" y="152">- Mendapatkan Potongan Pembuatan Kartu Pasien 50%</text>
-      <text x="385" y="186">- Gratis Oplas 1 Kali (Selama SKWB Masih Berlaku)</text>
+      <text x="385" y="118">- Free Operasi Plastik 1x</text>
+      <text x="385" y="152">- Diskon 50% Layanan Treatment</text>
+      <text x="385" y="186">- Gratis 1x Paket Perban</text>
     </g>
 
     <!-- Gold Ribbon Seal -->

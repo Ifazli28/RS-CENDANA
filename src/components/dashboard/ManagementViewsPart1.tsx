@@ -18,6 +18,12 @@ import {
   MessageSquareWarning,
   UserPlus,
   Eye,
+  EyeOff,
+  Key,
+  Copy,
+  Check,
+  Lock,
+  ShieldCheck,
   FileText,
   X,
 } from 'lucide-react';
@@ -401,16 +407,33 @@ export const StaffManagementView: React.FC = () => {
 // 2. APPROVAL AKUN BARU (Sec 36 & 84 — Heads+ Level 7+)
 // Jika pengajuan akun sudah diproses (Approve atau Reject), maka data pengajuan langsung hilang dari daftar ini
 export const AccountApprovalView: React.FC = () => {
-  const { staffAccounts, approveOrRejectAccount, deleteStaffAccount, requestDelete } = useApp();
+  const { staffAccounts, approveOrRejectAccount, deleteStaffAccount, requestDelete, currentUser } = useApp();
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const isDirector = currentUser?.role === 'Director' || (currentUser?.level ?? 0) >= 11;
 
   // Hanya menampilkan akun yang masih berstatus 'Pending Approval'
   const pendingList = staffAccounts.filter((s) => s.status === 'Pending Approval');
+
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Approval Akun Staff Baru</h2>
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span>Approval Akun Staff Baru</span>
+            {isDirector && (
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
+                Director Credential Access
+              </span>
+            )}
+          </h2>
           <p className="text-xs text-slate-500">
             Menampilkan pengajuan akun baru. Begitu diproses (Approve / Reject), data pengajuan langsung selesai dan hilang dari antrean ini.
           </p>
@@ -429,13 +452,14 @@ export const AccountApprovalView: React.FC = () => {
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Tanggal Register</th>
                 <th className="py-3.5 px-4">Status</th>
+                {isDirector && <th className="py-3.5 px-4">Password Pendaftaran</th>}
                 <th className="py-3.5 px-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
               {pendingList.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-slate-500">
+                  <td colSpan={isDirector ? 6 : 5} className="py-10 text-center text-xs text-slate-500">
                     Tidak ada pengajuan akun baru yang menunggu persetujuan saat ini.
                   </td>
                 </tr>
@@ -450,6 +474,50 @@ export const AccountApprovalView: React.FC = () => {
                     <td className="py-3.5 px-4">
                       <span className="text-xs font-bold text-amber-600">{acc.status}</span>
                     </td>
+                    {isDirector && (
+                      <td className="py-3.5 px-4">
+                        {revealedPasswords[acc.id] ? (
+                          <div className="inline-flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                            <span className="font-mono text-xs font-bold text-amber-950 select-all">
+                              {acc.password}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setRevealedPasswords((prev) => ({ ...prev, [acc.id]: false }))
+                              }
+                              title="Sembunyikan"
+                              className="p-1 text-amber-700 hover:text-amber-900 cursor-pointer"
+                            >
+                              <EyeOff className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(acc.id, acc.password)}
+                              title="Salin password"
+                              className="p-1 text-amber-700 hover:text-amber-900 cursor-pointer"
+                            >
+                              {copiedId === acc.id ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRevealedPasswords((prev) => ({ ...prev, [acc.id]: true }))
+                            }
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold text-amber-800 bg-amber-100/80 hover:bg-amber-200 transition cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Lihat Password</span>
+                          </button>
+                        )}
+                      </td>
+                    )}
                     <td className="py-3.5 px-4 text-right">
                       <div className="inline-flex items-center gap-1.5">
                         <button
@@ -494,30 +562,135 @@ export const AccountApprovalView: React.FC = () => {
 export const AccountManagementView: React.FC = () => {
   const { staffAccounts, currentUser, updateAccountStatus, deleteStaffAccount } = useApp();
   const [statusFilter, setStatusFilter] = useState<'All' | AccountStatus>('All');
-  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<typeof staffAccounts[0] | null>(
-    null
-  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAllPasswords, setShowAllPasswords] = useState(false);
+  const [revealedPasswordIds, setRevealedPasswordIds] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<typeof staffAccounts[0] | null>(null);
+  const [credentialDetailTarget, setCredentialDetailTarget] = useState<typeof staffAccounts[0] | null>(null);
 
-  const filtered = staffAccounts.filter((s) =>
-    statusFilter === 'All' ? true : s.status === statusFilter
-  );
+  // Wewenang Director: Level 11 (Director) atau Level 12 (Hospital Comitee / Pimpinan)
+  const isDirector = currentUser?.role === 'Director' || (currentUser?.level ?? 0) >= 11;
+
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 2000);
+  };
+
+  const togglePassword = (id: string) => {
+    setRevealedPasswordIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const filtered = staffAccounts.filter((s) => {
+    const matchesStatus = statusFilter === 'All' ? true : s.status === statusFilter;
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      s.name.toLowerCase().includes(q) ||
+      s.email.toLowerCase().includes(q) ||
+      s.role.toLowerCase().includes(q);
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div className="space-y-6">
+      {/* Header Utama */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-red-100">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Kelola Akun & Kredensial Staff</h2>
-          <p className="text-xs text-slate-500">
-            Kelola status Active, Pending, Rejected, Inactive serta fitur hapus akun staff
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-lg font-bold text-slate-900">Kelola Akun & Kredensial Staff</h2>
+            {isDirector ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                Director Authorized
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-medium">
+                <Lock className="w-3 h-3 text-slate-400" />
+                HRD Standard Access
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Kelola status akun, kredensial login, dan administrasi seluruh staf RS Kota Baru.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-red-50/40 rounded-xl border border-red-100">
-          {(['All', 'Pending Approval', 'Active', 'Rejected', 'Inactive'] as const).map((st) => (
+        <div className="flex items-center gap-2">
+          <div className="px-3.5 py-1.5 rounded-xl bg-red-50/60 border border-red-100 text-xs font-bold text-[#7F1D1D]">
+            Total: {staffAccounts.length} Akun
+          </div>
+        </div>
+      </div>
+
+      {/* Banner Khusus Hak Akses Password Director */}
+      {isDirector ? (
+        <div className="bg-gradient-to-r from-amber-50/90 via-orange-50/80 to-amber-50/90 border border-amber-200/90 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+              <Key className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-amber-950 flex items-center gap-2">
+                Otoritas Khusus Director: Monitoring Password Seluruh Akun
+                <span className="px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-900 text-[10px] font-black uppercase tracking-wide">
+                  Privileged
+                </span>
+              </h4>
+              <p className="text-[11px] text-amber-800 leading-relaxed mt-0.5">
+                Sebagai Director, Anda memiliki hak istimewa untuk melihat password semua akun staf secara transparan guna kepentingan audit, keamanan, dan bantuan pemulihan kredensial.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+            <button
+              type="button"
+              onClick={() => setShowAllPasswords((prev) => !prev)}
+              className="px-3.5 py-2 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-100/70 text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            >
+              {showAllPasswords ? (
+                <EyeOff className="w-3.5 h-3.5 text-amber-700" />
+              ) : (
+                <Eye className="w-3.5 h-3.5 text-amber-700" />
+              )}
+              <span>{showAllPasswords ? 'Sembunyikan Semua Password' : 'Lihat Semua Password'}</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 text-xs text-slate-600">
+          <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+          <span>
+            Kolom password disensor. Sesuai regulasi rumah sakit, hanya akun dengan jabatan{' '}
+            <strong>Director</strong> yang memiliki wewenang untuk melihat password akun staf.
+          </span>
+        </div>
+      )}
+
+      {/* Bar Pencarian & Filter Status */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-red-100">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Cari nama staf, email, atau jabatan..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3.5 py-1.5 rounded-xl border border-red-200 text-xs focus:ring-2 focus:ring-[#9E1B21]/20 focus:border-[#9E1B21] outline-hidden"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-red-50/40 rounded-xl border border-red-100 overflow-x-auto">
+          {(['All', 'Active', 'Pending Approval', 'Rejected', 'Inactive'] as const).map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-                statusFilter === st ? 'bg-[#9E1B21] text-white' : 'text-slate-600'
+                statusFilter === st ? 'bg-[#9E1B21] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {st === 'Pending Approval' ? 'Pending' : st}
@@ -526,6 +699,7 @@ export const AccountManagementView: React.FC = () => {
         </div>
       </div>
 
+      {/* Tabel Data Akun & Password */}
       <div className="bg-white rounded-2xl border border-red-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -533,64 +707,309 @@ export const AccountManagementView: React.FC = () => {
               <tr className="border-b border-red-100 text-[11px] font-bold text-slate-500 bg-red-50/40/60">
                 <th className="py-3.5 px-4">Nama Akun</th>
                 <th className="py-3.5 px-4">Email</th>
-                <th className="py-3.5 px-4">Role</th>
+                <th className="py-3.5 px-4">Role & Level</th>
                 <th className="py-3.5 px-4">Status Akun</th>
-                <th className="py-3.5 px-4 text-right">Kelola Status / Delete Akun</th>
+                <th className="py-3.5 px-4">{isDirector ? 'Password Akun' : 'Kredensial'}</th>
+                <th className="py-3.5 px-4 text-right">Kelola Status / Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-red-50 text-xs sm:text-sm">
-              {filtered.map((acc) => (
-                <tr key={acc.id} className="hover:bg-red-50/60/30 transition">
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">{acc.name}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{acc.email}</td>
-                  <td className="py-3.5 px-4 text-slate-600">{acc.role}</td>
-                  <td className="py-3.5 px-4">
-                    <span
-                      className={`text-xs font-bold ${
-                        acc.status === 'Active'
-                          ? 'text-[#20C997]'
-                          : acc.status === 'Pending Approval'
-                          ? 'text-amber-600'
-                          : acc.status === 'Inactive'
-                          ? 'text-slate-500'
-                          : 'text-rose-600'
-                      }`}
-                    >
-                      {acc.status}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <select
-                        value={acc.status}
-                        onChange={(e) =>
-                          updateAccountStatus(acc.id, e.target.value as AccountStatus)
-                        }
-                        className="px-2.5 py-1.5 rounded-lg border border-red-200 text-xs bg-white font-semibold"
-                      >
-                        <option value="Pending Approval">Pending Approval</option>
-                        <option value="Active">Active</option>
-                        <option value="Rejected">Rejected</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
-
-                      {acc.id !== currentUser?.id && (
-                        <button
-                          onClick={() => setDeleteConfirmTarget(acc)}
-                          className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 flex items-center gap-1 cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Delete Akun</span>
-                        </button>
-                      )}
-                    </div>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-xs text-slate-500">
+                    Tidak ada akun staf yang sesuai dengan filter pencarian saat ini.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filtered.map((acc) => {
+                  const isPassRevealed = showAllPasswords || revealedPasswordIds[acc.id];
+                  return (
+                    <tr key={acc.id} className="hover:bg-red-50/60/30 transition">
+                      <td className="py-3.5 px-4 font-semibold text-slate-900">
+                        <div className="flex items-center gap-2">
+                          <span>{acc.name}</span>
+                          {acc.id === currentUser?.id && (
+                            <span className="px-1.5 py-0.5 rounded bg-red-100 text-[#7F1D1D] text-[10px] font-bold">
+                              Anda
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{acc.email}</td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-800">{acc.role}</span>
+                          <span className="text-[10px] text-slate-400">Level {acc.level}</span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`text-xs font-bold ${
+                            acc.status === 'Active'
+                              ? 'text-[#20C997]'
+                              : acc.status === 'Pending Approval'
+                              ? 'text-amber-600'
+                              : acc.status === 'Inactive'
+                              ? 'text-slate-500'
+                              : 'text-rose-600'
+                          }`}
+                        >
+                          {acc.status}
+                        </span>
+                      </td>
+
+                      {/* Kolom Password */}
+                      <td className="py-3.5 px-4">
+                        {isDirector ? (
+                          isPassRevealed ? (
+                            <div className="inline-flex items-center gap-1.5 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200/90 shadow-2xs">
+                              <span className="font-mono text-xs font-bold text-amber-950 select-all tracking-wide">
+                                {acc.password}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => togglePassword(acc.id)}
+                                title="Sembunyikan password ini"
+                                className="p-1 rounded-lg text-amber-700 hover:text-amber-900 hover:bg-amber-100 transition cursor-pointer"
+                              >
+                                <EyeOff className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCopy(`pwd-${acc.id}`, acc.password)}
+                                title="Salin password"
+                                className="p-1 rounded-lg text-amber-700 hover:text-amber-900 hover:bg-amber-100 transition cursor-pointer"
+                              >
+                                {copiedId === `pwd-${acc.id}` ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center gap-2 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                              <span className="font-mono text-xs text-slate-400 tracking-widest font-bold">
+                                ••••••••
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => togglePassword(acc.id)}
+                                title="Tampilkan password akun"
+                                className="px-2 py-0.5 rounded-md text-[11px] font-bold text-amber-800 bg-amber-100/90 hover:bg-amber-200 transition cursor-pointer inline-flex items-center gap-1"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>Lihat</span>
+                              </button>
+                            </div>
+                          )
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5 text-slate-400">
+                            <Lock className="w-3.5 h-3.5 text-slate-300" />
+                            <span className="font-mono text-xs tracking-widest text-slate-300">
+                              ••••••••
+                            </span>
+                            <span className="text-[10px] text-slate-400 italic">(Terkunci)</span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Kolom Kelola Status & Action */}
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <select
+                            value={acc.status}
+                            onChange={(e) =>
+                              updateAccountStatus(acc.id, e.target.value as AccountStatus)
+                            }
+                            className="px-2.5 py-1.5 rounded-lg border border-red-200 text-xs bg-white font-semibold cursor-pointer"
+                          >
+                            <option value="Pending Approval">Pending Approval</option>
+                            <option value="Active">Active</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Inactive">Inactive</option>
+                          </select>
+
+                          {/* Tombol Rincian Kredensial untuk Director */}
+                          {isDirector && (
+                            <button
+                              type="button"
+                              onClick={() => setCredentialDetailTarget(acc)}
+                              title="Lihat Rincian Kredensial Lengkap"
+                              className="px-2.5 py-1.5 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
+                            >
+                              <Key className="w-3.5 h-3.5 text-amber-700" />
+                              <span className="hidden sm:inline">Detail</span>
+                            </button>
+                          )}
+
+                          {acc.id !== currentUser?.id && (
+                            <button
+                              type="button"
+                              onClick={() => setDeleteConfirmTarget(acc)}
+                              className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Delete Akun</span>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Modal Detail Kredensial Akun (Khusus Director) */}
+      {credentialDetailTarget && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setCredentialDetailTarget(null)}
+        >
+          <div
+            className="bg-white rounded-3xl border border-red-100 p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-red-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-xs">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Kredensial Akun Staff
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Audit Kredensial Khusus Director RS Kota Baru
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCredentialDetailTarget(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-medium">Nama Staf</span>
+                  <span className="font-bold text-slate-900 text-sm">{credentialDetailTarget.name}</span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-medium">Jabatan & Level</span>
+                  <span className="font-semibold text-slate-800">
+                    {credentialDetailTarget.role} (Level {credentialDetailTarget.level})
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-medium">Status Akun</span>
+                  <span className="font-bold text-[#20C997]">{credentialDetailTarget.status}</span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-medium">Tanggal Registrasi</span>
+                  <span className="font-mono text-slate-600">
+                    {credentialDetailTarget.registeredAt || credentialDetailTarget.joinDate}
+                  </span>
+                </div>
+              </div>
+
+              {/* Box Email & Password Kredensial */}
+              <div className="p-4 bg-amber-50/80 rounded-2xl border border-amber-200 space-y-3">
+                <div>
+                  <span className="text-[11px] font-bold text-amber-900 block mb-1">
+                    Alamat Email Login
+                  </span>
+                  <div className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-amber-200">
+                    <span className="font-mono text-xs text-slate-800 font-semibold select-all">
+                      {credentialDetailTarget.email}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy('modal-email', credentialDetailTarget.email)}
+                      className="p-1 text-amber-700 hover:text-amber-900 cursor-pointer"
+                      title="Salin Email"
+                    >
+                      {copiedId === 'modal-email' ? (
+                        <Check className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[11px] font-bold text-amber-900 block mb-1">
+                    Password Akun (Director View)
+                  </span>
+                  <div className="flex items-center justify-between gap-2 bg-white px-3 py-2.5 rounded-xl border-2 border-amber-300 shadow-2xs">
+                    <span className="font-mono text-sm text-amber-950 font-black tracking-wide select-all">
+                      {credentialDetailTarget.password}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy('modal-pwd', credentialDetailTarget.password)}
+                      className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs flex items-center gap-1 cursor-pointer transition"
+                      title="Salin Password"
+                    >
+                      {copiedId === 'modal-pwd' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Tersalin</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Salin Password</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const combined = `Email: ${credentialDetailTarget.email}\nPassword: ${credentialDetailTarget.password}`;
+                  handleCopy('modal-both', combined);
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
+              >
+                {copiedId === 'modal-both' ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span>Kredensial Tersalin!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Salin Email + Password</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCredentialDetailTarget(null)}
+                className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold cursor-pointer hover:bg-slate-800 transition"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal Delete Account */}
       {deleteConfirmTarget && (
@@ -931,14 +1350,14 @@ function buildFallbackDocSvgDataUrl(docTitle: string, applicantName: string, fil
     <rect width="900" height="580" rx="24" fill="url(#bg)" stroke="#FBCFE8" stroke-width="4"/>
     <rect x="36" y="36" width="828" height="508" rx="16" fill="#FFFFFF" stroke="#9E1B21" stroke-width="2" stroke-dasharray="8 6"/>
     <rect x="64" y="64" width="772" height="76" rx="12" fill="#FFF5F8"/>
-    <text x="90" y="102" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#9E1B21">PEMERINTAH KOTA KOTA BARU — DOKUMEN LAMPIRAN RECRUITMENT</text>
-    <text x="90" y="126" font-family="Arial, sans-serif" font-size="14" fill="#64748B">Kota Baru Medical Center · Sistem Verifikasi Dokumen Pelamar Kerja</text>
+    <text x="90" y="102" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#9E1B21">RUMAH SAKIT KOTABARU — DOKUMEN LAMPIRAN RECRUITMENT</text>
+    <text x="90" y="126" font-family="Arial, sans-serif" font-size="14" fill="#64748B">Pillbox Medical Center, Koordinat 201 — KotaBaru Roleplay</text>
     <text x="90" y="200" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#0F172A">${docTitle.replace(/[<>&"']/g, '')}</text>
     <text x="90" y="255" font-family="Arial, sans-serif" font-size="18" fill="#334155">Nama Karakter (IC) : ${applicantName.replace(/[<>&"']/g, '')}</text>
     <text x="90" y="295" font-family="monospace" font-size="16" fill="#9E1B21">Nama File Terlampir : ${fileName.replace(/[<>&"']/g, '')}</text>
     <rect x="90" y="340" width="280" height="46" rx="10" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
     <text x="112" y="369" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#047857">✓ LAMPIRAN DOKUMEN TERVERIFIKASI</text>
-    <text x="90" y="470" font-family="Arial, sans-serif" font-size="13" fill="#94A3B8">Pratinjau Dokumen Digital · HRD Kota Baru Medical Center</text>
+    <text x="90" y="470" font-family="Arial, sans-serif" font-size="13" fill="#94A3B8">Pratinjau Dokumen Digital · HRD Rumah Sakit Kotabaru</text>
   </svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }

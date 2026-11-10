@@ -99,12 +99,81 @@ export const SKWBBenefitView: React.FC = () => {
     return skwbClaims.map((claim) => {
       const isActive = isSKWBClaimCurrentlyActive(claim.issueDate, claim.endDate);
       const computedStatus: 'Aktif' | 'Kadaluarsa' = isActive ? 'Aktif' : 'Kadaluarsa';
-      const oplasRecord = skwbOplasClaims.find((o) => o.skwbClaimId === claim.id) || null;
-      const treatmentRecord = skwbPatientCardClaims.find((k) => k.skwbClaimId === claim.id) || null;
-      const perbanRecord = skwbPaketSedangClaims.find((p) => p.skwbClaimId === claim.id) || null;
-      const paketHistory = skwbPaketSedangClaims
-        .filter((p) => p.skwbClaimId === claim.id)
+
+      const oplasRecord =
+        skwbOplasClaims.find(
+          (o) =>
+            o.skwbClaimId === claim.id ||
+            (claim.id && o.skwbClaimId && o.skwbClaimId.toLowerCase() === claim.id.toLowerCase())
+        ) ||
+        (claim.isOplasClaimed
+          ? {
+              id: `op_${claim.id}`,
+              skwbClaimId: claim.id,
+              claimDate:
+                claim.oplasClaimedAt?.slice(0, 10) || claim.updatedAt?.slice(0, 10) || todayStr,
+              claimTime: claim.oplasClaimedAt?.slice(11, 16) || '12:00',
+              staffId: '',
+              staffName: claim.oplasStaffName || 'Dokter Bertugas',
+              staffRole: (claim.oplasStaffRole || 'Doctor') as any,
+              status: 'Claimed' as const,
+              createdAt: claim.oplasClaimedAt || claim.createdAt,
+            }
+          : null);
+
+      const treatmentRecord =
+        skwbPatientCardClaims.find(
+          (k) =>
+            k.skwbClaimId === claim.id ||
+            (claim.id && k.skwbClaimId && k.skwbClaimId.toLowerCase() === claim.id.toLowerCase())
+        ) ||
+        (claim.isTreatmentClaimed
+          ? {
+              id: `tr_${claim.id}`,
+              skwbClaimId: claim.id,
+              claimDate:
+                claim.treatmentClaimedAt?.slice(0, 10) || claim.updatedAt?.slice(0, 10) || todayStr,
+              claimTime: claim.treatmentClaimedAt?.slice(11, 16) || '12:00',
+              staffId: '',
+              staffName: claim.treatmentStaffName || 'Staff Bertugas',
+              staffRole: (claim.treatmentStaffRole || 'Nurse') as any,
+              status: 'Claimed' as const,
+              createdAt: claim.treatmentClaimedAt || claim.createdAt,
+            }
+          : null);
+
+      const perbanRecord =
+        skwbPaketSedangClaims.find(
+          (p) =>
+            p.skwbClaimId === claim.id ||
+            (claim.id && p.skwbClaimId && p.skwbClaimId.toLowerCase() === claim.id.toLowerCase())
+        ) ||
+        (claim.isPerbanClaimed
+          ? {
+              id: `pb_${claim.id}`,
+              skwbClaimId: claim.id,
+              claimDate:
+                claim.perbanClaimedAt?.slice(0, 10) || claim.updatedAt?.slice(0, 10) || todayStr,
+              claimTime: claim.perbanClaimedAt?.slice(11, 16) || '12:00',
+              staffId: '',
+              staffName: claim.perbanStaffName || 'Staff Bertugas',
+              staffRole: (claim.perbanStaffRole || 'Co-Ass') as any,
+              status: 'Claimed' as const,
+              createdAt: claim.perbanClaimedAt || claim.createdAt,
+            }
+          : null);
+
+      let paketHistory = skwbPaketSedangClaims
+        .filter(
+          (p) =>
+            p.skwbClaimId === claim.id ||
+            (claim.id && p.skwbClaimId && p.skwbClaimId.toLowerCase() === claim.id.toLowerCase())
+        )
         .sort((a, b) => `${b.claimDate} ${b.claimTime}`.localeCompare(`${a.claimDate} ${a.claimTime}`));
+
+      if (paketHistory.length === 0 && perbanRecord) {
+        paketHistory = [perbanRecord];
+      }
 
       return {
         ...claim,
@@ -1036,31 +1105,31 @@ export const SKWBBenefitView: React.FC = () => {
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                             item.oplasRecord
-                              ? 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : 'bg-red-50/60 text-[#7F1D1D]'
                           }`}
                         >
-                          Free Oplas: {item.oplasRecord ? 'Claimed' : 'Belum'}
+                          Free Oplas: {item.oplasRecord ? 'Sudah Diklaim' : 'Belum'}
                         </span>
                         {/* Status Diskon 50% Treatment */}
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                             item.treatmentRecord
-                              ? 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : 'bg-amber-50 text-amber-800'
                           }`}
                         >
-                          Diskon Treatment: {item.treatmentRecord ? 'Claimed' : 'Belum'}
+                          Diskon Treatment: {item.treatmentRecord ? 'Sudah Diklaim' : 'Belum'}
                         </span>
                         {/* Status Gratis 1x Paket Perban */}
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                             item.perbanRecord
-                              ? 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : 'bg-slate-100 text-slate-700'
                           }`}
                         >
-                          Gratis Perban: {item.perbanRecord ? 'Claimed' : 'Belum'}
+                          Gratis Perban: {item.perbanRecord ? 'Sudah Diklaim' : 'Belum'}
                         </span>
                       </div>
                     </td>

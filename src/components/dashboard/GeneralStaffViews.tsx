@@ -2234,7 +2234,7 @@ export const MySalaryView: React.FC = () => {
                       DEPARTEMEN SUMBER DAYA MANUSIA & KEUANGAN
                     </p>
                     <p className="text-[10px] text-slate-400">
-                      Kotabaru Roleplay Medical Center · Jl. Pelayanan Medis No. 1
+                      Pillbox Medical Center, Koordinat 201 — KotaBaru Roleplay
                     </p>
                   </div>
                 </div>

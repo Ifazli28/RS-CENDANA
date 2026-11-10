@@ -408,6 +408,18 @@ export interface SKWBClaim {
   photoFileSize: number;  // dalam bytes
   photoDataUrl: string;   // Persistent image data URL stored in Firestore
   status: 'Aktif' | 'Kadaluarsa';
+  isOplasClaimed?: boolean;
+  oplasClaimedAt?: string;
+  oplasStaffName?: string;
+  oplasStaffRole?: string;
+  isTreatmentClaimed?: boolean;
+  treatmentClaimedAt?: string;
+  treatmentStaffName?: string;
+  treatmentStaffRole?: string;
+  isPerbanClaimed?: boolean;
+  perbanClaimedAt?: string;
+  perbanStaffName?: string;
+  perbanStaffRole?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -440,16 +452,12 @@ export interface ToastMessage {
   message: string;
 }
 
-export type PharmacyPackageType =
-  | 'Paket Perban (10 Pcs)'
-  | 'Paket obat Antidepresan (5 Pcs)'
-  | 'Paket Bundle Pengobatan (10 Perban, 5 Obat Antidepresan)'
-  | 'Paket Bundle Penyembuhan (15 Perban, 5 Antidepresan)';
+export type PharmacyPackageType = string;
 
 export interface PharmacyPackageConfig {
   id: string;
-  code: 'a' | 'b' | 'c' | 'd';
-  name: PharmacyPackageType;
+  code: string;
+  name: string;
   description: string;
   price: number;
   priceFormatted: string;

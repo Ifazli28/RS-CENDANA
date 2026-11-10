@@ -230,7 +230,9 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm text-slate-600">
             <span className="font-semibold text-[#7F1D1D]">PELAYANAN TERPADU</span>
             <span aria-hidden="true">·</span>
-            <span>Layanan Medis Terpadu Kota Kota Baru Roleplay</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-[#7F1D1D] border border-red-200/80 font-semibold text-xs">
+              📍 Pillbox Medical Center, Koordinat 201 — KotaBaru Roleplay
+            </span>
             <span aria-hidden="true">·</span>
             <span className="inline-flex items-center gap-2 font-medium text-slate-800">
               <span className="w-2.5 h-2.5 rounded-full bg-[#20C997] animate-pulse" />
@@ -868,9 +870,9 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
               <LogoKotaBaruRoleplay className="w-11 h-11 shrink-0" />
             </div>
             <div>
-              <span className="text-base font-bold text-slate-900">Paramedic Kota Baru</span>
+              <span className="text-base font-bold text-slate-900">Rumah Sakit Kotabaru</span>
               <p className="text-xs text-slate-500 mt-0.5">
-                Layanan medis resmi Pemerintah Kota Kota Baru Roleplay (KBR)
+                Pillbox Medical Center, Koordinat 201 — KotaBaru Roleplay
               </p>
             </div>
           </div>
@@ -884,7 +886,7 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
           </div>
 
           <p className="text-xs text-slate-500 text-center md:text-right">
-            © 2026 Portal Layanan Paramedic Kota Baru. Hak Cipta Dilindungi Undang-Undang.
+            © 2026 Rumah Sakit Kotabaru. Hak Cipta Dilindungi Undang-Undang.
           </p>
         </div>
       </footer>

@@ -77,12 +77,13 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
     submitSKWBClaim,
     submitCharacterKill,
     submitPharmacyOrder,
+    pharmacyPackages,
   } = useApp();
 
   // Layanan Loket Farmasi Form State
   const [pharmacyName, setPharmacyName] = useState('');
   const [pharmacyPocket, setPharmacyPocket] = useState('');
-  const [pharmacyPackageCode, setPharmacyPackageCode] = useState<'a' | 'b' | 'c' | 'd'>('a');
+  const [pharmacyPackageCode, setPharmacyPackageCode] = useState<string>('a');
   const [pharmacyQuantity, setPharmacyQuantity] = useState<number>(1);
   const [pharmacyKtpPhoto, setPharmacyKtpPhoto] = useState<string>('');
   const [pharmacyKtaPhoto, setPharmacyKtaPhoto] = useState<string>('');
@@ -92,8 +93,12 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
   const [pharmacySuccessOrder, setPharmacySuccessOrder] = useState<PharmacyOrder | null>(null);
   const [pharmacySubmitting, setPharmacySubmitting] = useState(false);
 
+  const currentPharmacyPackages =
+    pharmacyPackages && pharmacyPackages.length > 0 ? pharmacyPackages : PHARMACY_PACKAGES;
   const selectedPharmacyPackage =
-    PHARMACY_PACKAGES.find((p) => p.code === pharmacyPackageCode) || PHARMACY_PACKAGES[0];
+    currentPharmacyPackages.find((p) => p.code === pharmacyPackageCode) ||
+    currentPharmacyPackages[0] ||
+    PHARMACY_PACKAGES[0];
   const maxPharmacyQuantity = pharmacyKtaPhoto ? 3 : 2;
 
   const handlePharmacyKtpUpload = async (file: File) => {
@@ -3176,7 +3181,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
                       Pilih Paket : <span className="text-red-500">*</span>
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {PHARMACY_PACKAGES.map((pkg) => {
+                      {currentPharmacyPackages.map((pkg) => {
                         const isSelected = pharmacyPackageCode === pkg.code;
                         return (
                           <div

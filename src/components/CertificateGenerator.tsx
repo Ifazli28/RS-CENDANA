@@ -70,21 +70,17 @@ function drawCertificateBase(
   ctx.restore();
 
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#0F172A';
-  ctx.font = 'bold 26px "Poppins", Arial, sans-serif';
-  ctx.fillText('PEMERINTAH KOTA KOTA BARU — DINAS KESEHATAN TERPADU', cx, 184);
-
   ctx.fillStyle = accentPrimary;
-  ctx.font = 'bold 34px "Poppins", Arial, sans-serif';
-  ctx.fillText('RUMAH SAKIT & PARAMEDIC KOTA BARU (KBR)', cx, 224);
+  ctx.font = 'bold 38px "Poppins", Arial, sans-serif';
+  ctx.fillText('RUMAH SAKIT KOTABARU', cx, 196);
+
+  ctx.fillStyle = '#334155';
+  ctx.font = 'bold 19px "Poppins", Arial, sans-serif';
+  ctx.fillText('Pillbox Medical Center, Koordinat 201 — KotaBaru Roleplay', cx, 234);
 
   ctx.fillStyle = '#64748B';
-  ctx.font = '500 17px "Poppins", Arial, sans-serif';
-  ctx.fillText(
-    'Instalasi Diagnostik Klinis, Kesehatan Jiwa & Penglihatan Warna Resmi Kota Kota Baru Roleplay',
-    cx,
-    254
-  );
+  ctx.font = '500 15px "Poppins", Arial, sans-serif';
+  ctx.fillText('Pelayanan Kesehatan Terpadu, Diagnostik Klinis & Spesialis Medis', cx, 258);
 
   // Garis Pembatas Kop
   ctx.strokeStyle = '#E2E8F0';
@@ -182,7 +178,7 @@ export const PsychologyCertificateCard: React.FC<{
     ctx.fillStyle = '#334155';
     ctx.font = '500 20px "Poppins", Arial, sans-serif';
     ctx.fillText(
-      'Tim Penguji Kesehatan Mental & Psikiatri Rumah Sakit Kota Baru menerangkan bahwa:',
+      'Tim Penguji Kesehatan Mental & Psikiatri Rumah Sakit Kotabaru menerangkan bahwa:',
       cx,
       415
     );
@@ -248,8 +244,8 @@ export const PsychologyCertificateCard: React.FC<{
     // Footer Tanda Tangan & Stempel Resmi
     ctx.textAlign = 'left';
     ctx.fillStyle = '#475569';
-    ctx.font = '500 18px "Poppins", Arial, sans-serif';
-    ctx.fillText(`Diterbitkan di : Kota Kota Baru`, 160, 935);
+    ctx.font = '500 17px "Poppins", Arial, sans-serif';
+    ctx.fillText(`Diterbitkan di : Pillbox Medical Center, Koordinat 201 — KotaBaru Roleplay`, 160, 935);
     ctx.fillText(`Tanggal Terbit : ${record.createdAt}`, 160, 965);
     ctx.fillText(`Status Dokumen : TERVERIFIKASI RESMI (VALID)`, 160, 995);
 
@@ -262,9 +258,9 @@ export const PsychologyCertificateCard: React.FC<{
     ctx.stroke();
     ctx.textAlign = 'center';
     ctx.fillStyle = '#9E1B21';
-    ctx.font = 'bold 15px "Poppins", Arial, sans-serif';
+    ctx.font = 'bold 14px "Poppins", Arial, sans-serif';
     ctx.fillText('VERIFIED', cx, 962);
-    ctx.fillText('RS KOTA BARU', cx, 982);
+    ctx.fillText('RS KOTABARU', cx, 982);
     ctx.restore();
 
     // Tanda Tangan Dokter Penguji Kanan
@@ -284,7 +280,7 @@ export const PsychologyCertificateCard: React.FC<{
 
     ctx.fillStyle = '#64748B';
     ctx.font = '500 16px "Poppins", Arial, sans-serif';
-    ctx.fillText('Instalasi Kesehatan Jiwa & Psikologi RS Kota Baru', rightX, 1040);
+    ctx.fillText('Instalasi Kesehatan Jiwa & Psikologi Rumah Sakit Kotabaru', rightX, 1040);
   }, [
     record,
     ghqScore,
@@ -378,7 +374,7 @@ export const ColorBlindCertificateCard: React.FC<{
     ctx.fillStyle = '#334155';
     ctx.font = '500 20px "Poppins", Arial, sans-serif';
     ctx.fillText(
-      'Instalasi Diagnostik Visual & Oftalmologi Rumah Sakit Kota Baru menerangkan bahwa:',
+      'Instalasi Diagnostik Visual & Oftalmologi Rumah Sakit Kotabaru menerangkan bahwa:',
       cx,
       415
     );
@@ -450,8 +446,8 @@ export const ColorBlindCertificateCard: React.FC<{
     // Footer Tanda Tangan & Stempel
     ctx.textAlign = 'left';
     ctx.fillStyle = '#475569';
-    ctx.font = '500 18px "Poppins", Arial, sans-serif';
-    ctx.fillText(`Diterbitkan di : Kota Kota Baru`, 160, 935);
+    ctx.font = '500 17px "Poppins", Arial, sans-serif';
+    ctx.fillText(`Diterbitkan di : Pillbox Medical Center, Koordinat 201 — KotaBaru Roleplay`, 160, 935);
     ctx.fillText(`Tanggal Terbit : ${result.testDate}`, 160, 965);
     ctx.fillText(`Status Dokumen : TERVERIFIKASI RESMI (VALID)`, 160, 995);
 
@@ -464,9 +460,9 @@ export const ColorBlindCertificateCard: React.FC<{
     ctx.stroke();
     ctx.textAlign = 'center';
     ctx.fillStyle = '#0D9488';
-    ctx.font = 'bold 15px "Poppins", Arial, sans-serif';
+    ctx.font = 'bold 14px "Poppins", Arial, sans-serif';
     ctx.fillText('ISHIHARA', cx, 962);
-    ctx.fillText('VERIFIED', cx, 982);
+    ctx.fillText('RS KOTABARU', cx, 982);
     ctx.restore();
 
     // Tanda Tangan Dokter Pemeriksa Kanan
@@ -486,7 +482,7 @@ export const ColorBlindCertificateCard: React.FC<{
 
     ctx.fillStyle = '#64748B';
     ctx.font = '500 16px "Poppins", Arial, sans-serif';
-    ctx.fillText('Instalasi Diagnostik Mata & Poli Umum RS Kota Baru', rightX, 1040);
+    ctx.fillText('Instalasi Diagnostik Mata & Poli Umum Rumah Sakit Kotabaru', rightX, 1040);
   }, [result, doctorSigner]);
 
   const handleDownloadJpeg = () => {

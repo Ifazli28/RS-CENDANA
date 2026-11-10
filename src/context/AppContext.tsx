@@ -31,6 +31,7 @@ import {
   ToastMessage,
   PharmacyOrder,
   PharmacyOrderStatus,
+  PharmacyPackageConfig,
   PHARMACY_PACKAGES,
 } from '../types';
 import {
@@ -102,9 +103,14 @@ interface AppContextType {
   skwbOplasClaims: SKWBOplasClaim[];
   characterKillRecords: CharacterKillRecord[];
   pharmacyOrders: PharmacyOrder[];
+  pharmacyPackages: PharmacyPackageConfig[];
   submitPharmacyOrder: (data: Omit<PharmacyOrder, 'id' | 'createdAt' | 'status'>) => Promise<{ success: boolean; id: string; message: string }>;
   updatePharmacyOrderStatus: (id: string, status: PharmacyOrderStatus, notes?: string) => void;
   deletePharmacyOrder: (id: string) => void;
+  addPharmacyPackage: (pkg: { code: string; name: string; description: string; price: number }) => void;
+  updatePharmacyPackage: (id: string, updates: Partial<{ code: string; name: string; description: string; price: number }>) => void;
+  deletePharmacyPackage: (id: string) => void;
+  resetPharmacyPackagesToDefault: () => void;
   toasts: ToastMessage[];
   addToast: (type: ToastMessage['type'], title: string, message: string) => void;
   removeToast: (id: string) => void;
@@ -259,16 +265,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [roleSalaryConfigs, setRoleSalaryConfigs] = useState<RoleSalaryConfig[]>(() =>
     loadLocal('role_salaries_v1', INITIAL_ROLE_SALARY_CONFIGS)
   );
-  // SKWB Benefit records — 100% centralized in Cloud Firestore (no localStorage or mock arrays)
-  const [skwbClaims, setSkwbClaims] = useState<SKWBClaim[]>([]);
-  const [skwbPaketSedangClaims, setSkwbPaketSedangClaims] = useState<SKWBPaketSedangClaim[]>([]);
-  const [skwbPatientCardClaims, setSkwbPatientCardClaims] = useState<SKWBPatientCardClaim[]>([]);
-  const [skwbOplasClaims, setSkwbOplasClaims] = useState<SKWBOplasClaim[]>([]);
+  // SKWB Benefit records — persistent local & Cloud Firestore sync
+  const [skwbClaims, setSkwbClaims] = useState<SKWBClaim[]>(() =>
+    loadLocal('skwb_claims_v1', [])
+  );
+  const [skwbPaketSedangClaims, setSkwbPaketSedangClaims] = useState<SKWBPaketSedangClaim[]>(() =>
+    loadLocal('skwb_perban_claims_v1', [])
+  );
+  const [skwbPatientCardClaims, setSkwbPatientCardClaims] = useState<SKWBPatientCardClaim[]>(() =>
+    loadLocal('skwb_treatment_claims_v1', [])
+  );
+  const [skwbOplasClaims, setSkwbOplasClaims] = useState<SKWBOplasClaim[]>(() =>
+    loadLocal('skwb_oplas_claims_v1', [])
+  );
   const [characterKillRecords, setCharacterKillRecords] = useState<CharacterKillRecord[]>(() =>
     loadLocal('ck_v1', INITIAL_CHARACTER_KILL_RECORDS)
   );
   const [pharmacyOrders, setPharmacyOrders] = useState<PharmacyOrder[]>(() =>
     loadLocal('pharmacy_v1', [])
+  );
+  const [pharmacyPackages, setPharmacyPackages] = useState<PharmacyPackageConfig[]>(() =>
+    loadLocal('pharmacy_packages_v1', PHARMACY_PACKAGES)
   );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState | null>(null);
@@ -354,6 +371,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('kotabaru_pharmacy_v1', JSON.stringify(pharmacyOrders));
   }, [pharmacyOrders]);
+  useEffect(() => {
+    localStorage.setItem('kotabaru_pharmacy_packages_v1', JSON.stringify(pharmacyPackages));
+  }, [pharmacyPackages]);
+  useEffect(() => {
+    localStorage.setItem('kotabaru_skwb_claims_v1', JSON.stringify(skwbClaims));
+  }, [skwbClaims]);
+  useEffect(() => {
+    localStorage.setItem('kotabaru_skwb_perban_claims_v1', JSON.stringify(skwbPaketSedangClaims));
+  }, [skwbPaketSedangClaims]);
+  useEffect(() => {
+    localStorage.setItem('kotabaru_skwb_treatment_claims_v1', JSON.stringify(skwbPatientCardClaims));
+  }, [skwbPatientCardClaims]);
+  useEffect(() => {
+    localStorage.setItem('kotabaru_skwb_oplas_claims_v1', JSON.stringify(skwbOplasClaims));
+  }, [skwbOplasClaims]);
 
   useEffect(() => {
     if (currentUserId) localStorage.setItem('kotabaru_current_user_id_v1', currentUserId);
@@ -593,6 +625,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setPharmacyOrders([]);
       }
 
+      const pkgDocs = byModule.get('pharmacy_package');
+      if (pkgDocs && pkgDocs.length > 0) {
+        const items = pkgDocs
+          .map((r) => r.payload as unknown as PharmacyPackageConfig)
+          .filter((x) => Boolean(x && x.id));
+        if (items.length > 0) {
+          setPharmacyPackages(items);
+        }
+      }
+
       const skwbDocs = byModule.get('skwb_claim');
       if (skwbDocs && skwbDocs.length > 0) {
         const items = skwbDocs
@@ -603,22 +645,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSkwbClaims([]);
       }
 
-      const pktDocs = byModule.get('skwb_paket_sedang_claim');
+      const pktDocs = [
+        ...(byModule.get('skwb_paket_perban_claim') || []),
+        ...(byModule.get('skwb_paket_sedang_claim') || []),
+      ];
       if (pktDocs && pktDocs.length > 0) {
         const items = pktDocs
-          .map((r) => r.payload as unknown as SKWBPaketSedangClaim)
+          .map((r) => r.payload as unknown as SKWBPaketPerbanClaim)
           .filter((x) => Boolean(x && x.id));
-        setSkwbPaketSedangClaims(items);
+        // Remove duplicates if same ID
+        const uniqueItems = Array.from(new Map(items.map((it) => [it.id, it])).values());
+        setSkwbPaketSedangClaims(uniqueItems);
       } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
         setSkwbPaketSedangClaims([]);
       }
 
-      const kpDocs = byModule.get('skwb_kartu_pasien_claim');
+      const kpDocs = [
+        ...(byModule.get('skwb_treatment_claim') || []),
+        ...(byModule.get('skwb_kartu_pasien_claim') || []),
+      ];
       if (kpDocs && kpDocs.length > 0) {
         const items = kpDocs
-          .map((r) => r.payload as unknown as SKWBPatientCardClaim)
+          .map((r) => r.payload as unknown as SKWBTreatmentClaim)
           .filter((x) => Boolean(x && x.id));
-        setSkwbPatientCardClaims(items);
+        const uniqueItems = Array.from(new Map(items.map((it) => [it.id, it])).values());
+        setSkwbPatientCardClaims(uniqueItems);
       } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
         setSkwbPatientCardClaims([]);
       }
@@ -628,7 +679,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const items = opDocs
           .map((r) => r.payload as unknown as SKWBOplasClaim)
           .filter((x) => Boolean(x && x.id));
-        setSkwbOplasClaims(items);
+        const uniqueItems = Array.from(new Map(items.map((it) => [it.id, it])).values());
+        setSkwbOplasClaims(uniqueItems);
       } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
         setSkwbOplasClaims([]);
       }
@@ -1743,7 +1795,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // 2. Cek apakah sudah pernah klaim Gratis 1x Paket Perban
-    const alreadyClaimed = skwbPaketSedangClaims.some((c) => c.skwbClaimId === skwbClaimId);
+    const alreadyClaimed =
+      skwbPaketSedangClaims.some((c) => c.skwbClaimId === skwbClaimId) ||
+      Boolean(skwb.isPerbanClaimed);
     if (alreadyClaimed) {
       addToast('warning', 'Sudah Pernah Diklaim', 'Gratis 1x Paket Perban sudah pernah diklaim.');
       return { success: false, message: 'Gratis 1x Paket Perban sudah pernah diklaim.' };
@@ -1790,6 +1844,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSkwbPaketSedangClaims((prev) => [record, ...prev]);
+
+    // Update state skwbClaims agar status langsung berubah menjadi "Claimed / Sudah Diklaim"
+    const updatedClaim: SKWBClaim = {
+      ...skwb,
+      isPerbanClaimed: true,
+      perbanClaimedAt: `${todayDate} ${claimTime}`,
+      perbanStaffName: staff.name,
+      perbanStaffRole: staff.role,
+      updatedAt: nowFormatted(),
+    };
+    setSkwbClaims((prev) => prev.map((c) => (c.id === skwbClaimId ? updatedClaim : c)));
+
+    // Dual-sync to Firestore: sync both sub-record and parent skwb_claim
+    void syncRecordToFirestore(
+      skwb.id,
+      'skwb_claim',
+      skwb.icName,
+      skwb.status,
+      { ...updatedClaim }
+    );
     void syncRecordToFirestore(
       id,
       'skwb_paket_perban_claim',
@@ -1827,7 +1901,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // 2. Cek apakah belum pernah diklaim
-    const alreadyClaimed = skwbPatientCardClaims.some((c) => c.skwbClaimId === skwbClaimId);
+    const alreadyClaimed =
+      skwbPatientCardClaims.some((c) => c.skwbClaimId === skwbClaimId) ||
+      Boolean(skwb.isTreatmentClaimed);
     if (alreadyClaimed) {
       addToast(
         'warning',
@@ -1880,6 +1956,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSkwbPatientCardClaims((prev) => [record, ...prev]);
+
+    // Update state skwbClaims agar status langsung berubah menjadi "Claimed / Sudah Diklaim"
+    const updatedClaim: SKWBClaim = {
+      ...skwb,
+      isTreatmentClaimed: true,
+      treatmentClaimedAt: `${todayDate} ${claimTime}`,
+      treatmentStaffName: staff.name,
+      treatmentStaffRole: staff.role,
+      updatedAt: nowFormatted(),
+    };
+    setSkwbClaims((prev) => prev.map((c) => (c.id === skwbClaimId ? updatedClaim : c)));
+
+    // Dual-sync to Firestore
+    void syncRecordToFirestore(
+      skwb.id,
+      'skwb_claim',
+      skwb.icName,
+      skwb.status,
+      { ...updatedClaim }
+    );
     void syncRecordToFirestore(
       id,
       'skwb_treatment_claim',
@@ -1917,7 +2013,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // 2. Cek apakah belum pernah diklaim
-    const alreadyClaimed = skwbOplasClaims.some((c) => c.skwbClaimId === skwbClaimId);
+    const alreadyClaimed =
+      skwbOplasClaims.some((c) => c.skwbClaimId === skwbClaimId) ||
+      Boolean(skwb.isOplasClaimed);
     if (alreadyClaimed) {
       addToast('warning', 'Sudah Pernah Digunakan', 'Free 1x Oplas sudah pernah digunakan.');
       return { success: false, message: 'Free 1x Oplas sudah pernah digunakan.' };
@@ -1963,6 +2061,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSkwbOplasClaims((prev) => [record, ...prev]);
+
+    // Update state skwbClaims agar status langsung berubah menjadi "Claimed / Sudah Diklaim"
+    const updatedClaim: SKWBClaim = {
+      ...skwb,
+      isOplasClaimed: true,
+      oplasClaimedAt: `${todayDate} ${claimTime}`,
+      oplasStaffName: staff.name,
+      oplasStaffRole: staff.role,
+      updatedAt: nowFormatted(),
+    };
+    setSkwbClaims((prev) => prev.map((c) => (c.id === skwbClaimId ? updatedClaim : c)));
+
+    // Dual-sync to Firestore
+    void syncRecordToFirestore(
+      skwb.id,
+      'skwb_claim',
+      skwb.icName,
+      skwb.status,
+      { ...updatedClaim }
+    );
     void syncRecordToFirestore(
       id,
       'skwb_oplas_claim',
@@ -1976,6 +2094,78 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       `Benefit Free 1x Oplas (${skwb.icName}) berhasil diklaim dan ditangani oleh ${staff.name} (${staff.role}).`
     );
     return { success: true, message: 'Klaim Free 1x Oplas berhasil disimpan.' };
+  };
+
+  // ----------------------------------------------------
+  // MANAJEMEN PAKET & HARGA FARMASI (Edit, Hapus, Tambah Paket, Atur Harga)
+  // ----------------------------------------------------
+  const addPharmacyPackage = (pkg: {
+    code: string;
+    name: string;
+    description: string;
+    price: number;
+  }) => {
+    const id = `pkg-${Date.now()}`;
+    const priceFormatted = `$${pkg.price.toLocaleString()} KBRP`;
+    const newPkg: PharmacyPackageConfig = {
+      id,
+      code: pkg.code.trim().toLowerCase(),
+      name: pkg.name.trim(),
+      description: pkg.description.trim(),
+      price: pkg.price,
+      priceFormatted,
+    };
+    setPharmacyPackages((prev) => [...prev, newPkg]);
+    void syncRecordToFirestore(id, 'pharmacy_package', newPkg.name, 'ACTIVE', { ...newPkg });
+    addToast(
+      'success',
+      'Paket Farmasi Ditambahkan',
+      `Paket "${newPkg.name}" (${priceFormatted}) berhasil ditambahkan ke katalog farmasi.`
+    );
+  };
+
+  const updatePharmacyPackage = (
+    id: string,
+    updates: Partial<{ code: string; name: string; description: string; price: number }>
+  ) => {
+    setPharmacyPackages((prev) =>
+      prev.map((p) => {
+        if (p.id === id) {
+          const newPrice = updates.price !== undefined ? updates.price : p.price;
+          const priceFormatted = `$${newPrice.toLocaleString()} KBRP`;
+          const updated: PharmacyPackageConfig = {
+            ...p,
+            ...updates,
+            code: updates.code ? updates.code.trim().toLowerCase() : p.code,
+            name: updates.name ? updates.name.trim() : p.name,
+            description: updates.description !== undefined ? updates.description.trim() : p.description,
+            price: newPrice,
+            priceFormatted,
+          };
+          void syncRecordToFirestore(id, 'pharmacy_package', updated.name, 'ACTIVE', { ...updated });
+          return updated;
+        }
+        return p;
+      })
+    );
+    addToast('success', 'Paket Farmasi Diperbarui', 'Data dan harga paket farmasi berhasil diperbarui di sistem.');
+  };
+
+  const deletePharmacyPackage = (id: string) => {
+    const target = pharmacyPackages.find((p) => p.id === id);
+    if (!target) return;
+    setPharmacyPackages((prev) => prev.filter((p) => p.id !== id));
+    void syncRecordToFirestore(target.id, 'pharmacy_package', target.name, 'DELETED', { id: target.id });
+    void deleteRecordFromFirestore(target.id);
+    addToast('info', 'Paket Farmasi Dihapus', `Paket "${target.name}" telah dihapus dari katalog farmasi.`);
+  };
+
+  const resetPharmacyPackagesToDefault = () => {
+    setPharmacyPackages(PHARMACY_PACKAGES);
+    PHARMACY_PACKAGES.forEach((pkg) => {
+      void syncRecordToFirestore(pkg.id, 'pharmacy_package', pkg.name, 'ACTIVE', { ...pkg });
+    });
+    addToast('success', 'Paket Direset', 'Katalog paket farmasi berhasil dikembalikan ke pengaturan default.');
   };
 
   return (
@@ -2012,9 +2202,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         skwbOplasClaims,
         characterKillRecords,
         pharmacyOrders,
+        pharmacyPackages,
         submitPharmacyOrder,
         updatePharmacyOrderStatus,
         deletePharmacyOrder,
+        addPharmacyPackage,
+        updatePharmacyPackage,
+        deletePharmacyPackage,
+        resetPharmacyPackagesToDefault,
         toasts,
         addToast,
         removeToast,
