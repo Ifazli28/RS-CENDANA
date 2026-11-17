@@ -520,3 +520,63 @@ export interface PharmacyOrder {
   createdAt: string;
   updatedAt?: string;
 }
+
+export type LetterSectionType = 'table' | 'paragraph' | 'list' | 'notice';
+
+export interface LetterSection {
+  id: string;
+  type: LetterSectionType;
+  heading?: string;
+  intro?: string;
+  // For 'paragraph'
+  body?: string;
+  // For 'list'
+  listItems?: string[];
+  listStyle?: 'numbered' | 'bullet';
+  // For 'table'
+  tableHeaders?: string[];
+  tableRows?: string[][];
+  // For 'notice'
+  noticeTitle?: string;
+  noticeBody?: string;
+}
+
+export interface LetterSignatureItem {
+  id: string;
+  topLabel: string; // e.g., "Penanggung Jawab Kontrak"
+  name: string;     // e.g., "Yuzuriha M Bimantara" or "" for "(   )"
+  roleLabel: string; // e.g., "HRD Rumah Sakit"
+  signatureDataUrl?: string; // Optional drawn/uploaded signature image
+  isBlankLine?: boolean;     // Renders (                    ) if true or name is empty
+}
+
+export interface OfficialLetter {
+  id: string;
+  templateId: string;
+  // Kop Surat
+  kopTitle: string;
+  kopSubtitle: string;
+  kopAddress: string;
+  // Metadata
+  nomorSurat: string;
+  lampiran: string;
+  perihal: string;
+  kotaTanggal: string;
+  kepadaYthLine1: string;
+  kepadaYthLine2: string;
+  kepadaYthLine3: string;
+  // Pembuka & Penutup
+  salamPembuka: string;
+  paragrafPembuka: string;
+  sections: LetterSection[];
+  paragrafPenutup: string;
+  // Tanda Tangan & Footer
+  signatures: LetterSignatureItem[];
+  footerTitle: string;
+  fontStyle: 'serif' | 'sans';
+  // Record metadata
+  createdBy: string;
+  createdByRole: RoleName;
+  createdAt: string;
+  updatedAt: string;
+}

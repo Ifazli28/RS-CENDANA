@@ -35,6 +35,7 @@ import {
 } from './dashboard/ManagementViewsPart2';
 import { SKWBBenefitView } from './dashboard/SKWBBenefitView';
 import { PharmacyManagementView } from './dashboard/PharmacyManagementView';
+import { OfficialLetterView } from './dashboard/OfficialLetterView';
 import {
   LayoutDashboard,
   User,
@@ -66,6 +67,7 @@ import {
   Sparkles,
   HeartPulse,
   Pill,
+  ScrollText,
 } from 'lucide-react';
 
 export type StaffRouteId =
@@ -97,7 +99,8 @@ export type StaffRouteId =
   | 'monthly-attendance-recap'
   | 'payroll-management'
   | 'regulation-management'
-  | 'pharmacy-management';
+  | 'pharmacy-management'
+  | 'official-letter';
 
 interface MenuItemConfig {
   id: StaffRouteId;
@@ -204,6 +207,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     { id: 'monthly-attendance-recap', label: 'Rekap Absensi Bulanan', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: FileText },
     { id: 'payroll-management', label: 'Payroll Management', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: CreditCard },
     { id: 'regulation-management', label: 'Regulation Management', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: ShieldCheck },
+    { id: 'official-letter', label: 'Pembuatan Surat Resmi', minLevel: 8, category: 'Manajemen & Approval (HRD+)', icon: ScrollText },
   ];
 
   // CRITICAL RBAC RULE SEC 10: Only display menu items that the current user's role level has access to!
@@ -298,6 +302,8 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         return <PayrollManagementView />;
       case 'regulation-management':
         return <RegulationManagementView />;
+      case 'official-letter':
+        return <OfficialLetterView />;
       case 'dashboard':
       default:
         return <DashboardLeaderboardView onNavigateRoute={onNavigateRoute} />;

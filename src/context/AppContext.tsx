@@ -33,6 +33,7 @@ import {
   PharmacyOrderStatus,
   PharmacyPackageConfig,
   PHARMACY_PACKAGES,
+  OfficialLetter,
 } from '../types';
 import {
   INITIAL_STAFF_ACCOUNTS,
@@ -194,6 +195,9 @@ interface AppContextType {
   deletePayrollRecord: (id: string) => void;
   deleteSOPDocument: (id: string) => void;
   deleteRegulation: (id: string) => Promise<{ success: boolean; message: string }>;
+  officialLetters: OfficialLetter[];
+  saveOfficialLetter: (letter: OfficialLetter) => void;
+  deleteOfficialLetter: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -373,6 +377,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [pharmacyPackages, setPharmacyPackages] = useState<PharmacyPackageConfig[]>(() =>
     loadLocal('pharmacy_packages_v1', PHARMACY_PACKAGES)
   );
+  const [officialLetters, setOfficialLetters] = useState<OfficialLetter[]>(() =>
+    loadLocal('letters_v1', [])
+  );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState | null>(null);
 
@@ -460,6 +467,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     saveLocal('pharmacy_packages_v1', pharmacyPackages);
   }, [pharmacyPackages]);
+  useEffect(() => {
+    saveLocal('letters_v1', officialLetters);
+  }, [officialLetters]);
   useEffect(() => {
     saveLocal('skwb_claims_v1', skwbClaims);
   }, [skwbClaims]);
@@ -737,6 +747,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (items.length > 0) {
           setPharmacyPackages(items);
         }
+      }
+
+      const letterDocs = byModule.get('official_letter');
+      if (letterDocs && letterDocs.length > 0) {
+        const items = letterDocs
+          .map((r) => r.payload as unknown as OfficialLetter)
+          .filter((x) => Boolean(x && x.id));
+        setOfficialLetters(items);
+      } else if (isDatabaseBootstrapped && byModule.has('system_metadata')) {
+        setOfficialLetters([]);
       }
 
       const skwbDocs = byModule.get('skwb_claim');
@@ -2293,6 +2313,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast('success', 'Paket Direset', 'Katalog paket farmasi berhasil dikembalikan ke pengaturan default.');
   };
 
+  // ----------------------------------------------------
+  // PEMBUATAN SURAT RESMI RUMAH SAKIT (HRD Ke Atas)
+  // ----------------------------------------------------
+  const saveOfficialLetter = (letter: OfficialLetter) => {
+    if (!currentUser || currentUser.level < 8) {
+      addToast('error', 'Akses Ditolak', 'Hanya HRD ke atas yang dapat menyimpan arsip surat resmi.');
+      return;
+    }
+    const nowIso = new Date().toISOString();
+    const record: OfficialLetter = {
+      ...letter,
+      updatedAt: nowIso,
+      createdAt: letter.createdAt || nowIso,
+      createdBy: letter.createdBy || currentUser.name,
+      createdByRole: letter.createdByRole || currentUser.role,
+    };
+
+    setOfficialLetters((prev) => {
+      const exists = prev.some((l) => l.id === record.id);
+      if (exists) {
+        return prev.map((l) => (l.id === record.id ? record : l));
+      }
+      return [record, ...prev];
+    });
+
+    void syncRecordToFirestore(
+      record.id,
+      'official_letter',
+      `${record.nomorSurat} — ${record.perihal}`.slice(0, 280),
+      'Saved',
+      { ...record }
+    );
+    addToast('success', 'Arsip Surat Disimpan', `Surat "${record.nomorSurat}" tersimpan di Database.`);
+  };
+
+  const deleteOfficialLetter = (id: string) => {
+    if (!currentUser || currentUser.level < 8) return;
+    setOfficialLetters((prev) => prev.filter((l) => l.id !== id));
+    void deleteRecordFromFirestore(id);
+    addToast('info', 'Arsip Surat Dihapus', 'Draft/arsip surat resmi berhasil dihapus dari Database.');
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -2407,6 +2469,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deletePayrollRecord,
         deleteSOPDocument,
         deleteRegulation,
+        officialLetters,
+        saveOfficialLetter,
+        deleteOfficialLetter,
       }}
     >
       {children}
