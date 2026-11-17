@@ -8,6 +8,7 @@ import {
   PharmacyOrder,
 } from '../types';
 import { compressImageForFirestore } from '../utils/imageCompressor';
+import { SPECIALIST_CATEGORIES } from '../utils/doctorFormatting';
 import { IshiharaTestSection } from './IshiharaTest';
 import {
   GHQ12_QUESTIONS,
@@ -338,6 +339,7 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
 
   // Doctor Schedule Filter State
   const [scheduleFilter, setScheduleFilter] = useState<string>('Semua');
+  const [showAllSpecialties, setShowAllSpecialties] = useState<boolean>(false);
 
   // Appointment Form State
   const [aptForm, setAptForm] = useState({
@@ -440,10 +442,16 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
   const filteredSchedules =
     scheduleFilter === 'Semua'
       ? doctorSchedules
+      : scheduleFilter === 'Doctor'
+      ? doctorSchedules.filter(
+          (s) =>
+            s.specialty.toLowerCase() === 'doctor' ||
+            s.doctorRole.toLowerCase() === 'doctor'
+        )
       : doctorSchedules.filter(
           (s) =>
-            s.specialty.toLowerCase().includes(scheduleFilter.toLowerCase()) ||
-            s.doctorRole.toLowerCase().includes(scheduleFilter.toLowerCase())
+            s.specialty.toLowerCase() === scheduleFilter.toLowerCase() ||
+            s.doctorRole.toLowerCase() === scheduleFilter.toLowerCase()
         );
 
   return (
@@ -1401,82 +1409,146 @@ export const PublicModals: React.FC<PublicModalsProps> = ({
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Jadwal Praktik Dokter RS Kota Baru</h2>
                 <p className="text-xs text-slate-500">
-                  Pilih dokter untuk membuat janji temu konsultasi langsung
+                  Pilih dokter untuk membuat janji temu konsultasi langsung atau jelajahi spesialisasi dokter kami
                 </p>
               </div>
 
-              {/* Interactive Filter Controls */}
-              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-50 rounded-xl border border-red-100">
-                {[
-                  'Semua',
-                  'Doctor',
-                  'Spesialis Obgyn',
-                  'Spesialis Kecantikan',
-                  'Spesialis Forensik',
-                  'Spesialis Jantung',
-                  'Spesialis Bedah',
-                ].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setScheduleFilter(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-                      scheduleFilter === cat
-                        ? 'bg-[#9E1B21] text-white shadow-xs'
-                        : 'text-slate-600 hover:text-[#7F1D1D]'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              {/* Filter Dropdown & Directory Toggle */}
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={scheduleFilter}
+                  onChange={(e) => setScheduleFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-red-200 bg-white text-xs font-semibold text-slate-700 focus:border-[#9E1B21] focus:outline-none max-w-xs"
+                >
+                  <option value="Semua">Semua Spesialisasi</option>
+                  <option value="Doctor">Doctor (Poli Umum)</option>
+                  {SPECIALIST_CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAllSpecialties((prev) => !prev)}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer whitespace-nowrap ${
+                    showAllSpecialties
+                      ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
+                      : 'bg-red-50/50 text-[#7F1D1D] border-red-200 hover:bg-red-100'
+                  }`}
+                >
+                  {showAllSpecialties
+                    ? 'Tutup Daftar Spesialis'
+                    : `Daftar Spesialis (${SPECIALIST_CATEGORIES.length})`}
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredSchedules.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-4 rounded-2xl border border-red-100 bg-white hover:border-red-600/40 transition flex flex-col justify-between gap-4"
+            {/* Direktori Lengkap Spesialisasi Dokter */}
+            {showAllSpecialties && (
+              <div className="p-4 rounded-2xl bg-slate-50 border border-red-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#9E1B21]">
+                    Direktori Spesialisasi Dokter RS Kota Baru
+                  </h3>
+                  <span className="text-[11px] text-slate-500">
+                    Klik spesialisasi untuk menyaring jadwal
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
+                  {SPECIALIST_CATEGORIES.map((sp) => (
+                    <button
+                      key={sp.id}
+                      type="button"
+                      onClick={() => {
+                        setScheduleFilter(sp.id);
+                        setShowAllSpecialties(false);
+                      }}
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                        scheduleFilter === sp.id
+                          ? 'bg-red-50 border-[#9E1B21]'
+                          : 'bg-white border-slate-200 hover:border-red-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-slate-900">{sp.label}</span>
+                        <span className="px-2 py-0.5 rounded-md bg-red-50 text-[#7F1D1D] font-mono text-[10px] font-bold shrink-0">
+                          {sp.degreeSuffix}
+                        </span>
+                      </div>
+                      {sp.description && (
+                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                          {sp.description}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {filteredSchedules.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-slate-50 border border-red-100 text-center space-y-3">
+                <p className="text-sm font-semibold text-slate-700">
+                  Belum ada jadwal praktik aktif untuk kategori "{scheduleFilter}".
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setScheduleFilter('Semua')}
+                  className="px-4 py-2 rounded-xl bg-[#9E1B21] text-white text-xs font-semibold hover:bg-[#7F1D1D] transition cursor-pointer"
                 >
-                  <div className="flex items-start gap-3.5">
-                    <img
-                      src={doc.doctorAvatar}
-                      alt={doc.doctorName}
-                      referrerPolicy="no-referrer"
-                      className="w-14 h-14 rounded-2xl object-cover border border-red-100 shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-base font-bold text-slate-900 truncate">{doc.doctorName}</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {doc.doctorRole} · {doc.specialty}
-                      </p>
-                      <div className="mt-2 space-y-1 text-xs text-slate-600">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
-                          <span>{doc.days}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 tabular-nums">
-                          <Clock className="w-3.5 h-3.5 text-[#20C997]" />
-                          <span>
-                            {doc.startTime} – {doc.endTime} WIB · Status:{' '}
-                            <strong className="text-[#20C997]">{doc.status}</strong>
-                          </span>
+                  Tampilkan Semua Jadwal Dokter
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredSchedules.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="p-4 rounded-2xl border border-red-100 bg-white hover:border-red-600/40 transition flex flex-col justify-between gap-4"
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <img
+                        src={doc.doctorAvatar}
+                        alt={doc.doctorName}
+                        referrerPolicy="no-referrer"
+                        className="w-14 h-14 rounded-2xl object-cover border border-red-100 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-bold text-slate-900 truncate">{doc.doctorName}</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {doc.doctorRole} · {doc.specialty}
+                        </p>
+                        <div className="mt-2 space-y-1 text-xs text-slate-600">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-[#9E1B21]" />
+                            <span>{doc.days}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 tabular-nums">
+                            <Clock className="w-3.5 h-3.5 text-[#20C997]" />
+                            <span>
+                              {doc.startTime} – {doc.endTime} WIB · Status:{' '}
+                              <strong className="text-[#20C997]">{doc.status}</strong>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <button
-                    onClick={() => {
-                      onSelectDoctorForAppointment(doc);
-                      onOpenModal('appointment');
-                    }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
-                  >
-                    Buat Janji Temu
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <button
+                      onClick={() => {
+                        onSelectDoctorForAppointment(doc);
+                        onOpenModal('appointment');
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#9E1B21] to-[#7F1D1D] text-white text-xs font-semibold hover:opacity-95 transition cursor-pointer"
+                    >
+                      Buat Janji Temu
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

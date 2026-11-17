@@ -997,10 +997,16 @@ export const DoctorScheduleManageView: React.FC = () => {
                 <option value="Doctor">Doctor (Poli Umum — dr. ..., S.Ked)</option>
                 {SPECIALIST_CATEGORIES.map((sp) => (
                   <option key={sp.id} value={sp.id}>
-                    {sp.label} ({sp.degreeSuffix})
+                    {sp.label}
                   </option>
                 ))}
               </select>
+              {(() => {
+                const matched = SPECIALIST_CATEGORIES.find((sp) => sp.id === specialty);
+                return matched?.description ? (
+                  <p className="text-[11px] text-slate-500 mt-1">{matched.description}</p>
+                ) : null;
+              })()}
             </div>
 
           <div>

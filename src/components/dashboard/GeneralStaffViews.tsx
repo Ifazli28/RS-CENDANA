@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
+import { compressImageForFirestore } from '../../utils/imageCompressor';
 import {
   Trophy,
   Clock,
@@ -1162,20 +1163,24 @@ export const StaffProfileView: React.FC = () => {
   const hasSymbol = /[^A-Za-z0-9]/.test(newPass);
   const passValid = hasUpper && hasLower && hasNumber && hasSymbol && newPass === confPass;
 
-  const handleJpgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleJpgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.toLowerCase().match(/\.(jpg|jpeg)$/)) {
       addToast('error', 'Format Harus JPG', 'Silakan pilih file foto berformat .JPG atau .JPEG.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        updateProfileAvatar(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImageForFirestore(file, {
+        maxWidth: 400,
+        maxHeight: 400,
+        quality: 0.8,
+        targetMaxBytes: 90 * 1024,
+      });
+      updateProfileAvatar(compressed.dataUrl);
+    } catch {
+      addToast('error', 'Gagal Memproses Foto', 'Silakan pilih file foto JPG lain yang lebih kecil.');
+    }
   };
 
   return (

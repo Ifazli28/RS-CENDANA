@@ -207,6 +207,92 @@ function loadLocal<T>(key: string, fallback: T): T {
   }
 }
 
+const HEAVY_LOCAL_CACHE_KEYS = [
+  'kotabaru_skwb_claims_v1',
+  'kotabaru_regs_v1',
+  'kotabaru_pharmacy_v1',
+  'kotabaru_rec_app_v1',
+  'kotabaru_pls_v1',
+  'kotabaru_ck_v1',
+  'kotabaru_duties_v1',
+];
+
+function stripLargeDataUrlsForCache(value: unknown): unknown {
+  if (typeof value === 'string') {
+    if (value.startsWith('data:image/') && value.length > 4000) {
+      return '';
+    }
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => stripLargeDataUrlsForCache(item));
+  }
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(record)) {
+      if (k === 'avatarUrl' && typeof v === 'string' && v.startsWith('data:image/') && v.length > 4000) {
+        const nameStr = typeof record.name === 'string' ? record.name : 'ST';
+        const initials = nameStr
+          .split(' ')
+          .filter(Boolean)
+          .map((n) => n[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
+        out[k] = createStaffAvatarSvg(initials || 'ST', '#9E1B21');
+      } else {
+        out[k] = stripLargeDataUrlsForCache(v);
+      }
+    }
+    return out;
+  }
+  return value;
+}
+
+function saveLocal<T>(key: string, value: T): void {
+  const fullKey = `kotabaru_${key}`;
+  const trySet = (payload: string): boolean => {
+    try {
+      localStorage.setItem(fullKey, payload);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  try {
+    const serialized = JSON.stringify(value);
+    if (serialized.length <= 1_500_000 && trySet(serialized)) {
+      return;
+    }
+
+    // Free space by removing heavy image-bearing caches (Firestore keeps full cloud copy)
+    for (const heavyKey of HEAVY_LOCAL_CACHE_KEYS) {
+      if (heavyKey !== fullKey) {
+        try {
+          localStorage.removeItem(heavyKey);
+        } catch {
+          // ignore storage errors during cleanup
+        }
+      }
+    }
+
+    if (serialized.length <= 1_500_000 && trySet(serialized)) {
+      return;
+    }
+
+    // Retry with stripped oversized base64 data URLs for local cache only
+    const compact = stripLargeDataUrlsForCache(value);
+    const compactSerialized = JSON.stringify(compact);
+    if (compactSerialized.length <= 1_500_000) {
+      trySet(compactSerialized);
+    }
+  } catch (err) {
+    console.warn(`LocalStorage cache skipped for ${fullKey}:`, err);
+  }
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [staffAccounts, setStaffAccounts] = useState<StaffAccount[]>(() =>
     loadLocal('staff_v1', [])
@@ -310,86 +396,104 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const closeConfirmModal = () => setConfirmModal(null);
 
-  // LocalStorage persistence for all modules
+  // LocalStorage persistence for all modules (quota-safe fallback cache; Cloud Firestore is source of truth)
   useEffect(() => {
-    localStorage.setItem('kotabaru_staff_v1', JSON.stringify(staffAccounts));
+    saveLocal('staff_v1', staffAccounts);
   }, [staffAccounts]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_schedules_v1', JSON.stringify(doctorSchedules));
+    saveLocal('schedules_v1', doctorSchedules);
   }, [doctorSchedules]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_sks_v1', JSON.stringify(sksRecords));
+    saveLocal('sks_v1', sksRecords);
   }, [sksRecords]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_psy_v1', JSON.stringify(psychologyRecords));
+    saveLocal('psy_v1', psychologyRecords);
   }, [psychologyRecords]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_pls_v1', JSON.stringify(plasticSurgeryRecords));
+    saveLocal('pls_v1', plasticSurgeryRecords);
   }, [plasticSurgeryRecords]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_cb_v1', JSON.stringify(colorBlindResults));
+    saveLocal('cb_v1', colorBlindResults);
   }, [colorBlindResults]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_apt_v1', JSON.stringify(appointments));
+    saveLocal('apt_v1', appointments);
   }, [appointments]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_cmp_v1', JSON.stringify(complaints));
+    saveLocal('cmp_v1', complaints);
   }, [complaints]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_rec_status_v1', JSON.stringify(recruitmentStatus));
+    saveLocal('rec_status_v1', recruitmentStatus);
   }, [recruitmentStatus]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_rec_app_v1', JSON.stringify(recruitmentApplicants));
+    saveLocal('rec_app_v1', recruitmentApplicants);
   }, [recruitmentApplicants]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_votes_v1', JSON.stringify(votingPolls));
+    saveLocal('votes_v1', votingPolls);
   }, [votingPolls]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_leaves_v1', JSON.stringify(leaveRequests));
+    saveLocal('leaves_v1', leaveRequests);
   }, [leaveRequests]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_resigns_v1', JSON.stringify(resignRequests));
+    saveLocal('resigns_v1', resignRequests);
   }, [resignRequests]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_sops_v1', JSON.stringify(sopDocuments));
+    saveLocal('sops_v1', sopDocuments);
   }, [sopDocuments]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_regs_v1', JSON.stringify(regulations));
+    saveLocal('regs_v1', regulations);
   }, [regulations]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_duties_v1', JSON.stringify(dutyLogs));
+    saveLocal('duties_v1', dutyLogs);
   }, [dutyLogs]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_payrolls_v1', JSON.stringify(payrollRecords));
+    saveLocal('payrolls_v1', payrollRecords);
   }, [payrollRecords]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_role_salaries_v1', JSON.stringify(roleSalaryConfigs));
+    saveLocal('role_salaries_v1', roleSalaryConfigs);
   }, [roleSalaryConfigs]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_ck_v1', JSON.stringify(characterKillRecords));
+    saveLocal('ck_v1', characterKillRecords);
   }, [characterKillRecords]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_pharmacy_v1', JSON.stringify(pharmacyOrders));
+    saveLocal('pharmacy_v1', pharmacyOrders);
   }, [pharmacyOrders]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_pharmacy_packages_v1', JSON.stringify(pharmacyPackages));
+    saveLocal('pharmacy_packages_v1', pharmacyPackages);
   }, [pharmacyPackages]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_skwb_claims_v1', JSON.stringify(skwbClaims));
+    saveLocal('skwb_claims_v1', skwbClaims);
   }, [skwbClaims]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_skwb_perban_claims_v1', JSON.stringify(skwbPaketSedangClaims));
+    saveLocal('skwb_perban_claims_v1', skwbPaketSedangClaims);
   }, [skwbPaketSedangClaims]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_skwb_treatment_claims_v1', JSON.stringify(skwbPatientCardClaims));
+    saveLocal('skwb_treatment_claims_v1', skwbPatientCardClaims);
   }, [skwbPatientCardClaims]);
   useEffect(() => {
-    localStorage.setItem('kotabaru_skwb_oplas_claims_v1', JSON.stringify(skwbOplasClaims));
+    saveLocal('skwb_oplas_claims_v1', skwbOplasClaims);
   }, [skwbOplasClaims]);
 
   useEffect(() => {
-    if (currentUserId) localStorage.setItem('kotabaru_current_user_id_v1', currentUserId);
-    else localStorage.removeItem('kotabaru_current_user_id_v1');
+    try {
+      if (currentUserId) {
+        try {
+          localStorage.setItem('kotabaru_current_user_id_v1', currentUserId);
+        } catch {
+          for (const heavyKey of HEAVY_LOCAL_CACHE_KEYS) {
+            try {
+              localStorage.removeItem(heavyKey);
+            } catch {
+              // ignore
+            }
+          }
+          localStorage.setItem('kotabaru_current_user_id_v1', currentUserId);
+        }
+      } else {
+        localStorage.removeItem('kotabaru_current_user_id_v1');
+      }
+    } catch {
+      // ignore storage quota errors for session id
+    }
   }, [currentUserId]);
 
   // Real-time synchronization from Cloud Firestore across all public & internal staff modules
@@ -979,17 +1083,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateProfileAvatar = (avatarUrl: string) => {
     if (!currentUser) return;
-    setStaffAccounts((prev) =>
-      prev.map((s) => {
-        if (s.id === currentUser.id) {
-          const updated = { ...s, avatarUrl };
-          void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
-          return updated;
-        }
-        return s;
+    const targetUserId = currentUser.id;
+    const applyAvatarUpdate = (finalAvatarUrl: string) => {
+      setStaffAccounts((prev) =>
+        prev.map((s) => {
+          if (s.id === targetUserId) {
+            const updated = { ...s, avatarUrl: finalAvatarUrl };
+            void syncRecordToFirestore(updated.id, 'staff_account', updated.name, updated.status, { ...updated });
+            return updated;
+          }
+          return s;
+        })
+      );
+      addToast('success', 'Foto Profil Diperbarui', 'Foto profil Anda berhasil disimpan ke Database.');
+    };
+
+    if (
+      avatarUrl.startsWith('data:image/') &&
+      !avatarUrl.startsWith('data:image/svg+xml') &&
+      avatarUrl.length > 150_000
+    ) {
+      void compressImageForFirestore(avatarUrl, {
+        maxWidth: 400,
+        maxHeight: 400,
+        quality: 0.78,
+        targetMaxBytes: 90 * 1024,
       })
-    );
-    addToast('success', 'Foto Profil Diperbarui', 'Foto profil Anda berhasil disimpan ke Database.');
+        .then((res) => applyAvatarUpdate(res.dataUrl))
+        .catch(() => applyAvatarUpdate(avatarUrl));
+      return;
+    }
+
+    applyAvatarUpdate(avatarUrl);
   };
 
   const updateProfileName = (name: string, bio?: string) => {

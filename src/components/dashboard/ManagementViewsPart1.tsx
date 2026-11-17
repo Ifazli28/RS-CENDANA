@@ -188,7 +188,7 @@ export const StaffManagementView: React.FC = () => {
           onClick={() => setEditingStaff(null)}
         >
           <div
-            className="bg-white rounded-2xl border border-red-100 p-6 max-w-md w-full space-y-4"
+            className="bg-white rounded-2xl border border-red-100 p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {!confirmRoleModal ? (
@@ -238,10 +238,10 @@ export const StaffManagementView: React.FC = () => {
                       type="text"
                       value={editSpecialty}
                       onChange={(e) => setEditSpecialty(e.target.value)}
-                      placeholder="Contoh: Spesialis Obgyn / Spesialis Jantung"
+                      placeholder="Contoh: Spesialis Anak / Spesialis Penyakit Dalam"
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm"
                     />
-                    {/* Pilihan Cepat Spesialis Dokter (Obgyn, Kecantikan, Forensik, Jantung, dll) */}
+                    {/* Pilihan Cepat Spesialis Dokter */}
                     {[
                       'Doctor',
                       'Doctor Specialist',
@@ -255,11 +255,12 @@ export const StaffManagementView: React.FC = () => {
                         <p className="text-[11px] font-semibold text-slate-500">
                           Pilih Spesialis (Otomatis menambahkan gelar <code className="text-[#7F1D1D]">dr.</code> di depan & gelar pendidikan di belakang nama):
                         </p>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto p-2 rounded-xl bg-slate-50 border border-slate-200">
                           {SPECIALIST_CATEGORIES.map((sp) => (
                             <button
                               key={sp.id}
                               type="button"
+                              title={sp.description || sp.label}
                               onClick={() => {
                                 setEditSpecialty(sp.id);
                                 setEditName(
@@ -269,7 +270,7 @@ export const StaffManagementView: React.FC = () => {
                               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
                                 editSpecialty === sp.id
                                   ? 'bg-[#9E1B21] text-white border-[#9E1B21]'
-                                  : 'bg-red-50/40 text-[#7F1D1D] border-red-200 hover:bg-red-100'
+                                  : 'bg-white text-[#7F1D1D] border-red-200 hover:bg-red-50'
                               }`}
                             >
                               {sp.id} ({sp.degreeSuffix})
